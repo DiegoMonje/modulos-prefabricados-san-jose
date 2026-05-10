@@ -39,6 +39,7 @@ type Store = {
   moveItem: (id: string, x: number, y: number) => void;
   removeSelected: () => void;
   rotateSelected: () => void;
+  duplicateSelected: () => void;
   setDivisionOrientation: (id: string, orientation: DivisionOrientation) => void;
   resizeBathroom: (id: string, width: number, height: number) => void;
   undo: () => void;
@@ -51,6 +52,20 @@ const cloneLayout = (items: LayoutItem[]) => items.map((item) => ({ ...item }));
 const isEdgeType = (type: LayoutItemType) => ['base_door', 'additional_door', 'base_window_80x80', 'window_80x80', 'large_window'].includes(type);
 const isDivisionType = (type: LayoutItemType) => ['wall_partition', 'interior_room', 'full_bathroom'].includes(type);
 const isBathroomChildType = (type: LayoutItemType) => ['bathroom_door', 'bathroom_window_40x40', 'bathroom_light_point', 'bathroom_socket'].includes(type);
+
+const duplicateTypeMap: Partial<Record<LayoutItemType, LayoutItemType>> = {
+  base_door: 'additional_door',
+  base_window_80x80: 'window_80x80',
+  base_socket: 'additional_socket',
+  additional_socket: 'additional_socket',
+  additional_door: 'additional_door',
+  window_80x80: 'window_80x80',
+  large_window: 'large_window',
+  wall_partition: 'wall_partition',
+  interior_room: 'interior_room',
+  full_bathroom: 'full_bathroom',
+  air_conditioning: 'air_conditioning',
+};
 
 const normalizeItemForModule = (item: LayoutItem, x: number, y: number, length: number, width: number, items: LayoutItem[] = []) => {
   if (isBathroomChildType(item.type) && item.parentId) {
@@ -293,6 +308,41 @@ export const useConfiguratorStore = create<Store>((set, get) => ({
           return normalizeItemForModule({ ...item, rotation: (((item.rotation + 90) % 360) as LayoutItem['rotation']) }, item.x, item.y, state.config.length, state.config.width, state.config.layoutItems);
         }),
       },
+    }));
+  },
+  duplicateSelected: () => {
+    const { selectedItemId, config } = get();
+    if (!selectedItemId) return;
+    const selected = config.layoutItems.find((item) => item.id === selectedItemId);
+    if (!selected || isBathroomChildType(selected.type)) return;
+
+    const duplicateType = duplicateTypeMap[selected.type];
+    if (!duplicateType) return;
+
+    const newId = crypto.randomUUID();
+    const offsetX = selected.zone === 'edge' ? 0.5 : 0.25;
+    const offsetY = selected.zone === 'edge' ? 0 : 0.25;
+    const baseDuplicate: LayoutItem = {
+      ...selected,
+      id: newId,
+      type: duplicateType,
+      label: ITEM_LABELS[duplicateType],
+      x: selected.x + offsetX,
+      y: selected.y + offsetY,
+      price: ITEM_PRICES[duplicateType],
+      included: false,
+      parentId: undefined,
+      bathroomChildType: undefined,
+    };
+
+    const normalized = normalizeItemForModule(baseDuplicate, baseDuplicate.x, baseDuplicate.y, config.length, config.width, config.layoutItems);
+    const children = duplicateType === 'full_bathroom' ? createBathroomChildren(normalized).map((child) => normalizeBathroomChildItem(child, normalized, child.x, child.y)) : [];
+
+    set((state) => ({
+      undoStack: [...state.undoStack.slice(-30), cloneLayout(state.config.layoutItems)],
+      redoStack: [],
+      selectedItemId: normalized.id,
+      config: { ...state.config, layoutItems: [...state.config.layoutItems, normalized, ...children] },
     }));
   },
   setDivisionOrientation: (id, orientation) => {
