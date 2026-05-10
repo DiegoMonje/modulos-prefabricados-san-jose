@@ -1,0 +1,93 @@
+import { forwardRef, useEffect, useMemo, useRef, useState } from 'react';
+import type Konva from 'konva';
+import { Layer, Rect, Stage, Text } from 'react-konva';
+import { RotateCcw, Smartphone } from 'lucide-react';
+import type { LayoutItem } from '../../../types';
+import { buildCadWarnings } from './utils/collisions';
+import { calculatePlanGeometry } from './utils/coordinates';
+import { CadGrid } from './CadGrid';
+import { CadObjectsLayer } from './CadObjectsLayer';
+import { CadRulers } from './CadRulers';
+import { CadSelectionLayer } from './CadSelectionLayer';
+import { CadWalls } from './CadWalls';
+
+export const CadStage = forwardRef<Konva.Stage, {
+  length: number;
+  width: number;
+  items: LayoutItem[];
+  selectedItemId: string | null;
+  zoom: number;
+  onSelect: (id: string | null) => void;
+  onMove: (id: string, x: number, y: number) => void;
+}>(({ length, width, items, selectedItemId, zoom, onSelect, onMove }, ref) => {
+  const shellRef = useRef<HTMLDivElement | null>(null);
+  const [availableWidth, setAvailableWidth] = useState(920);
+
+  useEffect(() => {
+    const node = shellRef.current;
+    if (!node) return;
+    const update = () => setAvailableWidth(Math.max(620, node.clientWidth - 24));
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
+
+  const geometry = useMemo(() => calculatePlanGeometry(availableWidth, length, width, zoom), [availableWidth, length, width, zoom]);
+  const warnings = useMemo(() => buildCadWarnings(items), [items]);
+  const selectedItem = items.find((item) => item.id === selectedItemId) || null;
+
+  return (
+    <div>
+      <div className="mb-4 rounded-[24px] border border-amber-200 bg-amber-50 p-5 text-center text-amber-950 shadow-sm md:hidden portrait:block landscape:hidden">
+        <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-2xl bg-white text-brand-orange shadow-sm">
+          <div className="relative">
+            <Smartphone size={34} />
+            <RotateCcw size={18} className="absolute -right-4 -top-3" />
+          </div>
+        </div>
+        <p className="text-lg font-black">Gira el móvil</p>
+        <p className="mt-1 text-sm font-semibold">Para usar el plano 2D correctamente, pon el teléfono en horizontal.</p>
+      </div>
+      <div ref={shellRef} className="overflow-auto rounded-[28px] border border-slate-700/70 bg-slate-950 p-3 shadow-2xl shadow-slate-950/30">
+        <Stage ref={ref} width={geometry.stageWidth} height={geometry.stageHeight} onMouseDown={(event) => { if (event.target === event.target.getStage()) onSelect(null); }} onTouchStart={(event) => { if (event.target === event.target.getStage()) onSelect(null); }}>
+          <Layer listening={false}>
+            <Rect x={0} y={0} width={geometry.stageWidth} height={geometry.stageHeight} fill="#020617" cornerRadius={22} />
+            <Rect x={12} y={12} width={geometry.stageWidth - 24} height={geometry.stageHeight - 24} stroke="#334155" strokeWidth={1} cornerRadius={18} />
+            <Text x={geometry.planX} y={22} text="PLANO CAD 2D · MÓDULO PREFABRICADO" fill="#f8fafc" fontSize={13} fontStyle="bold" letterSpacing={1.5} />
+            <Text x={geometry.planX} y={42} text="Escala visual orientativa · unidades en metros" fill="#94a3b8" fontSize={11} />
+          </Layer>
+          <Layer listening={false}>
+            <CadGrid geometry={geometry} length={length} width={width} />
+            <CadRulers geometry={geometry} length={length} width={width} />
+            <CadWalls geometry={geometry} />
+          </Layer>
+          <Layer>
+            <CadObjectsLayer items={items} selectedItemId={selectedItemId} geometry={geometry} onSelect={onSelect} onMove={onMove} />
+            <CadSelectionLayer selectedItem={selectedItem} geometry={geometry} />
+          </Layer>
+          <Layer listening={false}>
+            <Text
+              x={geometry.planX}
+              y={geometry.planY + geometry.planHeight + 28}
+              text="Leyenda: P=Puerta · V=Ventana · VG=Ventana grande · T=Enchufe · PL=Punto de luz · CE=Cuadro eléctrico · A/A=Aire acondicionado"
+              fill="#cbd5e1"
+              fontSize={11}
+              fontStyle="bold"
+            />
+          </Layer>
+        </Stage>
+      </div>
+      {warnings.length ? (
+        <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm font-semibold text-amber-950">
+          <p className="font-black">Avisos técnicos del plano</p>
+          <ul className="mt-2 list-disc space-y-1 pl-5">
+            {warnings.map((warning) => <li key={warning}>{warning}</li>)}
+          </ul>
+        </div>
+      ) : null}
+    </div>
+  );
+});
+
+CadStage.displayName = 'CadStage';
