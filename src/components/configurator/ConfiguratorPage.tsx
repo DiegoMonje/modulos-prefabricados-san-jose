@@ -299,10 +299,33 @@ const SummaryStep = ({ price }: { price: ReturnType<typeof calculatePrice> }) =>
 };
 
 const SelectedItemPanel = ({ item }: { item: LayoutItem | null }) => {
-  const { setDivisionOrientation, updateItem } = useConfiguratorStore();
+  const { setDivisionOrientation, updateItem, resizeBathroom } = useConfiguratorStore();
   if (!item) return <p className="mt-4 rounded-2xl bg-slate-50 p-4 text-sm font-semibold text-slate-600">Selecciona un elemento del plano para ver sus opciones.</p>;
   const isDivision = item.type === 'interior_room' || item.type === 'full_bathroom' || item.type === 'wall_partition';
-  return <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4"><p className="font-black text-slate-900">Seleccionado: {item.label}</p><p className="mt-1 text-sm text-slate-600">X {item.x.toFixed(2)} m · Y {item.y.toFixed(2)} m</p>{isDivision ? <div className="mt-3 flex flex-wrap gap-2"><Button variant="outline" onClick={() => setDivisionOrientation(item.id, 'transversal')}>Transversal</Button><Button variant="outline" onClick={() => setDivisionOrientation(item.id, 'longitudinal')}>Longitudinal</Button>{item.type === 'full_bathroom' ? <Button variant="outline" onClick={() => updateItem(item.id, { hasShowerTray: !item.hasShowerTray })}>{item.hasShowerTray === false ? 'Añadir ducha' : 'Sin plato de ducha (-100 €)'}</Button> : null}</div> : null}</div>;
+  const updateBathroomWidth = (value: string) => {
+    const parsed = parseNumberInput(value);
+    if (!Number.isNaN(parsed)) resizeBathroom(item.id, parsed, item.height);
+  };
+  const updateBathroomHeight = (value: string) => {
+    const parsed = parseNumberInput(value);
+    if (!Number.isNaN(parsed)) resizeBathroom(item.id, item.width, parsed);
+  };
+
+  return (
+    <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+      <p className="font-black text-slate-900">Seleccionado: {item.label}</p>
+      <p className="mt-1 text-sm text-slate-600">X {item.x.toFixed(2)} m · Y {item.y.toFixed(2)} m · {item.width.toFixed(2)} x {item.height.toFixed(2)} m</p>
+      {item.parentId ? <p className="mt-2 rounded-xl bg-blue-50 p-3 text-sm font-semibold text-blue-900">Elemento interno del baño. Puedes arrastrarlo para colocarlo dentro del bloque.</p> : null}
+      {isDivision ? <div className="mt-3 flex flex-wrap gap-2"><Button variant="outline" onClick={() => setDivisionOrientation(item.id, 'transversal')}>Transversal</Button><Button variant="outline" onClick={() => setDivisionOrientation(item.id, 'longitudinal')}>Longitudinal</Button>{item.type === 'full_bathroom' ? <Button variant="outline" onClick={() => updateItem(item.id, { hasShowerTray: !item.hasShowerTray })}>{item.hasShowerTray === false ? 'Añadir ducha' : 'Sin plato de ducha (-100 €)'}</Button> : null}</div> : null}
+      {item.type === 'full_bathroom' ? (
+        <div className="mt-4 grid gap-4 sm:grid-cols-2">
+          <Field label="Ancho del baño (m)"><Input value={item.width.toFixed(2)} onChange={(event) => updateBathroomWidth(event.target.value)} /></Field>
+          <Field label="Fondo del baño (m)"><Input value={item.height.toFixed(2)} onChange={(event) => updateBathroomHeight(event.target.value)} /></Field>
+          <p className="rounded-xl bg-amber-50 p-3 text-xs font-semibold text-amber-900 sm:col-span-2">El bloque de baño se puede ampliar o reducir. Sus elementos internos se mantienen dentro del bloque y se pueden recolocar arrastrándolos.</p>
+        </div>
+      ) : null}
+    </div>
+  );
 };
 
 const ContactStep = ({ onSubmit, error }: { onSubmit: (contact: ContactFormState) => Promise<void>; error?: string }) => {
