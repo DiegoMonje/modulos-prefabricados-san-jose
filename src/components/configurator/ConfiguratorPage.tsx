@@ -19,6 +19,10 @@ import { useConfiguratorStore } from './store/useConfiguratorStore';
 const panelChoices: PanelChoice[] = ['Panel sándwich blanco 30 mm', 'Otro grosor de panel', 'Otro color de panel', 'Otro grosor y otro color'];
 const uses: UseType[] = ['Caseta de obra', 'Oficina', 'Almacén', 'Vestuario', 'Caseta para finca', 'Local comercial', 'Otro'];
 const timelines: DeliveryTimeline[] = ['Lo antes posible', 'En menos de 1 mes', 'En 1-3 meses', 'Más adelante', 'Solo estoy mirando precios'];
+const MIN_CUSTOM_WIDTH = 2;
+const MAX_CUSTOM_WIDTH = 3.5;
+
+const parseNumberInput = (value: string) => Number(value.replace(',', '.'));
 
 const contactSchema = z.object({
   fullName: z.string().min(2, 'Introduce tu nombre completo.'),
@@ -46,26 +50,55 @@ export const ConfiguratorPage = ({ onBack }: { onBack: () => void }) => {
   const [zoom, setZoom] = useState(1);
   const [submitted, setSubmitted] = useState(false);
   const [submitError, setSubmitError] = useState('');
+  const [stepError, setStepError] = useState('');
+  const [cadImage, setCadImage] = useState<string | null>(null);
   const store = useConfiguratorStore();
   const { config, selectedItemId } = store;
   const price = useMemo(() => calculatePrice(config), [config]);
   const totalSteps = 7;
 
   const next = () => setStep((prev) => Math.min(totalSteps, prev + 1));
-  const prev = () => setStep((previous) => Math.max(1, previous - 1));
+  const prev = () => {
+    setStepError('');
+    setStep((previous) => Math.max(1, previous - 1));
+  };
+
+  const captureCadImage = () => {
+    const image = exportStageAsPng(stageRef.current);
+    if (image) setCadImage(image);
+    return image;
+  };
 
   const validateCurrentStep = () => {
-    if (step === 1 && config.widthOption === 'Otro ancho' && (!config.customWidth || Number.isNaN(Number(config.customWidth)))) return false;
-    if (step === 2) {
-      if ((config.panelChoice === 'Otro grosor de panel' || config.panelChoice === 'Otro grosor y otro color') && !config.specialThickness.trim()) return false;
-      if ((config.panelChoice === 'Otro color de panel' || config.panelChoice === 'Otro grosor y otro color') && !config.specialColor.trim()) return false;
+    if (step === 1 && config.widthOption === 'Otro ancho') {
+      const customWidth = parseNumberInput(config.customWidth);
+      if (!config.customWidth.trim() || Number.isNaN(customWidth)) {
+        return 'Introduce un ancho válido en metros. Ejemplo: 2.60';
+      }
+      if (customWidth < MIN_CUSTOM_WIDTH || customWidth > MAX_CUSTOM_WIDTH) {
+        return `Introduce un ancho entre ${MIN_CUSTOM_WIDTH.toLocaleString('es-ES')} m y ${MAX_CUSTOM_WIDTH.toLocaleString('es-ES')} m. Para medidas superiores, consúltanos.`;
+      }
     }
-    if (step === 5 && (!config.province.trim() || !config.city.trim())) return false;
-    return true;
+    if (step === 2) {
+      if ((config.panelChoice === 'Otro grosor de panel' || config.panelChoice === 'Otro grosor y otro color') && !config.specialThickness.trim()) return 'Indica el grosor deseado del panel.';
+      if ((config.panelChoice === 'Otro color de panel' || config.panelChoice === 'Otro grosor y otro color') && !config.specialColor.trim()) return 'Indica el color deseado del panel.';
+    }
+    if (step === 5) {
+      if (!config.province.trim()) return 'Indica la provincia de instalación.';
+      if (!config.city.trim()) return 'Indica la localidad de instalación.';
+    }
+    return '';
   };
 
   const continueStep = () => {
-    if (!validateCurrentStep()) return;
+    const validationError = validateCurrentStep();
+    if (validationError) {
+      setStepError(validationError);
+      return;
+    }
+
+    setStepError('');
+    if (step === 4) captureCadImage();
     next();
   };
 
@@ -142,7 +175,6 @@ export const ConfiguratorPage = ({ onBack }: { onBack: () => void }) => {
                     onUndo={store.undo}
                     onRedo={store.redo}
                     onDelete={store.removeSelected}
-                    onRotate={store.rotateSelected}
                     onZoomIn={() => setZoom((z) => Math.min(1.6, Number((z + 0.1).toFixed(2))))}
                     onZoomOut={() => setZoom((z) => Math.max(0.75, Number((z - 0.1).toFixed(2))))}
                     onCenter={() => setZoom(1)}
@@ -158,9 +190,9 @@ export const ConfiguratorPage = ({ onBack }: { onBack: () => void }) => {
                 onSubmit={async (contact) => {
                   setSubmitError('');
                   try {
-                    const cadImage = exportStageAsPng(stageRef.current);
+                    const currentCadImage = cadImage ?? captureCadImage();
                     await createLead({ contact, config, price });
-                    downloadConfiguratorPdf({ contact, config, price, cadImage });
+                    downloadConfiguratorPdf({ contact, config, price, cadImage: currentCadImage });
                     sessionStorage.setItem('last_contact', JSON.stringify(contact));
                     setSubmitted(true);
                   } catch (error) {
@@ -170,6 +202,8 @@ export const ConfiguratorPage = ({ onBack }: { onBack: () => void }) => {
                 error={submitError}
               />
             )}
+
+            {stepError ? <p className="mt-6 rounded-2xl bg-red-50 p-4 text-sm font-semibold text-red-700">{stepError}</p> : null}
 
             <div className="mt-8 flex flex-col justify-between gap-3 border-t border-slate-200 pt-5 sm:flex-row">
               <Button variant="outline" onClick={prev} disabled={step === 1}><ArrowLeft size={18} /> Anterior</Button>
@@ -209,6 +243,12 @@ export const ConfiguratorPage = ({ onBack }: { onBack: () => void }) => {
 
 const MeasuresStep = () => {
   const { config, setMeasure } = useConfiguratorStore();
+  const setCustomWidth = (value: string) => {
+    const parsed = parseNumberInput(value);
+    const nextWidth = Number.isNaN(parsed) || parsed <= 0 ? config.width : parsed;
+    setMeasure(config.length, nextWidth, 'Otro ancho', value);
+  };
+
   return (
     <StepShell title="Elige las medidas de tu módulo" subtitle="El modelo recomendado es 6 x 2,40 m, desde 4.750 € sin IVA.">
       <div className="grid gap-4 sm:grid-cols-3">
@@ -217,10 +257,12 @@ const MeasuresStep = () => {
       <div className="mt-6 grid gap-3 sm:grid-cols-3">
         {[{label:'2,40 metros',value:2.4,option:'2.40 m' as const,helper:'Ancho estándar'}, {label:'2,50 metros',value:2.5,option:'2.50 m' as const,helper:'Opción habitual'}, {label:'Otro ancho',value:null,option:'Otro ancho' as const,helper:'Bajo consulta'}].map((option) => {
           const selected = config.widthOption === option.option;
-          return <button key={option.label} onClick={() => setMeasure(config.length, option.value ?? Number(config.customWidth || config.width), option.option, config.customWidth)} className={`rounded-2xl border p-4 text-left transition ${selected ? 'border-brand-blue bg-blue-50 text-brand-blue' : 'border-slate-200 hover:border-slate-300'}`}><p className="font-black">{option.label}</p><p className="mt-1 text-xs text-slate-500">{option.helper}</p></button>;
+          const customWidth = parseNumberInput(config.customWidth);
+          const widthValue = option.value ?? (Number.isNaN(customWidth) ? config.width : customWidth);
+          return <button key={option.label} onClick={() => setMeasure(config.length, widthValue, option.option, config.customWidth)} className={`rounded-2xl border p-4 text-left transition ${selected ? 'border-brand-blue bg-blue-50 text-brand-blue' : 'border-slate-200 hover:border-slate-300'}`}><p className="font-black">{option.label}</p><p className="mt-1 text-xs text-slate-500">{option.helper}</p></button>;
         })}
       </div>
-      {config.widthOption === 'Otro ancho' ? <div className="mt-5 max-w-xs"><Field label="Ancho deseado en metros"><Input value={config.customWidth} onChange={(e) => setMeasure(config.length, Number(e.target.value) || config.width, 'Otro ancho', e.target.value)} placeholder="Ej. 2.60" /></Field></div> : null}
+      {config.widthOption === 'Otro ancho' ? <div className="mt-5 max-w-xs"><Field label="Ancho deseado en metros"><Input value={config.customWidth} onChange={(e) => setCustomWidth(e.target.value)} placeholder="Ej. 2.60" /></Field><p className="mt-2 text-xs font-semibold text-slate-500">Rango permitido: {MIN_CUSTOM_WIDTH.toLocaleString('es-ES')} m a {MAX_CUSTOM_WIDTH.toLocaleString('es-ES')} m.</p></div> : null}
       {config.isSpecialMeasure ? <p className="mt-4 rounded-2xl bg-amber-50 p-4 text-sm font-bold text-amber-900">Esta medida se marcará como especial y puede requerir revisión técnica.</p> : null}
     </StepShell>
   );
