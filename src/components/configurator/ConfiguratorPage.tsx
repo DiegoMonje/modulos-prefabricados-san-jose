@@ -4,7 +4,7 @@ import type Konva from 'konva';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ArrowLeft, ArrowRight, CheckCircle2, Download, MessageCircle, Ruler, Send, Sparkles } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CheckCircle2, Download, MessageCircle } from 'lucide-react';
 import type { ContactFormState, DeliveryTimeline, LayoutItem, PanelChoice, UseType } from '../../types';
 import { calculatePrice, formatCurrency } from '../../utils/pricing';
 import { buildWhatsAppUrl } from '../../utils/whatsapp';
