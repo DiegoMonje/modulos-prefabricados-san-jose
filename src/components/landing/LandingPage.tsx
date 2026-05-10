@@ -19,6 +19,46 @@ const models = [
   ['Proyecto especial', '8 x 2,40 m', 'Bajo consulta técnica y transporte'],
 ] as const;
 
+
+const galleryImages = [
+  {
+    src: '/images/caseta-prefabricada-frontal-finca.webp',
+    title: 'Caseta para finca',
+    description: 'Módulo blanco con puerta y ventana, ideal para fincas, aperos y almacenamiento.',
+    alt: 'Caseta prefabricada blanca frontal para finca',
+  },
+  {
+    src: '/images/modulo-prefabricado-obra-dos-ventanas.webp',
+    title: 'Módulo para obra',
+    description: 'Módulo amplio con dos ventanas, preparado para uso profesional, obra u oficina.',
+    alt: 'Módulo prefabricado de obra con dos ventanas',
+  },
+  {
+    src: '/images/modulo-prefabricado-finca-dos-ventanas.webp',
+    title: 'Módulo grande',
+    description: 'Formato alargado con doble ventana para oficinas, vestuarios o almacenes.',
+    alt: 'Módulo prefabricado largo para finca con dos ventanas',
+  },
+  {
+    src: '/images/caseta-prefabricada-compacta-olivar.webp',
+    title: 'Caseta compacta',
+    description: 'Solución compacta para fincas, terrenos particulares y pequeños almacenes.',
+    alt: 'Caseta prefabricada compacta instalada en olivar',
+  },
+  {
+    src: '/images/interior-modulo-prefabricado-oficina.webp',
+    title: 'Interior acondicionado',
+    description: 'Interior con panel blanco, instalación eléctrica, iluminación y aire acondicionado.',
+    alt: 'Interior acondicionado de módulo prefabricado con instalación eléctrica',
+  },
+  {
+    src: '/images/modulo-prefabricado-perspectiva-jardin.webp',
+    title: 'Acabado premium',
+    description: 'Vista exterior en entorno ajardinado para mostrar el acabado final del módulo.',
+    alt: 'Módulo prefabricado visto en perspectiva en entorno ajardinado',
+  },
+] as const;
+
 export const LandingPage = ({ onStart, onLegalPage, onAdmin }: { onStart: () => void; onLegalPage: (page: 'aviso-legal' | 'privacidad' | 'cookies') => void; onAdmin: () => void }) => (
   <div className="min-h-screen bg-brand-light">
     <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur">
@@ -63,23 +103,23 @@ export const LandingPage = ({ onStart, onLegalPage, onAdmin }: { onStart: () => 
             </div>
           </div>
           <div className="rounded-[34px] border border-white/10 bg-white/10 p-4 shadow-2xl backdrop-blur">
-            <div className="rounded-[28px] bg-white p-5 text-slate-900 shadow-xl">
-              <div className="relative aspect-[1.8/1] overflow-hidden rounded-3xl border-4 border-slate-900 bg-slate-50">
-                <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(15,23,42,0.10)_1px,transparent_1px),linear-gradient(to_bottom,rgba(15,23,42,0.10)_1px,transparent_1px)] bg-[size:24px_24px]" />
-                <span className="absolute left-[42%] top-0 rounded border border-slate-900 bg-white px-3 py-1 text-xs font-black">P</span>
-                <span className="absolute left-[70%] top-0 rounded border border-blue-700 bg-white px-3 py-1 text-xs font-black text-blue-800">V</span>
-                <span className="absolute left-[18%] top-[45%] rounded-full border-2 border-slate-900 bg-white px-2 py-1 text-xs font-black">T</span>
-                <span className="absolute left-[50%] top-[45%] rounded-full border-2 border-yellow-600 bg-white px-2 py-1 text-xs font-black">PL</span>
-                <span className="absolute left-[8%] top-[12%] rounded border-2 border-slate-900 bg-white px-2 py-1 text-xs font-black">CE</span>
-              </div>
-              <div className="mt-5 flex items-center justify-between gap-3">
-                <div>
-                  <p className="text-xs font-black uppercase tracking-wide text-amber-700">Modelo más solicitado</p>
-                  <p className="text-3xl font-black">6 x 2,40 m</p>
+            <div className="overflow-hidden rounded-[28px] bg-white text-slate-900 shadow-xl">
+              <img
+                src="/images/hero-modulo-prefabricado-jardin.webp"
+                alt="Módulo prefabricado con panel sándwich blanco instalado en jardín"
+                className="h-[330px] w-full object-cover"
+                fetchPriority="high"
+              />
+              <div className="p-5">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-black uppercase tracking-wide text-amber-700">Modelo más solicitado</p>
+                    <p className="text-3xl font-black">6 x 2,40 m</p>
+                  </div>
+                  <span className="rounded-full bg-orange-50 px-4 py-2 text-sm font-black text-brand-orange">desde 4.750 € sin IVA</span>
                 </div>
-                <span className="rounded-full bg-orange-50 px-4 py-2 text-sm font-black text-brand-orange">desde 4.750 € sin IVA</span>
+                <p className="mt-3 text-sm font-semibold text-slate-600">Precio orientativo sujeto a medidas finales, extras, transporte, montaje y revisión técnica.</p>
               </div>
-              <p className="mt-3 text-sm font-semibold text-slate-600">Precio orientativo sujeto a medidas finales, extras, transporte, montaje y revisión técnica.</p>
             </div>
           </div>
         </div>
@@ -154,12 +194,30 @@ export const LandingPage = ({ onStart, onLegalPage, onAdmin }: { onStart: () => 
       <section id="galeria" className="bg-slate-50 py-16">
         <div className="container-page">
           <div className="mx-auto max-w-3xl text-center">
-            <span className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-4 py-2 text-sm font-black text-brand-blue"><ImageIcon size={16} /> Galería preparada para imágenes reales</span>
+            <span className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-4 py-2 text-sm font-black text-brand-blue"><ImageIcon size={16} /> Galería de módulos prefabricados</span>
             <h2 className="mt-4 text-3xl font-black text-slate-900 md:text-4xl">Ejemplos de acabados exteriores e interiores</h2>
-            <p className="mt-3 text-slate-600">Añade tus fotos reales en `/public/images` y sustituye estos espacios por módulos fabricados.</p>
+            <p className="mt-3 text-slate-600">Diferentes formatos de casetas y módulos con panel sándwich para fincas, obras, oficinas y espacios auxiliares.</p>
           </div>
-          <div className="mt-10 grid gap-5 md:grid-cols-4">
-            {[1,2,3,4].map((n) => <div key={n} className="rounded-3xl border border-dashed border-slate-300 bg-white p-10 text-center font-black text-slate-400">Imagen real {n}</div>)}
+          <div className="mt-10 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+            {galleryImages.map((image) => (
+              <Card key={image.src} className="overflow-hidden p-0">
+                <img src={image.src} alt={image.alt} className="h-64 w-full object-cover" loading="lazy" />
+                <div className="p-5">
+                  <h3 className="font-black text-slate-900">{image.title}</h3>
+                  <p className="mt-2 text-sm font-semibold text-slate-600">{image.description}</p>
+                </div>
+              </Card>
+            ))}
+          </div>
+          <div className="mt-10 rounded-3xl bg-slate-950 p-6 text-white md:flex md:items-center md:justify-between">
+            <div>
+              <h3 className="text-2xl font-black">¿Quieres un módulo parecido?</h3>
+              <p className="mt-2 text-slate-300">Configura medidas, distribución y extras. Te preparamos presupuesto personalizado.</p>
+            </div>
+            <div className="mt-5 flex flex-col gap-3 sm:flex-row md:mt-0">
+              <Button onClick={onStart}>Calcular mi módulo</Button>
+              <a href={whatsappContactUrl} target="_blank" rel="noreferrer"><Button variant="outline" className="border-white/30 bg-white/10 text-white hover:bg-white/20">WhatsApp</Button></a>
+            </div>
           </div>
         </div>
       </section>
