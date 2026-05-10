@@ -21,8 +21,10 @@ const colorFor = (item: LayoutItem, selected: boolean, hasError: boolean, hasWar
   return '#f8fafc';
 };
 
-const isDoor = (item: LayoutItem) => item.type === 'base_door' || item.type === 'additional_door';
-const isWindow = (item: LayoutItem) => item.type === 'base_window_80x80' || item.type === 'window_80x80' || item.type === 'large_window';
+const isDoor = (item: LayoutItem) => item.type === 'base_door' || item.type === 'additional_door' || item.type === 'bathroom_door';
+const isWindow = (item: LayoutItem) => item.type === 'base_window_80x80' || item.type === 'window_80x80' || item.type === 'large_window' || item.type === 'bathroom_window_40x40';
+const isLight = (item: LayoutItem) => item.type === 'base_light_point' || item.type === 'bathroom_light_point';
+const isSocket = (item: LayoutItem) => item.type === 'base_socket' || item.type === 'additional_socket' || item.type === 'bathroom_socket';
 const isDivision = (item: LayoutItem) => ['interior_room', 'full_bathroom', 'wall_partition'].includes(item.type);
 
 const CadObjectSymbol = ({ item, selected, geometry, hasError, hasWarning }: { item: LayoutItem; selected: boolean; geometry: PlanGeometry; hasError: boolean; hasWarning: boolean }) => {
@@ -31,8 +33,8 @@ const CadObjectSymbol = ({ item, selected, geometry, hasError, hasWarning }: { i
 
   if (isDoor(item)) return <DoorSymbol x={box.x} y={box.y} width={box.width} height={box.height} color={color} side={item.side} />;
   if (isWindow(item)) return <WindowSymbol x={box.x} y={box.y} width={box.width} height={box.height} color={color} />;
-  if (item.type === 'base_socket' || item.type === 'additional_socket') return <SocketSymbol x={box.x} y={box.y} width={box.width} height={box.height} color={color} />;
-  if (item.type === 'base_light_point') return <LightSymbol x={box.x} y={box.y} width={box.width} height={box.height} color={color} />;
+  if (isSocket(item)) return <SocketSymbol x={box.x} y={box.y} width={box.width} height={box.height} color={color} />;
+  if (isLight(item)) return <LightSymbol x={box.x} y={box.y} width={box.width} height={box.height} color={color} />;
   if (item.type === 'base_electrical_panel') return <ElectricalPanelSymbol x={box.x} y={box.y} width={box.width} height={box.height} color={color} />;
   if (item.type === 'air_conditioning') return <AirConditioningSymbol x={box.x} y={box.y} width={box.width} height={box.height} color={color} />;
   if (item.type === 'wall_partition') return <Rect x={box.x} y={box.y} width={box.width} height={box.height} fill={color} opacity={0.95} shadowBlur={4} />;
