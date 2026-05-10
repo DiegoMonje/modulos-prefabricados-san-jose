@@ -35,11 +35,16 @@ export type LayoutItemType =
   | 'wall_partition'
   | 'interior_room'
   | 'full_bathroom'
+  | 'bathroom_door'
+  | 'bathroom_window_40x40'
+  | 'bathroom_light_point'
+  | 'bathroom_socket'
   | 'air_conditioning';
 
 export type LayoutZone = 'edge' | 'inside';
 export type EdgeSide = 'top' | 'right' | 'bottom' | 'left';
 export type DivisionOrientation = 'transversal' | 'longitudinal';
+export type BathroomChildType = 'door' | 'window' | 'light' | 'socket';
 
 export interface LayoutItem {
   id: string;
@@ -56,6 +61,8 @@ export interface LayoutItem {
   included?: boolean;
   orientation?: DivisionOrientation;
   hasShowerTray?: boolean;
+  parentId?: string;
+  bathroomChildType?: BathroomChildType;
 }
 
 export interface ConfiguratorState {
