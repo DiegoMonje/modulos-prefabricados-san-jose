@@ -3,7 +3,7 @@ import type Konva from 'konva';
 import { Layer, Rect, Stage, Text } from 'react-konva';
 import { RotateCcw, Smartphone } from 'lucide-react';
 import type { LayoutItem } from '../../../types';
-import { buildCadWarnings } from './utils/collisions';
+import { validateCadLayout } from './utils/collisions';
 import { calculatePlanGeometry } from './utils/coordinates';
 import { CadGrid } from './CadGrid';
 import { CadObjectsLayer } from './CadObjectsLayer';
@@ -34,7 +34,9 @@ export const CadStage = forwardRef<Konva.Stage, {
   }, []);
 
   const geometry = useMemo(() => calculatePlanGeometry(availableWidth, length, width, zoom), [availableWidth, length, width, zoom]);
-  const warnings = useMemo(() => buildCadWarnings(items), [items]);
+  const validationIssues = useMemo(() => validateCadLayout(items, length, width), [items, length, width]);
+  const errorItemIds = useMemo(() => validationIssues.flatMap((issue) => issue.severity === 'error' ? [issue.itemId, issue.relatedItemId].filter(Boolean) as string[] : []), [validationIssues]);
+  const warningItemIds = useMemo(() => validationIssues.flatMap((issue) => issue.severity === 'warning' ? [issue.itemId, issue.relatedItemId].filter(Boolean) as string[] : []), [validationIssues]);
   const selectedItem = items.find((item) => item.id === selectedItemId) || null;
 
   return (
@@ -63,7 +65,7 @@ export const CadStage = forwardRef<Konva.Stage, {
             <CadWalls geometry={geometry} />
           </Layer>
           <Layer>
-            <CadObjectsLayer items={items} selectedItemId={selectedItemId} geometry={geometry} onSelect={onSelect} onMove={onMove} />
+            <CadObjectsLayer items={items} selectedItemId={selectedItemId} geometry={geometry} errorItemIds={errorItemIds} warningItemIds={warningItemIds} onSelect={onSelect} onMove={onMove} />
             <CadSelectionLayer selectedItem={selectedItem} geometry={geometry} />
           </Layer>
           <Layer listening={false}>
@@ -78,11 +80,11 @@ export const CadStage = forwardRef<Konva.Stage, {
           </Layer>
         </Stage>
       </div>
-      {warnings.length ? (
+      {validationIssues.length ? (
         <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm font-semibold text-amber-950">
           <p className="font-black">Avisos técnicos del plano</p>
           <ul className="mt-2 list-disc space-y-1 pl-5">
-            {warnings.map((warning) => <li key={warning}>{warning}</li>)}
+            {validationIssues.slice(0, 8).map((issue) => <li key={issue.id} className={issue.severity === 'error' ? 'text-red-700' : 'text-amber-950'}>{issue.message}</li>)}
           </ul>
         </div>
       ) : null}
