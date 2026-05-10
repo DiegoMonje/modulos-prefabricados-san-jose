@@ -138,7 +138,8 @@ export const getDefaultItemSize = (type: LayoutItemType) => {
     case 'interior_room':
       return { width: 6, height: 1.5 };
     case 'full_bathroom':
-      return { width: 2.0, height: 1.2 };
+      // El store lo normaliza para que el baño transversal ocupe todo el ancho real del módulo.
+      return { width: 1.5, height: 2.4 };
     case 'air_conditioning':
       return { width: 0.55, height: 0.28 };
     default:
@@ -197,7 +198,7 @@ export const summarizeLayoutItems = (items: LayoutItem[]): LayoutSummary => {
   if (largeWindows) extrasList.push(`${largeWindows} ventana(s) grande(s)`);
   if (wallPartitions) extrasList.push(`${wallPartitions} tabique(s) simple(s)`);
   if (interiorRooms) extrasList.push(`${interiorRooms} habitación(es) interior(es) · incluye puerta, ventana 80x80, punto de luz y enchufe`);
-  if (fullBathrooms) extrasList.push(`${fullBathrooms} baño(s) completo(s) · incluye puerta, ventana 40x40, punto de luz, enchufe, lavabo, váter y ducha opcional`);
+  if (fullBathrooms) extrasList.push(`${fullBathrooms} baño(s) completo(s) · bloque ajustado al ancho del módulo, con puerta, ventana 40x40, punto de luz, enchufe, lavabo, váter y ducha opcional`);
   if (hasAirConditioning) extrasList.push('aire acondicionado');
 
   return {

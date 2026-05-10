@@ -21,6 +21,7 @@ const colorFor = (item: LayoutItem, selected: boolean) => {
 
 const isDoor = (item: LayoutItem) => item.type === 'base_door' || item.type === 'additional_door';
 const isWindow = (item: LayoutItem) => item.type === 'base_window_80x80' || item.type === 'window_80x80' || item.type === 'large_window';
+const isDivision = (item: LayoutItem) => ['interior_room', 'full_bathroom', 'wall_partition'].includes(item.type);
 
 const CadObjectSymbol = ({ item, selected, geometry }: { item: LayoutItem; selected: boolean; geometry: PlanGeometry }) => {
   const box = itemToBox(item, geometry);
@@ -66,16 +67,39 @@ export const CadObjectsLayer = ({
   onSelect: (id: string | null) => void;
   onMove: (id: string, x: number, y: number) => void;
 }) => {
-  const sortedItems = [...items].sort((a, b) => (a.type.includes('room') || a.type.includes('bathroom') || a.type === 'wall_partition' ? -1 : 1) - (b.type.includes('room') || b.type.includes('bathroom') || b.type === 'wall_partition' ? -1 : 1));
+  const sortedItems = [...items].sort((a, b) => Number(isDivision(b)) - Number(isDivision(a)));
+
   return (
     <Group>
       {sortedItems.map((item) => {
         const box = itemToBox(item, geometry);
         const selected = selectedItemId === item.id;
+
+        const dragBoundFunc = (pos: { x: number; y: number }) => {
+          const minDx = geometry.planX - box.x;
+          const maxDx = geometry.planX + geometry.planWidth - (box.x + box.width);
+          const minDy = geometry.planY - box.y;
+          const maxDy = geometry.planY + geometry.planHeight - (box.y + box.height);
+
+          return {
+            x: Math.max(minDx, Math.min(maxDx, pos.x)),
+            y: Math.max(minDy, Math.min(maxDy, pos.y)),
+          };
+        };
+
         return (
           <Group
             key={item.id}
             draggable
+            dragBoundFunc={dragBoundFunc}
+            onMouseDown={(event) => {
+              event.cancelBubble = true;
+              onSelect(item.id);
+            }}
+            onTouchStart={(event) => {
+              event.cancelBubble = true;
+              onSelect(item.id);
+            }}
             onClick={(event) => {
               event.cancelBubble = true;
               onSelect(item.id);
@@ -86,8 +110,11 @@ export const CadObjectsLayer = ({
             }}
             onDragEnd={(event: KonvaEventObject<DragEvent>) => {
               const node = event.target;
-              const x = pxToMeters(node.x() - geometry.planX, geometry);
-              const y = pxToMeters(node.y() - geometry.planY, geometry);
+              const newTopLeftPxX = box.x + node.x();
+              const newTopLeftPxY = box.y + node.y();
+              const x = pxToMeters(newTopLeftPxX - geometry.planX, geometry);
+              const y = pxToMeters(newTopLeftPxY - geometry.planY, geometry);
+
               node.position({ x: 0, y: 0 });
               onMove(item.id, x, y);
             }}

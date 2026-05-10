@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import type { ConfiguratorState, DeliveryTimeline, DivisionOrientation, LayoutItem, LayoutItemType, PanelChoice, UseType } from '../../../types';
 import { createBaseLayoutItems, getDefaultItemSize, ITEM_LABELS, ITEM_PRICES } from '../../../utils/pricing';
-import { clampInsideItem, normalizeEdgeItem } from '../cad/utils/coordinates';
+import { normalizeEdgeItem, normalizeInsideItem } from '../cad/utils/coordinates';
 
 const initialConfig: ConfiguratorState = {
   length: 6,
@@ -50,6 +50,11 @@ const cloneLayout = (items: LayoutItem[]) => items.map((item) => ({ ...item }));
 const isEdgeType = (type: LayoutItemType) => ['base_door', 'additional_door', 'base_window_80x80', 'window_80x80', 'large_window'].includes(type);
 const isDivisionType = (type: LayoutItemType) => ['wall_partition', 'interior_room', 'full_bathroom'].includes(type);
 
+const normalizeItemForModule = (item: LayoutItem, x: number, y: number, length: number, width: number) =>
+  item.zone === 'edge'
+    ? normalizeEdgeItem(item, x, y, length, width)
+    : normalizeInsideItem(item, x, y, length, width);
+
 export const useConfiguratorStore = create<Store>((set, get) => ({
   config: initialConfig,
   selectedItemId: null,
@@ -64,10 +69,7 @@ export const useConfiguratorStore = create<Store>((set, get) => ({
         widthOption,
         customWidth,
         isSpecialMeasure: length === 8 || widthOption === 'Otro ancho' || width < 2 || width > 3,
-        layoutItems: state.config.layoutItems.map((item) => {
-          if (item.zone === 'edge') return normalizeEdgeItem(item, item.x, item.y, length, width);
-          return clampInsideItem(item, item.x, item.y, length, width);
-        }),
+        layoutItems: state.config.layoutItems.map((item) => normalizeItemForModule(item, item.x, item.y, length, width)),
       },
     }));
   },
@@ -107,8 +109,8 @@ export const useConfiguratorStore = create<Store>((set, get) => ({
       id: crypto.randomUUID(),
       type,
       label: ITEM_LABELS[type],
-      x: isEdgeType(type) ? 0.6 + index * 0.5 : Math.min(0.6 + index * 0.35, config.length - size.width),
-      y: isEdgeType(type) ? 0 : Math.min(0.5 + index * 0.2, config.width - size.height),
+      x: isEdgeType(type) ? 0.6 + index * 0.5 : Math.min(0.6 + index * 0.35, Math.max(0, config.length - size.width)),
+      y: isEdgeType(type) ? 0 : Math.min(0.5 + index * 0.2, Math.max(0, config.width - size.height)),
       width: size.width,
       height: size.height,
       rotation: 0,
@@ -119,9 +121,7 @@ export const useConfiguratorStore = create<Store>((set, get) => ({
       orientation: isDivisionType(type) ? 'transversal' : undefined,
       hasShowerTray: type === 'full_bathroom' ? true : undefined,
     };
-    const normalized = draft.zone === 'edge'
-      ? normalizeEdgeItem(draft, draft.x, draft.y, config.length, config.width)
-      : clampInsideItem(draft, draft.x, draft.y, config.length, config.width);
+    const normalized = normalizeItemForModule(draft, draft.x, draft.y, config.length, config.width);
     set((state) => ({
       undoStack: [...state.undoStack.slice(-30), cloneLayout(state.config.layoutItems)],
       redoStack: [],
@@ -134,7 +134,14 @@ export const useConfiguratorStore = create<Store>((set, get) => ({
     set((state) => ({
       undoStack: recordHistory ? [...state.undoStack.slice(-30), cloneLayout(config.layoutItems)] : state.undoStack,
       redoStack: recordHistory ? [] : state.redoStack,
-      config: { ...state.config, layoutItems: state.config.layoutItems.map((item) => (item.id === id ? { ...item, ...patch } : item)) },
+      config: {
+        ...state.config,
+        layoutItems: state.config.layoutItems.map((item) => {
+          if (item.id !== id) return item;
+          const updated = { ...item, ...patch };
+          return normalizeItemForModule(updated, updated.x, updated.y, state.config.length, state.config.width);
+        }),
+      },
     }));
   },
   moveItem: (id, x, y) => {
@@ -147,9 +154,7 @@ export const useConfiguratorStore = create<Store>((set, get) => ({
         ...state.config,
         layoutItems: state.config.layoutItems.map((item) => {
           if (item.id !== id) return item;
-          return item.zone === 'edge'
-            ? normalizeEdgeItem(item, x, y, state.config.length, state.config.width)
-            : clampInsideItem(item, x, y, state.config.length, state.config.width);
+          return normalizeItemForModule(item, x, y, state.config.length, state.config.width);
         }),
       },
     }));
@@ -175,7 +180,7 @@ export const useConfiguratorStore = create<Store>((set, get) => ({
         ...state.config,
         layoutItems: state.config.layoutItems.map((item) => {
           if (item.id !== selectedItemId) return item;
-          return { ...item, rotation: (((item.rotation + 90) % 360) as LayoutItem['rotation']) };
+          return normalizeItemForModule({ ...item, rotation: (((item.rotation + 90) % 360) as LayoutItem['rotation']) }, item.x, item.y, state.config.length, state.config.width);
         }),
       },
     }));
@@ -189,22 +194,8 @@ export const useConfiguratorStore = create<Store>((set, get) => ({
         ...state.config,
         layoutItems: state.config.layoutItems.map((item) => {
           if (item.id !== id) return item;
-          if (item.type === 'wall_partition') {
-            return orientation === 'transversal'
-              ? { ...item, orientation, x: 0, y: Math.min(item.y, state.config.width - 0.08), width: state.config.length, height: 0.08 }
-              : { ...item, orientation, x: Math.min(item.x, state.config.length - 0.08), y: 0, width: 0.08, height: state.config.width };
-          }
-          if (item.type === 'interior_room') {
-            return orientation === 'transversal'
-              ? { ...item, orientation, x: 0, width: state.config.length, height: Math.max(1.5, Math.min(item.height, state.config.width)) }
-              : { ...item, orientation, y: 0, height: state.config.width, width: Math.max(1.5, Math.min(item.width, state.config.length)) };
-          }
-          if (item.type === 'full_bathroom') {
-            return orientation === 'transversal'
-              ? { ...item, orientation, x: 0, width: Math.min(2.2, state.config.length), height: Math.max(1.2, Math.min(item.height, state.config.width)) }
-              : { ...item, orientation, y: 0, height: Math.min(1.7, state.config.width), width: Math.max(1.2, Math.min(item.width, state.config.length)) };
-          }
-          return item;
+          const oriented = { ...item, orientation };
+          return normalizeItemForModule(oriented, oriented.x, oriented.y, state.config.length, state.config.width);
         }),
       },
     }));
