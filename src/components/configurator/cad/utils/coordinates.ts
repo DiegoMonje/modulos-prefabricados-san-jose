@@ -6,9 +6,9 @@ export const GRID_MAJOR_METERS = 1;
 
 const OPENING_DEPTH = 0.1;
 const WALL_PARTITION_THICKNESS = 0.08;
-const MIN_BATHROOM_DEPTH = 1.2;
-const MAX_BATHROOM_DEPTH = 2.2;
-const MAX_BATHROOM_LONGITUDINAL_DEPTH = 1.7;
+const MIN_BATHROOM_SIZE = 1.2;
+const MAX_BATHROOM_LENGTH = 3.5;
+const MAX_BATHROOM_WIDTH = 2.4;
 const MIN_ROOM_DEPTH = 1.5;
 
 export interface PlanGeometry {
@@ -93,12 +93,22 @@ export const clampInsideItem = (item: LayoutItem, x: number, y: number, length: 
   y: clamp(snapMeters(y), 0, Math.max(0, width - item.height)),
 });
 
-/**
- * Normaliza elementos interiores especiales para que se comporten como bloques técnicos:
- * - Baño transversal: ocupa todo el ancho real del módulo y se mueve solo a lo largo.
- * - Baño longitudinal: ocupa todo el largo real del módulo y se mueve solo a lo ancho.
- * - Habitación/tabique: se ajustan a la orientación sin salirse del módulo.
- */
+export const normalizeBathroomChildItem = (item: LayoutItem, parent: LayoutItem, x: number, y: number): LayoutItem => {
+  const childWidth = item.width;
+  const childHeight = item.height;
+  const minX = parent.x;
+  const maxX = parent.x + parent.width - childWidth;
+  const minY = parent.y;
+  const maxY = parent.y + parent.height - childHeight;
+
+  return {
+    ...item,
+    zone: 'inside',
+    x: clamp(snapMeters(x), minX, Math.max(minX, maxX)),
+    y: clamp(snapMeters(y), minY, Math.max(minY, maxY)),
+  };
+};
+
 export const normalizeInsideItem = (item: LayoutItem, x: number, y: number, length: number, width: number): LayoutItem => {
   const snappedX = snapMeters(x);
   const snappedY = snapMeters(y);
@@ -155,27 +165,15 @@ export const normalizeInsideItem = (item: LayoutItem, x: number, y: number, leng
   }
 
   if (item.type === 'full_bathroom') {
-    if (orientation === 'transversal') {
-      const bathroomDepth = clamp(item.width || MIN_BATHROOM_DEPTH, MIN_BATHROOM_DEPTH, Math.min(MAX_BATHROOM_DEPTH, length));
-      return {
-        ...item,
-        orientation,
-        x: clamp(snappedX, 0, Math.max(0, length - bathroomDepth)),
-        y: 0,
-        width: bathroomDepth,
-        height: width,
-        zone: 'inside',
-      };
-    }
-
-    const bathroomDepth = clamp(item.height || MIN_BATHROOM_DEPTH, MIN_BATHROOM_DEPTH, Math.min(MAX_BATHROOM_LONGITUDINAL_DEPTH, width));
+    const bathroomWidth = clamp(item.width || MIN_BATHROOM_SIZE, MIN_BATHROOM_SIZE, Math.min(MAX_BATHROOM_LENGTH, length));
+    const bathroomHeight = clamp(item.height || MIN_BATHROOM_SIZE, MIN_BATHROOM_SIZE, Math.min(MAX_BATHROOM_WIDTH, width));
     return {
       ...item,
       orientation,
-      x: 0,
-      y: clamp(snappedY, 0, Math.max(0, width - bathroomDepth)),
-      width: length,
-      height: bathroomDepth,
+      x: clamp(snappedX, 0, Math.max(0, length - bathroomWidth)),
+      y: clamp(snappedY, 0, Math.max(0, width - bathroomHeight)),
+      width: bathroomWidth,
+      height: bathroomHeight,
       zone: 'inside',
     };
   }
