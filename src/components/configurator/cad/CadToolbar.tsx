@@ -1,5 +1,5 @@
 import type { ElementType } from 'react';
-import { Copy, DoorOpen, Grid3X3, RotateCw, Snowflake, Trash2, Undo2, Redo2, ZoomIn, ZoomOut, House, Bath, SquareDashedMousePointer, Plug, PanelsTopLeft } from 'lucide-react';
+import { Copy, DoorOpen, Grid3X3, Snowflake, Trash2, Undo2, Redo2, ZoomIn, ZoomOut, House, Bath, SquareDashedMousePointer, Plug, PanelsTopLeft } from 'lucide-react';
 import type { LayoutItemType } from '../../../types';
 import { formatCurrency, ITEM_LABELS, ITEM_PRICES } from '../../../utils/pricing';
 
@@ -19,7 +19,6 @@ export const CadToolbar = ({
   onUndo,
   onRedo,
   onDelete,
-  onRotate,
   onZoomIn,
   onZoomOut,
   onCenter,
@@ -28,7 +27,6 @@ export const CadToolbar = ({
   onUndo: () => void;
   onRedo: () => void;
   onDelete: () => void;
-  onRotate: () => void;
   onZoomIn: () => void;
   onZoomOut: () => void;
   onCenter: () => void;
@@ -49,7 +47,6 @@ export const CadToolbar = ({
     <div className="grid grid-cols-2 gap-2 border-t border-slate-200 pt-4">
       <button className="btn-outline px-3 py-2 text-sm" onClick={onUndo}><Undo2 size={16} /> Deshacer</button>
       <button className="btn-outline px-3 py-2 text-sm" onClick={onRedo}><Redo2 size={16} /> Rehacer</button>
-      <button className="btn-outline px-3 py-2 text-sm" onClick={onRotate}><RotateCw size={16} /> Girar</button>
       <button className="btn-outline px-3 py-2 text-sm" onClick={onDelete}><Trash2 size={16} /> Borrar</button>
       <button className="btn-outline px-3 py-2 text-sm" onClick={onZoomOut}><ZoomOut size={16} /> Zoom -</button>
       <button className="btn-outline px-3 py-2 text-sm" onClick={onZoomIn}><ZoomIn size={16} /> Zoom +</button>
