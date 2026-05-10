@@ -35,6 +35,8 @@ export const CadStage = forwardRef<Konva.Stage, {
 
   const geometry = useMemo(() => calculatePlanGeometry(availableWidth, length, width, zoom), [availableWidth, length, width, zoom]);
   const validationIssues = useMemo(() => validateCadLayout(items, length, width), [items, length, width]);
+  const errorCount = validationIssues.filter((issue) => issue.severity === 'error').length;
+  const warningCount = validationIssues.filter((issue) => issue.severity === 'warning').length;
   const errorItemIds = useMemo(() => validationIssues.flatMap((issue) => issue.severity === 'error' ? [issue.itemId, issue.relatedItemId].filter(Boolean) as string[] : []), [validationIssues]);
   const warningItemIds = useMemo(() => validationIssues.flatMap((issue) => issue.severity === 'warning' ? [issue.itemId, issue.relatedItemId].filter(Boolean) as string[] : []), [validationIssues]);
   const selectedItem = items.find((item) => item.id === selectedItemId) || null;
@@ -50,6 +52,14 @@ export const CadStage = forwardRef<Konva.Stage, {
         </div>
         <p className="text-lg font-black">Gira el móvil</p>
         <p className="mt-1 text-sm font-semibold">Para usar el plano 2D correctamente, pon el teléfono en horizontal.</p>
+      </div>
+      <div className="mb-4 rounded-2xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-950">
+        <p className="font-black">Revisión técnica automática activa</p>
+        <p className="mt-1 font-semibold">
+          {errorCount === 0 && warningCount === 0
+            ? 'El plano no tiene incidencias detectadas en esta revisión inicial.'
+            : `${errorCount} error(es) y ${warningCount} aviso(s) detectados. Los elementos afectados aparecen marcados en rojo o ámbar.`}
+        </p>
       </div>
       <div ref={shellRef} className="overflow-auto rounded-[28px] border border-slate-700/70 bg-slate-950 p-3 shadow-2xl shadow-slate-950/30">
         <Stage ref={ref} width={geometry.stageWidth} height={geometry.stageHeight} onMouseDown={(event) => { if (event.target === event.target.getStage()) onSelect(null); }} onTouchStart={(event) => { if (event.target === event.target.getStage()) onSelect(null); }}>
