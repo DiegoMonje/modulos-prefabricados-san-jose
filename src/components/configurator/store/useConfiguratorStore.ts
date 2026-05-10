@@ -241,7 +241,7 @@ export const useConfiguratorStore = create<Store>((set, get) => ({
       const current = state.config.layoutItems.find((item) => item.id === id);
       let dx = 0;
       let dy = 0;
-      let movedParent: LayoutItem | null = null;
+      let movedParent: LayoutItem | undefined;
 
       let layoutItems = state.config.layoutItems.map((item) => {
         if (item.id !== id) return item;
@@ -255,9 +255,10 @@ export const useConfiguratorStore = create<Store>((set, get) => ({
       });
 
       if (movedParent) {
+        const bathroom = movedParent;
         layoutItems = layoutItems.map((item) => {
-          if (item.parentId !== movedParent.id) return item;
-          return normalizeBathroomChildItem(item, movedParent, item.x + dx, item.y + dy);
+          if (item.parentId !== bathroom.id) return item;
+          return normalizeBathroomChildItem(item, bathroom, item.x + dx, item.y + dy);
         });
       }
 
