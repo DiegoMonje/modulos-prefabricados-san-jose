@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import type { ConfiguratorState, DeliveryTimeline, DivisionOrientation, LayoutItem, LayoutItemType, PanelChoice, UseType } from '../../../types';
 import { createBaseLayoutItems, getDefaultItemSize, ITEM_LABELS, ITEM_PRICES } from '../../../utils/pricing';
-import { normalizeEdgeItem, normalizeInsideItem } from '../cad/utils/coordinates';
+import { normalizeBathroomChildItem, normalizeEdgeItem, normalizeInsideItem } from '../cad/utils/coordinates';
 
 const initialConfig: ConfiguratorState = {
   length: 6,
@@ -40,6 +40,7 @@ type Store = {
   removeSelected: () => void;
   rotateSelected: () => void;
   setDivisionOrientation: (id: string, orientation: DivisionOrientation) => void;
+  resizeBathroom: (id: string, width: number, height: number) => void;
   undo: () => void;
   redo: () => void;
   reset: () => void;
@@ -49,11 +50,87 @@ const cloneLayout = (items: LayoutItem[]) => items.map((item) => ({ ...item }));
 
 const isEdgeType = (type: LayoutItemType) => ['base_door', 'additional_door', 'base_window_80x80', 'window_80x80', 'large_window'].includes(type);
 const isDivisionType = (type: LayoutItemType) => ['wall_partition', 'interior_room', 'full_bathroom'].includes(type);
+const isBathroomChildType = (type: LayoutItemType) => ['bathroom_door', 'bathroom_window_40x40', 'bathroom_light_point', 'bathroom_socket'].includes(type);
 
-const normalizeItemForModule = (item: LayoutItem, x: number, y: number, length: number, width: number) =>
-  item.zone === 'edge'
+const normalizeItemForModule = (item: LayoutItem, x: number, y: number, length: number, width: number, items: LayoutItem[] = []) => {
+  if (isBathroomChildType(item.type) && item.parentId) {
+    const parent = items.find((candidate) => candidate.id === item.parentId);
+    if (parent) return normalizeBathroomChildItem(item, parent, x, y);
+  }
+
+  return item.zone === 'edge'
     ? normalizeEdgeItem(item, x, y, length, width)
     : normalizeInsideItem(item, x, y, length, width);
+};
+
+const createBathroomChildren = (bathroom: LayoutItem): LayoutItem[] => [
+  {
+    id: `${bathroom.id}-door`,
+    type: 'bathroom_door',
+    label: ITEM_LABELS.bathroom_door,
+    x: bathroom.x + 0.2,
+    y: bathroom.y + bathroom.height - 0.08,
+    width: 0.7,
+    height: 0.08,
+    rotation: 0,
+    zone: 'inside',
+    price: 0,
+    included: true,
+    parentId: bathroom.id,
+    bathroomChildType: 'door',
+  },
+  {
+    id: `${bathroom.id}-window`,
+    type: 'bathroom_window_40x40',
+    label: ITEM_LABELS.bathroom_window_40x40,
+    x: bathroom.x + bathroom.width - 0.6,
+    y: bathroom.y,
+    width: 0.4,
+    height: 0.08,
+    rotation: 0,
+    zone: 'inside',
+    price: 0,
+    included: true,
+    parentId: bathroom.id,
+    bathroomChildType: 'window',
+  },
+  {
+    id: `${bathroom.id}-light`,
+    type: 'bathroom_light_point',
+    label: ITEM_LABELS.bathroom_light_point,
+    x: bathroom.x + bathroom.width / 2 - 0.14,
+    y: bathroom.y + bathroom.height / 2 - 0.14,
+    width: 0.28,
+    height: 0.28,
+    rotation: 0,
+    zone: 'inside',
+    price: 0,
+    included: true,
+    parentId: bathroom.id,
+    bathroomChildType: 'light',
+  },
+  {
+    id: `${bathroom.id}-socket`,
+    type: 'bathroom_socket',
+    label: ITEM_LABELS.bathroom_socket,
+    x: bathroom.x + 0.2,
+    y: bathroom.y + 0.2,
+    width: 0.28,
+    height: 0.28,
+    rotation: 0,
+    zone: 'inside',
+    price: 0,
+    included: true,
+    parentId: bathroom.id,
+    bathroomChildType: 'socket',
+  },
+];
+
+const normalizeBathroomChildrenForParent = (items: LayoutItem[], bathroom: LayoutItem) =>
+  items.map((item) => {
+    if (item.parentId !== bathroom.id) return item;
+    return normalizeBathroomChildItem(item, bathroom, item.x, item.y);
+  });
 
 export const useConfiguratorStore = create<Store>((set, get) => ({
   config: initialConfig,
@@ -61,17 +138,25 @@ export const useConfiguratorStore = create<Store>((set, get) => ({
   undoStack: [],
   redoStack: [],
   setMeasure: (length, width, widthOption, customWidth = '') => {
-    set((state) => ({
-      config: {
-        ...state.config,
-        length,
-        width,
-        widthOption,
-        customWidth,
-        isSpecialMeasure: length === 8 || widthOption === 'Otro ancho' || width < 2 || width > 3,
-        layoutItems: state.config.layoutItems.map((item) => normalizeItemForModule(item, item.x, item.y, length, width)),
-      },
-    }));
+    set((state) => {
+      let normalizedItems = state.config.layoutItems.map((item) => normalizeItemForModule(item, item.x, item.y, length, width, state.config.layoutItems));
+      normalizedItems
+        .filter((item) => item.type === 'full_bathroom')
+        .forEach((bathroom) => {
+          normalizedItems = normalizeBathroomChildrenForParent(normalizedItems, bathroom);
+        });
+      return {
+        config: {
+          ...state.config,
+          length,
+          width,
+          widthOption,
+          customWidth,
+          isSpecialMeasure: length === 8 || widthOption === 'Otro ancho' || width < 2 || width > 3,
+          layoutItems: normalizedItems,
+        },
+      };
+    });
   },
   setPanelChoice: (choice, specialThickness = '', specialColor = '') => {
     let panelType = 'Panel sándwich';
@@ -121,43 +206,67 @@ export const useConfiguratorStore = create<Store>((set, get) => ({
       orientation: isDivisionType(type) ? 'transversal' : undefined,
       hasShowerTray: type === 'full_bathroom' ? true : undefined,
     };
-    const normalized = normalizeItemForModule(draft, draft.x, draft.y, config.length, config.width);
+    const normalized = normalizeItemForModule(draft, draft.x, draft.y, config.length, config.width, config.layoutItems);
+    const children = type === 'full_bathroom' ? createBathroomChildren(normalized).map((child) => normalizeBathroomChildItem(child, normalized, child.x, child.y)) : [];
     set((state) => ({
       undoStack: [...state.undoStack.slice(-30), cloneLayout(state.config.layoutItems)],
       redoStack: [],
       selectedItemId: normalized.id,
-      config: { ...state.config, layoutItems: [...state.config.layoutItems, normalized] },
+      config: { ...state.config, layoutItems: [...state.config.layoutItems, normalized, ...children] },
     }));
   },
   updateItem: (id, patch, recordHistory = true) => {
     const { config } = get();
-    set((state) => ({
-      undoStack: recordHistory ? [...state.undoStack.slice(-30), cloneLayout(config.layoutItems)] : state.undoStack,
-      redoStack: recordHistory ? [] : state.redoStack,
-      config: {
-        ...state.config,
-        layoutItems: state.config.layoutItems.map((item) => {
-          if (item.id !== id) return item;
-          const updated = { ...item, ...patch };
-          return normalizeItemForModule(updated, updated.x, updated.y, state.config.length, state.config.width);
-        }),
-      },
-    }));
+    set((state) => {
+      let updatedParent: LayoutItem | null = null;
+      let layoutItems = state.config.layoutItems.map((item) => {
+        if (item.id !== id) return item;
+        const updated = { ...item, ...patch };
+        const normalized = normalizeItemForModule(updated, updated.x, updated.y, state.config.length, state.config.width, state.config.layoutItems);
+        if (normalized.type === 'full_bathroom') updatedParent = normalized;
+        return normalized;
+      });
+      if (updatedParent) layoutItems = normalizeBathroomChildrenForParent(layoutItems, updatedParent);
+      return {
+        undoStack: recordHistory ? [...state.undoStack.slice(-30), cloneLayout(config.layoutItems)] : state.undoStack,
+        redoStack: recordHistory ? [] : state.redoStack,
+        config: { ...state.config, layoutItems },
+      };
+    });
   },
   moveItem: (id, x, y) => {
     const { config } = get();
     const before = cloneLayout(config.layoutItems);
-    set((state) => ({
-      undoStack: [...state.undoStack.slice(-30), before],
-      redoStack: [],
-      config: {
-        ...state.config,
-        layoutItems: state.config.layoutItems.map((item) => {
-          if (item.id !== id) return item;
-          return normalizeItemForModule(item, x, y, state.config.length, state.config.width);
-        }),
-      },
-    }));
+    set((state) => {
+      const current = state.config.layoutItems.find((item) => item.id === id);
+      let dx = 0;
+      let dy = 0;
+      let movedParent: LayoutItem | null = null;
+
+      let layoutItems = state.config.layoutItems.map((item) => {
+        if (item.id !== id) return item;
+        const normalized = normalizeItemForModule(item, x, y, state.config.length, state.config.width, state.config.layoutItems);
+        if (item.type === 'full_bathroom' && current) {
+          dx = normalized.x - current.x;
+          dy = normalized.y - current.y;
+          movedParent = normalized;
+        }
+        return normalized;
+      });
+
+      if (movedParent) {
+        layoutItems = layoutItems.map((item) => {
+          if (item.parentId !== movedParent.id) return item;
+          return normalizeBathroomChildItem(item, movedParent, item.x + dx, item.y + dy);
+        });
+      }
+
+      return {
+        undoStack: [...state.undoStack.slice(-30), before],
+        redoStack: [],
+        config: { ...state.config, layoutItems },
+      };
+    });
   },
   removeSelected: () => {
     const { selectedItemId, config } = get();
@@ -168,7 +277,7 @@ export const useConfiguratorStore = create<Store>((set, get) => ({
       undoStack: [...state.undoStack.slice(-30), cloneLayout(state.config.layoutItems)],
       redoStack: [],
       selectedItemId: null,
-      config: { ...state.config, layoutItems: state.config.layoutItems.filter((item) => item.id !== selectedItemId) },
+      config: { ...state.config, layoutItems: state.config.layoutItems.filter((item) => item.id !== selectedItemId && item.parentId !== selectedItemId) },
     }));
   },
   rotateSelected: () => {
@@ -180,7 +289,7 @@ export const useConfiguratorStore = create<Store>((set, get) => ({
         ...state.config,
         layoutItems: state.config.layoutItems.map((item) => {
           if (item.id !== selectedItemId) return item;
-          return normalizeItemForModule({ ...item, rotation: (((item.rotation + 90) % 360) as LayoutItem['rotation']) }, item.x, item.y, state.config.length, state.config.width);
+          return normalizeItemForModule({ ...item, rotation: (((item.rotation + 90) % 360) as LayoutItem['rotation']) }, item.x, item.y, state.config.length, state.config.width, state.config.layoutItems);
         }),
       },
     }));
@@ -195,10 +304,28 @@ export const useConfiguratorStore = create<Store>((set, get) => ({
         layoutItems: state.config.layoutItems.map((item) => {
           if (item.id !== id) return item;
           const oriented = { ...item, orientation };
-          return normalizeItemForModule(oriented, oriented.x, oriented.y, state.config.length, state.config.width);
+          return normalizeItemForModule(oriented, oriented.x, oriented.y, state.config.length, state.config.width, state.config.layoutItems);
         }),
       },
     }));
+  },
+  resizeBathroom: (id, width, height) => {
+    const { config } = get();
+    set((state) => {
+      let bathroom: LayoutItem | null = null;
+      let layoutItems = state.config.layoutItems.map((item) => {
+        if (item.id !== id || item.type !== 'full_bathroom') return item;
+        const updated = normalizeItemForModule({ ...item, width, height }, item.x, item.y, state.config.length, state.config.width, state.config.layoutItems);
+        bathroom = updated;
+        return updated;
+      });
+      if (bathroom) layoutItems = normalizeBathroomChildrenForParent(layoutItems, bathroom);
+      return {
+        undoStack: [...state.undoStack.slice(-30), cloneLayout(config.layoutItems)],
+        redoStack: [],
+        config: { ...state.config, layoutItems },
+      };
+    });
   },
   undo: () => {
     const { undoStack, config } = get();
