@@ -27,6 +27,10 @@ export const ITEM_PRICES: Record<LayoutItemType, number> = {
   wall_partition: 300,
   interior_room: 700,
   full_bathroom: 1500,
+  bathroom_door: 0,
+  bathroom_window_40x40: 0,
+  bathroom_light_point: 0,
+  bathroom_socket: 0,
   air_conditioning: 600,
 };
 
@@ -43,6 +47,10 @@ export const ITEM_LABELS: Record<LayoutItemType, string> = {
   wall_partition: 'Tabique simple',
   interior_room: 'Habitación interior',
   full_bathroom: 'Baño completo',
+  bathroom_door: 'Puerta del baño',
+  bathroom_window_40x40: 'Ventana 40x40 del baño',
+  bathroom_light_point: 'Punto de luz del baño',
+  bathroom_socket: 'Enchufe del baño',
   air_conditioning: 'Aire acondicionado',
 };
 
@@ -138,8 +146,11 @@ export const getDefaultItemSize = (type: LayoutItemType) => {
     case 'interior_room':
       return { width: 6, height: 1.5 };
     case 'full_bathroom':
-      // El store lo normaliza para que el baño transversal ocupe todo el ancho real del módulo.
-      return { width: 1.5, height: 2.4 };
+      return { width: 1.6, height: 1.6 };
+    case 'bathroom_door':
+      return { width: 0.7, height: 0.08 };
+    case 'bathroom_window_40x40':
+      return { width: 0.4, height: 0.08 };
     case 'air_conditioning':
       return { width: 0.55, height: 0.28 };
     default:
@@ -149,6 +160,7 @@ export const getDefaultItemSize = (type: LayoutItemType) => {
 
 export const getItemPrice = (item: LayoutItem) => {
   if (item.included) return 0;
+  if (item.parentId) return 0;
   if (item.type === 'full_bathroom' && item.hasShowerTray === false) {
     return Math.max(0, ITEM_PRICES.full_bathroom - SHOWER_TRAY_DISCOUNT);
   }
@@ -170,7 +182,7 @@ export const calculateBasePrice = (length: number, width: number) => {
 };
 
 export const summarizeLayoutItems = (items: LayoutItem[]): LayoutSummary => {
-  const billable = items.filter((item) => !item.included);
+  const billable = items.filter((item) => !item.included && !item.parentId);
   const count = (type: LayoutItemType) => billable.filter((item) => item.type === type).length;
   const fullBathrooms = count('full_bathroom');
   const interiorRooms = count('interior_room');
@@ -198,7 +210,7 @@ export const summarizeLayoutItems = (items: LayoutItem[]): LayoutSummary => {
   if (largeWindows) extrasList.push(`${largeWindows} ventana(s) grande(s)`);
   if (wallPartitions) extrasList.push(`${wallPartitions} tabique(s) simple(s)`);
   if (interiorRooms) extrasList.push(`${interiorRooms} habitación(es) interior(es) · incluye puerta, ventana 80x80, punto de luz y enchufe`);
-  if (fullBathrooms) extrasList.push(`${fullBathrooms} baño(s) completo(s) · bloque ajustado al ancho del módulo, con puerta, ventana 40x40, punto de luz, enchufe, lavabo, váter y ducha opcional`);
+  if (fullBathrooms) extrasList.push(`${fullBathrooms} baño(s) completo(s) configurable(s) · puerta, ventana 40x40, punto de luz y enchufe colocables dentro del bloque`);
   if (hasAirConditioning) extrasList.push('aire acondicionado');
 
   return {
