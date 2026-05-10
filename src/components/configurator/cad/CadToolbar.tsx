@@ -31,19 +31,19 @@ const tools: { type: LayoutItemType; icon: ElementType; hint: string }[] = [
   { type: 'air_conditioning', icon: Snowflake, hint: `${ITEM_LABELS.air_conditioning} · ${formatCurrency(ITEM_PRICES.air_conditioning)}` },
 ];
 
-const duplicateTypeMap: Partial<Record<LayoutItemType, LayoutItemType>> = {
-  base_door: 'additional_door',
-  base_window_80x80: 'window_80x80',
-  base_socket: 'additional_socket',
-  additional_socket: 'additional_socket',
-  additional_door: 'additional_door',
-  window_80x80: 'window_80x80',
-  large_window: 'large_window',
-  wall_partition: 'wall_partition',
-  interior_room: 'interior_room',
-  full_bathroom: 'full_bathroom',
-  air_conditioning: 'air_conditioning',
-};
+const duplicableTypes: LayoutItemType[] = [
+  'base_door',
+  'base_window_80x80',
+  'base_socket',
+  'additional_socket',
+  'additional_door',
+  'window_80x80',
+  'large_window',
+  'wall_partition',
+  'interior_room',
+  'full_bathroom',
+  'air_conditioning',
+];
 
 export const CadToolbar = ({
   onAdd,
@@ -65,14 +65,8 @@ export const CadToolbar = ({
   const selectedItemId = useConfiguratorStore((state) => state.selectedItemId);
   const selectedItem = useConfiguratorStore((state) => state.config.layoutItems.find((item) => item.id === selectedItemId));
   const rotateSelected = useConfiguratorStore((state) => state.rotateSelected);
-  const canDuplicate = Boolean(selectedItem && duplicateTypeMap[selectedItem.type]);
-
-  const duplicateSelected = () => {
-    if (!selectedItem) return;
-    const duplicateType = duplicateTypeMap[selectedItem.type];
-    if (!duplicateType) return;
-    onAdd(duplicateType);
-  };
+  const duplicateSelected = useConfiguratorStore((state) => state.duplicateSelected);
+  const canDuplicate = Boolean(selectedItem && duplicableTypes.includes(selectedItem.type));
 
   return (
     <aside className="space-y-4 rounded-3xl border border-slate-200 bg-white p-4 shadow-soft">
