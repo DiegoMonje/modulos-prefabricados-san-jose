@@ -4,10 +4,12 @@ import { ArrowLeft, Download, LogOut, MessageCircle, RefreshCcw, Search, Trash2 
 import type { LeadRow, LeadStatus } from '../../types';
 import { addLeadNote, deleteLead, exportNewsletterCsv, getLeads, updateLeadStatus } from '../../services/leads';
 import { getCurrentUser, signIn, signOut } from '../../services/auth';
+import { getRememberAdminSession, setRememberAdminSession } from '../../lib/supabase';
 import { formatCurrency } from '../../utils/pricing';
 import { Button, Card, Field, Input, Select, Textarea, Badge } from '../ui/Ui';
 
 const statuses: LeadStatus[] = ['Nuevo', 'Contactado', 'Presupuesto enviado', 'Negociando', 'Vendido', 'Perdido'];
+const REMEMBERED_ADMIN_EMAIL_KEY = 'mpsj_admin_email';
 
 const statusColor = (status: LeadStatus): 'orange' | 'blue' | 'green' | 'red' | 'purple' | 'slate' => {
   if (status === 'Nuevo') return 'orange';
@@ -23,17 +25,34 @@ export const AdminPanel = ({ onBack }: { onBack: () => void }) => {
   const [loggedIn, setLoggedIn] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [rememberSession, setRememberSessionState] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
+    setRememberSessionState(getRememberAdminSession());
+    if (typeof window !== 'undefined') {
+      setEmail(window.localStorage.getItem(REMEMBERED_ADMIN_EMAIL_KEY) || '');
+    }
     getCurrentUser().then((user) => setLoggedIn(Boolean(user))).finally(() => setChecking(false));
   }, []);
+
+  const updateRememberSession = (checked: boolean) => {
+    setRememberSessionState(checked);
+    setRememberAdminSession(checked);
+    if (!checked && typeof window !== 'undefined') window.localStorage.removeItem(REMEMBERED_ADMIN_EMAIL_KEY);
+  };
 
   const login = async (event: FormEvent) => {
     event.preventDefault();
     setError('');
     try {
+      setRememberAdminSession(rememberSession);
       await signIn(email, password);
+      if (typeof window !== 'undefined') {
+        if (rememberSession) window.localStorage.setItem(REMEMBERED_ADMIN_EMAIL_KEY, email.trim());
+        else window.localStorage.removeItem(REMEMBERED_ADMIN_EMAIL_KEY);
+      }
+      setPassword('');
       setLoggedIn(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No se pudo iniciar sesión.');
@@ -51,12 +70,19 @@ export const AdminPanel = ({ onBack }: { onBack: () => void }) => {
             <h1 className="text-2xl font-black text-slate-900">Panel privado</h1>
             <p className="mt-2 text-sm text-slate-600">Accede para gestionar solicitudes de presupuesto.</p>
             <form onSubmit={login} className="mt-6 space-y-4">
-              <Field label="Email"><Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required /></Field>
-              <Field label="Contraseña"><Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required /></Field>
+              <Field label="Email"><Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="username" /></Field>
+              <Field label="Contraseña"><Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required autoComplete="current-password" /></Field>
+              <label className="flex items-start gap-3 rounded-2xl bg-slate-50 p-4 text-sm font-semibold text-slate-700">
+                <input type="checkbox" className="mt-1" checked={rememberSession} onChange={(e) => updateRememberSession(e.target.checked)} />
+                <span>
+                  Mantener sesión iniciada en este dispositivo.
+                  <span className="mt-1 block text-xs font-medium text-slate-500">No se guarda la contraseña. Solo se mantiene la sesión segura de Supabase y, si está activo, el email.</span>
+                </span>
+              </label>
               {error ? <p className="rounded-xl bg-red-50 p-3 text-sm font-semibold text-red-700">{error}</p> : null}
               <Button type="submit" className="w-full">Entrar</Button>
             </form>
-            <p className="mt-4 text-xs text-slate-500">Crea el usuario administrador desde Supabase Auth antes de entrar.</p>
+            <p className="mt-4 text-xs text-slate-500">Crea el usuario administrador desde Supabase Auth antes de entrar. Usa “Salir” al terminar si estás en un ordenador compartido.</p>
           </Card>
         </div>
       </div>
