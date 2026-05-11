@@ -49,6 +49,7 @@ type Store = {
 
 const cloneLayout = (items: LayoutItem[]) => items.map((item) => ({ ...item }));
 
+const isDoorType = (type: LayoutItemType) => ['base_door', 'additional_door', 'interior_door', 'bathroom_door'].includes(type);
 const isEdgeType = (type: LayoutItemType) => ['base_door', 'additional_door', 'base_window_80x80', 'window_80x80', 'large_window', 'bathroom_window_40x40'].includes(type);
 const isDivisionType = (type: LayoutItemType) => ['wall_partition', 'interior_room', 'full_bathroom'].includes(type);
 const isBathroomChildType = (type: LayoutItemType) => ['bathroom_door', 'bathroom_light_point', 'bathroom_socket'].includes(type);
@@ -57,8 +58,11 @@ const duplicateTypeMap: Partial<Record<LayoutItemType, LayoutItemType>> = {
   base_door: 'additional_door',
   base_window_80x80: 'window_80x80',
   base_socket: 'additional_socket',
+  base_light_point: 'additional_light_point',
   additional_socket: 'additional_socket',
+  additional_light_point: 'additional_light_point',
   additional_door: 'additional_door',
+  interior_door: 'interior_door',
   window_80x80: 'window_80x80',
   bathroom_window_40x40: 'bathroom_window_40x40',
   large_window: 'large_window',
@@ -83,6 +87,8 @@ const normalizeItemForModule = (item: LayoutItem, x: number, y: number, length: 
 };
 
 const rotateEdgeItemToNextSide = (item: LayoutItem, length: number, width: number): LayoutItem => {
+  if (isDoorType(item.type)) return { ...item, doorSwing: item.doorSwing === 'out' ? 'in' : 'out' };
+
   const sides: EdgeSide[] = ['top', 'right', 'bottom', 'left'];
   const currentSide = item.side ?? 'top';
   const nextSide = sides[(sides.indexOf(currentSide) + 1) % sides.length];
@@ -103,6 +109,8 @@ const rotateEdgeItemToNextSide = (item: LayoutItem, length: number, width: numbe
 };
 
 const rotateInsideItem = (item: LayoutItem, length: number, width: number): LayoutItem => {
+  if (isDoorType(item.type)) return { ...item, doorSwing: item.doorSwing === 'out' ? 'in' : 'out' };
+
   if (isDivisionType(item.type)) {
     const nextOrientation: DivisionOrientation = item.orientation === 'longitudinal' ? 'transversal' : 'longitudinal';
     return normalizeInsideItem({ ...item, orientation: nextOrientation }, item.x, item.y, length, width);
@@ -132,6 +140,7 @@ const createBathroomChildren = (bathroom: LayoutItem): LayoutItem[] => [
     included: true,
     parentId: bathroom.id,
     bathroomChildType: 'door',
+    doorSwing: 'in',
   },
   {
     id: `${bathroom.id}-window`,
@@ -258,6 +267,7 @@ export const useConfiguratorStore = create<Store>((set, get) => ({
       price: ITEM_PRICES[type],
       included: false,
       orientation: isDivisionType(type) ? 'transversal' : undefined,
+      doorSwing: isDoorType(type) ? 'in' : undefined,
       hasShowerTray: type === 'full_bathroom' ? true : undefined,
     };
     const normalized = normalizeItemForModule(draft, draft.x, draft.y, config.length, config.width, config.layoutItems);
