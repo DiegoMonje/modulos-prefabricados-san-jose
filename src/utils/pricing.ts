@@ -21,7 +21,9 @@ export const ITEM_PRICES: Record<LayoutItemType, number> = {
   base_light_point: 0,
   base_electrical_panel: 0,
   additional_socket: 50,
+  additional_light_point: 60,
   additional_door: 120,
+  interior_door: 120,
   window_80x80: 200,
   large_window: 250,
   wall_partition: 300,
@@ -44,7 +46,9 @@ export const ITEM_LABELS: Record<LayoutItemType, string> = {
   base_light_point: 'Punto de luz incluido',
   base_electrical_panel: 'Cuadro eléctrico incluido',
   additional_socket: 'Enchufe adicional',
-  additional_door: 'Puerta adicional',
+  additional_light_point: 'Punto de luz adicional',
+  additional_door: 'Puerta exterior adicional',
+  interior_door: 'Puerta para tabique interior',
   window_80x80: 'Ventana 80x80 extra',
   large_window: 'Ventana grande',
   wall_partition: 'Tabique simple',
@@ -81,6 +85,7 @@ export const createBaseLayoutItems = (): LayoutItem[] => [
     side: 'top',
     price: 0,
     included: true,
+    doorSwing: 'in',
   },
   {
     id: 'base-window',
@@ -142,6 +147,8 @@ export const getDefaultItemSize = (type: LayoutItemType) => {
     case 'additional_door':
     case 'base_door':
       return { width: 0.8, height: 0.1 };
+    case 'interior_door':
+      return { width: 0.8, height: 0.08 };
     case 'window_80x80':
     case 'base_window_80x80':
       return { width: 0.8, height: 0.1 };
@@ -200,7 +207,9 @@ export const summarizeLayoutItems = (items: LayoutItem[]): LayoutSummary => {
   const interiorRooms = count('interior_room');
   const wallPartitions = count('wall_partition');
   const additionalDoors = count('additional_door');
+  const interiorDoors = count('interior_door');
   const additionalSockets = count('additional_socket');
+  const additionalLightPoints = count('additional_light_point');
   const windows80x80 = count('window_80x80');
   const bathroomWindows40x40 = count('bathroom_window_40x40');
   const largeWindows = count('large_window');
@@ -221,7 +230,9 @@ export const summarizeLayoutItems = (items: LayoutItem[]): LayoutSummary => {
 
   const extrasList: string[] = [];
   if (additionalSockets) extrasList.push(`${additionalSockets} enchufe(s) adicional(es)`);
-  if (additionalDoors) extrasList.push(`${additionalDoors} puerta(s) adicional(es)`);
+  if (additionalLightPoints) extrasList.push(`${additionalLightPoints} punto(s) de luz adicional(es)`);
+  if (additionalDoors) extrasList.push(`${additionalDoors} puerta(s) exterior(es) adicional(es)`);
+  if (interiorDoors) extrasList.push(`${interiorDoors} puerta(s) para tabique interior`);
   if (windows80x80) extrasList.push(`${windows80x80} ventana(s) 80x80 extra`);
   if (bathroomWindows40x40) extrasList.push(`${bathroomWindows40x40} ventana(s) 40x40 para baño`);
   if (largeWindows) extrasList.push(`${largeWindows} ventana(s) grande(s)`);
@@ -237,7 +248,9 @@ export const summarizeLayoutItems = (items: LayoutItem[]): LayoutSummary => {
     includedList,
     extrasList,
     additionalSockets,
+    additionalLightPoints,
     additionalDoors,
+    interiorDoors,
     windows80x80,
     bathroomWindows40x40,
     largeWindows,
