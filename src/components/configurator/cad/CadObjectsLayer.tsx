@@ -22,9 +22,9 @@ const colorFor = (item: LayoutItem, selected: boolean, hasError: boolean, hasWar
   return '#f8fafc';
 };
 
-const isDoor = (item: LayoutItem) => item.type === 'base_door' || item.type === 'additional_door' || item.type === 'bathroom_door';
+const isDoor = (item: LayoutItem) => item.type === 'base_door' || item.type === 'additional_door' || item.type === 'interior_door' || item.type === 'bathroom_door';
 const isWindow = (item: LayoutItem) => item.type === 'base_window_80x80' || item.type === 'window_80x80' || item.type === 'large_window' || item.type === 'bathroom_window_40x40';
-const isLight = (item: LayoutItem) => item.type === 'base_light_point' || item.type === 'bathroom_light_point';
+const isLight = (item: LayoutItem) => item.type === 'base_light_point' || item.type === 'additional_light_point' || item.type === 'bathroom_light_point';
 const isSocket = (item: LayoutItem) => item.type === 'base_socket' || item.type === 'additional_socket' || item.type === 'bathroom_socket';
 const isDivision = (item: LayoutItem) => ['interior_room', 'full_bathroom', 'wall_partition'].includes(item.type);
 
