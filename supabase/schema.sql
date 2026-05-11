@@ -1,3 +1,6 @@
+-- Esquema Supabase para Módulos Prefabricados San José
+-- Ejecutar en Supabase SQL Editor del proyecto correcto.
+
 create extension if not exists "pgcrypto";
 
 create table if not exists public.leads (
@@ -5,8 +8,8 @@ create table if not exists public.leads (
   full_name text not null,
   phone text not null,
   email text,
-  province text not null,
-  city text not null,
+  province text not null default '',
+  city text not null default '',
   postal_code text,
   intended_use text,
   comments text,
@@ -31,12 +34,12 @@ create table if not exists public.configurations (
   square_meters numeric not null,
   is_special_measure boolean not null default false,
   panel_type text,
-  panel_thickness text not null,
+  panel_thickness text,
   panel_color text,
   is_special_panel boolean not null default false,
-  use_type text not null,
+  use_type text,
   extras text[] not null default '{}',
-  delivery_timeline text not null,
+  delivery_timeline text,
   base_included_door boolean not null default true,
   base_included_window_80x80 boolean not null default true,
   base_included_electrical_installation boolean not null default true,
@@ -49,7 +52,7 @@ create table if not exists public.configurations (
   extra_large_windows_quantity integer not null default 0,
   additional_doors_quantity integer not null default 0,
   additional_socket_quantity integer not null default 0,
-  layout_json jsonb not null default '[]',
+  layout_json jsonb not null default '[]'::jsonb,
   created_at timestamptz not null default now()
 );
 
@@ -62,7 +65,8 @@ create table if not exists public.newsletter_subscribers (
   city text,
   source text not null default 'configurador_cad_2d',
   active boolean not null default true,
-  subscribed_at timestamptz not null default now()
+  subscribed_at timestamptz not null default now(),
+  unique(email)
 );
 
 create table if not exists public.notes (
@@ -77,10 +81,10 @@ create table if not exists public.quotes (
   lead_id uuid references public.leads(id) on delete cascade,
   quote_number text not null,
   quote_date date not null default current_date,
-  base_price numeric not null,
+  base_price numeric not null default 0,
   iva_percentage numeric not null default 21,
-  iva_amount numeric not null,
-  total_price numeric not null,
+  iva_amount numeric not null default 0,
+  total_price numeric not null default 0,
   pdf_url text,
   created_at timestamptz not null default now()
 );
@@ -104,27 +108,63 @@ alter table public.newsletter_subscribers enable row level security;
 alter table public.notes enable row level security;
 alter table public.quotes enable row level security;
 
--- Lectura y escritura pública limitada para crear leads desde la web.
--- Para producción conviene endurecer estas políticas y mover la creación de leads a Edge Functions.
+-- Web pública: crear solicitudes, configuración, proforma y newsletter.
 drop policy if exists "public_insert_leads" on public.leads;
-create policy "public_insert_leads" on public.leads for insert with check (true);
-drop policy if exists "public_insert_configurations" on public.configurations;
-create policy "public_insert_configurations" on public.configurations for insert with check (true);
-drop policy if exists "public_insert_newsletter" on public.newsletter_subscribers;
-create policy "public_insert_newsletter" on public.newsletter_subscribers for insert with check (true);
+create policy "public_insert_leads" on public.leads for insert to anon with check (true);
 
--- Panel privado: usuarios autenticados pueden gestionar todo.
+drop policy if exists "public_insert_configurations" on public.configurations;
+create policy "public_insert_configurations" on public.configurations for insert to anon with check (true);
+
+drop policy if exists "public_insert_newsletter" on public.newsletter_subscribers;
+create policy "public_insert_newsletter" on public.newsletter_subscribers for insert to anon with check (true);
+
+drop policy if exists "public_insert_quotes" on public.quotes;
+create policy "public_insert_quotes" on public.quotes for insert to anon with check (true);
+
+-- Panel privado: usuarios autenticados pueden leer y gestionar.
 drop policy if exists "auth_select_leads" on public.leads;
 create policy "auth_select_leads" on public.leads for select to authenticated using (true);
+
 drop policy if exists "auth_update_leads" on public.leads;
-create policy "auth_update_leads" on public.leads for update to authenticated using (true);
+create policy "auth_update_leads" on public.leads for update to authenticated using (true) with check (true);
+
 drop policy if exists "auth_delete_leads" on public.leads;
 create policy "auth_delete_leads" on public.leads for delete to authenticated using (true);
+
 drop policy if exists "auth_select_configurations" on public.configurations;
 create policy "auth_select_configurations" on public.configurations for select to authenticated using (true);
+
 drop policy if exists "auth_select_newsletter" on public.newsletter_subscribers;
 create policy "auth_select_newsletter" on public.newsletter_subscribers for select to authenticated using (true);
+
 drop policy if exists "auth_manage_notes" on public.notes;
 create policy "auth_manage_notes" on public.notes for all to authenticated using (true) with check (true);
+
 drop policy if exists "auth_manage_quotes" on public.quotes;
 create policy "auth_manage_quotes" on public.quotes for all to authenticated using (true) with check (true);
+
+-- Storage para PDFs de proformas.
+insert into storage.buckets (id, name, public)
+values ('quotes', 'quotes', true)
+on conflict (id) do update set public = true;
+
+drop policy if exists "public_upload_quote_pdfs" on storage.objects;
+create policy "public_upload_quote_pdfs" on storage.objects
+for insert to anon
+with check (bucket_id = 'quotes');
+
+drop policy if exists "public_update_quote_pdfs" on storage.objects;
+create policy "public_update_quote_pdfs" on storage.objects
+for update to anon
+using (bucket_id = 'quotes')
+with check (bucket_id = 'quotes');
+
+drop policy if exists "public_read_quote_pdfs" on storage.objects;
+create policy "public_read_quote_pdfs" on storage.objects
+for select to anon, authenticated
+using (bucket_id = 'quotes');
+
+create index if not exists leads_created_at_idx on public.leads(created_at desc);
+create index if not exists configurations_lead_id_idx on public.configurations(lead_id);
+create index if not exists quotes_lead_id_idx on public.quotes(lead_id);
+create index if not exists notes_lead_id_idx on public.notes(lead_id);
