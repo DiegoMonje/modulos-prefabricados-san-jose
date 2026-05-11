@@ -1,9 +1,6 @@
 import { useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import type Konva from 'konva';
-import { useForm } from 'react-hook-form';
-import { z } from 'zod';
-import { zodResolver } from '@hookform/resolvers/zod';
 import { ArrowLeft, ArrowRight, CheckCircle2, Download, MessageCircle } from 'lucide-react';
 import type { ContactFormState, DeliveryTimeline, LayoutItem, PanelChoice, UseType } from '../../types';
 import { calculatePrice, formatCurrency } from '../../utils/pricing';
@@ -23,20 +20,7 @@ const MIN_CUSTOM_WIDTH = 2;
 const MAX_CUSTOM_WIDTH = 3.5;
 
 const parseNumberInput = (value: string) => Number(value.replace(',', '.'));
-
-const requiredString = (message: string) => z.string({ required_error: message }).trim().min(1, message);
-
-const contactSchema = z.object({
-  fullName: requiredString('Introduce tu nombre completo.').min(2, 'Introduce tu nombre completo.'),
-  phone: requiredString('Introduce un teléfono válido.').min(7, 'Introduce un teléfono válido.'),
-  email: requiredString('Introduce un email válido.').email('Introduce un email válido.'),
-  intendedUse: z.string().optional().default(''),
-  comments: z.string().optional().default(''),
-  accepted: z.boolean().refine(Boolean, 'Debes aceptar la política de privacidad.'),
-  newsletterSubscribed: z.boolean().optional().default(false),
-});
-
-type ContactFormValues = z.infer<typeof contactSchema>;
+const isValidEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
 
 const StepShell = ({ title, subtitle, children }: { title: string; subtitle?: string; children: ReactNode }) => (
   <div>
@@ -337,13 +321,82 @@ const SelectedItemPanel = ({ item }: { item: LayoutItem | null }) => {
   );
 };
 
+const validateContact = (contact: ContactFormState) => {
+  const errors: Partial<Record<keyof ContactFormState, string>> = {};
+  if (contact.fullName.trim().length < 2) errors.fullName = 'Introduce tu nombre completo.';
+  if (contact.phone.trim().length < 7) errors.phone = 'Introduce un teléfono válido.';
+  if (!isValidEmail(contact.email)) errors.email = 'Introduce un email válido.';
+  if (!contact.accepted) errors.accepted = 'Debes aceptar la política de privacidad.';
+  return errors;
+};
+
 const ContactStep = ({ onSubmit, error }: { onSubmit: (contact: ContactFormState) => Promise<void>; error?: string }) => {
   const { config } = useConfiguratorStore();
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<ContactFormValues>({
-    resolver: zodResolver(contactSchema),
-    mode: 'onChange',
-    reValidateMode: 'onChange',
-    defaultValues: { fullName: '', phone: '', email: '', intendedUse: config.useType, comments: '', accepted: false, newsletterSubscribed: false },
+  const [contact, setContact] = useState<ContactFormState>({
+    fullName: '',
+    phone: '',
+    email: '',
+    intendedUse: config.useType,
+    comments: '',
+    accepted: false,
+    newsletterSubscribed: false,
   });
-  return <StepShell title="Datos del cliente" subtitle="Generaremos el PDF y guardaremos la solicitud para preparar el presupuesto."><form noValidate onSubmit={handleSubmit((values) => onSubmit(values as ContactFormState))} className="space-y-4"><div className="grid gap-4 sm:grid-cols-2"><Field label="Nombre completo" error={errors.fullName?.message}><Input autoComplete="name" {...register('fullName')} /></Field><Field label="Teléfono" error={errors.phone?.message}><Input autoComplete="tel" {...register('phone')} /></Field><Field label="Email" error={errors.email?.message}><Input type="email" autoComplete="email" {...register('email')} /></Field><Field label="Uso previsto"><Input {...register('intendedUse')} /></Field></div><Field label="Comentarios"><Textarea rows={4} {...register('comments')} placeholder="Cuéntanos detalles de transporte, montaje, accesos, acabados, etc." /></Field><label className="flex items-start gap-3 rounded-2xl bg-slate-50 p-4 text-sm font-semibold text-slate-700"><input type="checkbox" className="mt-1" {...register('accepted')} /><span>Acepto la política de privacidad y el tratamiento de mis datos para gestionar la solicitud.</span></label>{errors.accepted?.message ? <p className="text-sm font-semibold text-red-600">{errors.accepted.message}</p> : null}<label className="flex items-start gap-3 rounded-2xl bg-blue-50 p-4 text-sm font-semibold text-blue-900"><input type="checkbox" className="mt-1" {...register('newsletterSubscribed')} /><span>Quiero recibir novedades u ofertas.</span></label>{error ? <p className="rounded-2xl bg-red-50 p-4 text-sm font-semibold text-red-700">{error}</p> : null}<Button type="submit" disabled={isSubmitting}><Download size={18} /> {isSubmitting ? 'Generando...' : 'Guardar solicitud y descargar PDF'}</Button></form></StepShell>;
+  const [errors, setErrors] = useState<Partial<Record<keyof ContactFormState, string>>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const updateContact = <K extends keyof ContactFormState>(key: K, value: ContactFormState[K]) => {
+    setContact((previous) => ({ ...previous, [key]: value }));
+    setErrors((previous) => ({ ...previous, [key]: undefined }));
+  };
+
+  const submit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const validationErrors = validateContact(contact);
+    setErrors(validationErrors);
+    if (Object.keys(validationErrors).length) return;
+
+    setIsSubmitting(true);
+    try {
+      await onSubmit(contact);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <StepShell title="Datos del cliente" subtitle="Generaremos el PDF y guardaremos la solicitud para preparar el presupuesto.">
+      <form noValidate onSubmit={submit} className="space-y-4">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Nombre completo" error={errors.fullName}>
+            <Input autoComplete="name" value={contact.fullName} onChange={(event) => updateContact('fullName', event.target.value)} />
+          </Field>
+          <Field label="Teléfono" error={errors.phone}>
+            <Input autoComplete="tel" value={contact.phone} onChange={(event) => updateContact('phone', event.target.value)} />
+          </Field>
+          <Field label="Email" error={errors.email}>
+            <Input type="email" autoComplete="email" value={contact.email} onChange={(event) => updateContact('email', event.target.value)} />
+          </Field>
+          <Field label="Uso previsto">
+            <Input value={contact.intendedUse} onChange={(event) => updateContact('intendedUse', event.target.value)} />
+          </Field>
+        </div>
+        <Field label="Comentarios">
+          <Textarea rows={4} value={contact.comments} onChange={(event) => updateContact('comments', event.target.value)} placeholder="Cuéntanos detalles de transporte, montaje, accesos, acabados, etc." />
+        </Field>
+        <label className="flex items-start gap-3 rounded-2xl bg-slate-50 p-4 text-sm font-semibold text-slate-700">
+          <input type="checkbox" className="mt-1" checked={contact.accepted} onChange={(event) => updateContact('accepted', event.target.checked)} />
+          <span>Acepto la política de privacidad y el tratamiento de mis datos para gestionar la solicitud.</span>
+        </label>
+        {errors.accepted ? <p className="text-sm font-semibold text-red-600">{errors.accepted}</p> : null}
+        <label className="flex items-start gap-3 rounded-2xl bg-blue-50 p-4 text-sm font-semibold text-blue-900">
+          <input type="checkbox" className="mt-1" checked={contact.newsletterSubscribed} onChange={(event) => updateContact('newsletterSubscribed', event.target.checked)} />
+          <span>Quiero recibir novedades u ofertas.</span>
+        </label>
+        {error ? <p className="rounded-2xl bg-red-50 p-4 text-sm font-semibold text-red-700">{error}</p> : null}
+        <Button type="submit" disabled={isSubmitting}>
+          <Download size={18} /> {isSubmitting ? 'Generando...' : 'Guardar solicitud y descargar PDF'}
+        </Button>
+      </form>
+    </StepShell>
+  );
 };
