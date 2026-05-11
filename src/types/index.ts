@@ -105,6 +105,7 @@ export interface LayoutSummary {
   additionalSockets: number;
   additionalDoors: number;
   windows80x80: number;
+  bathroomWindows40x40: number;
   largeWindows: number;
   wallPartitions: number;
   interiorRooms: number;
