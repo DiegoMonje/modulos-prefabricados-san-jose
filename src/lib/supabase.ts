@@ -1,10 +1,16 @@
 import { createClient } from '@supabase/supabase-js';
 
+const oldSupabaseUrl = 'https://giqbwlwkdycpsngdhzam.supabase.co';
 const fallbackSupabaseUrl = 'https://wrremolyjmjcyijrmypv.supabase.co';
 const fallbackSupabaseAnonKey = 'sb_publishable_8Xqw716bnR1y5fqHe6V7JQ_PleVHp4V';
 
-const supabaseUrl = (import.meta.env.VITE_SUPABASE_URL as string | undefined) || fallbackSupabaseUrl;
-const supabaseAnonKey = (import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined) || fallbackSupabaseAnonKey;
+const envSupabaseUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined;
+const envSupabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
+
+const supabaseUrl = envSupabaseUrl && envSupabaseUrl !== oldSupabaseUrl ? envSupabaseUrl : fallbackSupabaseUrl;
+const supabaseAnonKey = envSupabaseUrl && envSupabaseUrl !== oldSupabaseUrl && envSupabaseAnonKey ? envSupabaseAnonKey : fallbackSupabaseAnonKey;
+
+export const activeSupabaseUrl = supabaseUrl;
 
 const REMEMBER_SESSION_KEY = 'mpsj_admin_remember_session';
 const SESSION_STORAGE_PREFIX = 'mpsj_supabase_auth';
