@@ -4,6 +4,7 @@ import {
   Copy,
   DoorOpen,
   Droplets,
+  FlipHorizontal2,
   Grid3X3,
   House,
   Lightbulb,
@@ -62,6 +63,8 @@ const duplicableTypes: LayoutItemType[] = [
   'air_conditioning',
 ];
 
+const doorTypes: LayoutItemType[] = ['base_door', 'additional_door', 'interior_door', 'bathroom_door'];
+
 export const CadToolbar = ({
   onAdd,
   onUndo,
@@ -83,7 +86,9 @@ export const CadToolbar = ({
   const selectedItem = useConfiguratorStore((state) => state.config.layoutItems.find((item) => item.id === selectedItemId));
   const rotateSelected = useConfiguratorStore((state) => state.rotateSelected);
   const duplicateSelected = useConfiguratorStore((state) => state.duplicateSelected);
+  const toggleSelectedDoorSwing = useConfiguratorStore((state) => state.toggleSelectedDoorSwing);
   const canDuplicate = Boolean(selectedItem && duplicableTypes.includes(selectedItem.type));
+  const canChangeDoorSwing = Boolean(selectedItem && doorTypes.includes(selectedItem.type));
 
   return (
     <aside className="space-y-4 rounded-3xl border border-slate-200 bg-white p-4 shadow-soft">
@@ -106,6 +111,7 @@ export const CadToolbar = ({
         <div className="mt-3 grid grid-cols-2 gap-2">
           <button className="btn-outline px-3 py-2 text-sm" onClick={rotateSelected} disabled={!selectedItem}><RotateCw size={16} /> Girar 90°</button>
           <button className="btn-outline px-3 py-2 text-sm" onClick={duplicateSelected} disabled={!canDuplicate}><Copy size={16} /> Duplicar</button>
+          <button className="btn-outline col-span-2 px-3 py-2 text-sm" onClick={toggleSelectedDoorSwing} disabled={!canChangeDoorSwing}><FlipHorizontal2 size={16} /> Abrir dentro / fuera</button>
         </div>
       </div>
 
