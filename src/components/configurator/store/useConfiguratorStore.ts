@@ -64,6 +64,9 @@ const duplicateTypeMap: Partial<Record<LayoutItemType, LayoutItemType>> = {
   wall_partition: 'wall_partition',
   interior_room: 'interior_room',
   full_bathroom: 'full_bathroom',
+  toilet: 'toilet',
+  sink: 'sink',
+  shower_tray: 'shower_tray',
   air_conditioning: 'air_conditioning',
 };
 
