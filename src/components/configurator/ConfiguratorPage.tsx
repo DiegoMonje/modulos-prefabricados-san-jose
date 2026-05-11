@@ -146,25 +146,8 @@ export const ConfiguratorPage = ({ onBack }: { onBack: () => void }) => {
             {step === 4 && (
               <StepShell title="Plano CAD 2D profesional" subtitle="Añade, selecciona y arrastra elementos sobre el módulo. Puertas y ventanas se ajustan a muros exteriores.">
                 <div className="grid gap-5 xl:grid-cols-[1fr_330px]">
-                  <CadStage
-                    ref={stageRef}
-                    length={config.length}
-                    width={config.width}
-                    items={config.layoutItems}
-                    selectedItemId={selectedItemId}
-                    zoom={zoom}
-                    onSelect={store.selectItem}
-                    onMove={store.moveItem}
-                  />
-                  <CadToolbar
-                    onAdd={store.addItem}
-                    onUndo={store.undo}
-                    onRedo={store.redo}
-                    onDelete={store.removeSelected}
-                    onZoomIn={() => setZoom((z) => Math.min(1.6, Number((z + 0.1).toFixed(2))))}
-                    onZoomOut={() => setZoom((z) => Math.max(0.75, Number((z - 0.1).toFixed(2))))}
-                    onCenter={() => setZoom(1)}
-                  />
+                  <CadStage ref={stageRef} length={config.length} width={config.width} items={config.layoutItems} selectedItemId={selectedItemId} zoom={zoom} onSelect={store.selectItem} onMove={store.moveItem} />
+                  <CadToolbar onAdd={store.addItem} onUndo={store.undo} onRedo={store.redo} onDelete={store.removeSelected} onZoomIn={() => setZoom((z) => Math.min(1.6, Number((z + 0.1).toFixed(2))))} onZoomOut={() => setZoom((z) => Math.max(0.75, Number((z - 0.1).toFixed(2))))} onCenter={() => setZoom(1)} />
                 </div>
                 <SelectedItemPanel item={config.layoutItems.find((i) => i.id === selectedItemId) || null} />
               </StepShell>
@@ -176,9 +159,10 @@ export const ConfiguratorPage = ({ onBack }: { onBack: () => void }) => {
                 onSubmit={async (contact) => {
                   setSubmitError('');
                   const currentCadImage = cadImage ?? captureCadImage();
+                  let generatedPdf: ReturnType<typeof downloadConfiguratorPdf> | null = null;
 
                   try {
-                    downloadConfiguratorPdf({ contact, config, price, cadImage: currentCadImage });
+                    generatedPdf = downloadConfiguratorPdf({ contact, config, price, cadImage: currentCadImage });
                     sessionStorage.setItem('last_contact', JSON.stringify(contact));
                     setSubmitted(true);
                   } catch (error) {
@@ -187,7 +171,7 @@ export const ConfiguratorPage = ({ onBack }: { onBack: () => void }) => {
                   }
 
                   try {
-                    await createLead({ contact, config, price });
+                    await createLead({ contact, config, price, pdf: generatedPdf });
                   } catch (error) {
                     console.warn('La solicitud no se pudo guardar, pero el PDF se generó correctamente.', error);
                   }
@@ -209,24 +193,10 @@ export const ConfiguratorPage = ({ onBack }: { onBack: () => void }) => {
               <p className="text-sm font-black uppercase tracking-[0.18em] text-brand-orange">Precio estimado</p>
               <p className="mt-2 text-4xl font-black text-slate-900">{formatCurrency(price.estimatedPriceWithoutVat)}</p>
               <p className="text-sm font-bold text-slate-500">sin IVA</p>
-              <div className="mt-4 space-y-2 text-sm text-slate-700">
-                <p><strong>Base:</strong> {formatCurrency(price.basePrice)}</p>
-                <p><strong>Extras:</strong> {formatCurrency(price.extrasPrice)}</p>
-                <p><strong>IVA 21%:</strong> {formatCurrency(price.vatAmount)}</p>
-                <p className="text-lg font-black text-brand-orange"><strong>Total:</strong> {formatCurrency(price.estimatedPriceWithVat)}</p>
-              </div>
+              <div className="mt-4 space-y-2 text-sm text-slate-700"><p><strong>Base:</strong> {formatCurrency(price.basePrice)}</p><p><strong>Extras:</strong> {formatCurrency(price.extrasPrice)}</p><p><strong>IVA 21%:</strong> {formatCurrency(price.vatAmount)}</p><p className="text-lg font-black text-brand-orange"><strong>Total:</strong> {formatCurrency(price.estimatedPriceWithVat)}</p></div>
               <p className="mt-4 rounded-2xl bg-amber-50 p-3 text-xs font-semibold leading-5 text-amber-900">Precio orientativo sujeto a revisión técnica, transporte, montaje, accesos y disponibilidad de materiales.</p>
             </Card>
-            <Card>
-              <p className="text-sm font-black uppercase tracking-[0.18em] text-brand-blue">Configuración</p>
-              <div className="mt-3 space-y-2 text-sm text-slate-700">
-                <p><strong>Medidas:</strong> {config.length} x {config.width} m</p>
-                <p><strong>m²:</strong> {price.squareMeters}</p>
-                <p><strong>Panel:</strong> {config.panelThickness} · {config.panelColor}</p>
-                <p><strong>Uso:</strong> {config.useType}</p>
-                <p><strong>Extras:</strong> {price.summary.extrasList.length || 'Sin extras'}</p>
-              </div>
-            </Card>
+            <Card><p className="text-sm font-black uppercase tracking-[0.18em] text-brand-blue">Configuración</p><div className="mt-3 space-y-2 text-sm text-slate-700"><p><strong>Medidas:</strong> {config.length} x {config.width} m</p><p><strong>m²:</strong> {price.squareMeters}</p><p><strong>Panel:</strong> {config.panelThickness} · {config.panelColor}</p><p><strong>Uso:</strong> {config.useType}</p><p><strong>Extras:</strong> {price.summary.extrasList.length || 'Sin extras'}</p></div></Card>
           </aside>
         </div>
       </div>
@@ -234,169 +204,11 @@ export const ConfiguratorPage = ({ onBack }: { onBack: () => void }) => {
   );
 };
 
-const MeasuresStep = () => {
-  const { config, setMeasure } = useConfiguratorStore();
-  const setCustomWidth = (value: string) => {
-    const parsed = parseNumberInput(value);
-    const nextWidth = Number.isNaN(parsed) || parsed <= 0 ? config.width : parsed;
-    setMeasure(config.length, nextWidth, 'Otro ancho', value);
-  };
-
-  return (
-    <StepShell title="Elige las medidas de tu módulo" subtitle="El modelo recomendado es 6 x 2,40 m, desde 4.750 € sin IVA.">
-      <div className="grid gap-4 sm:grid-cols-3">
-        {[3,4,5,6,7,8].map((length) => <button key={length} onClick={() => setMeasure(length, config.width, config.widthOption, config.customWidth)} className={`rounded-2xl border p-4 text-left transition ${config.length === length ? 'border-brand-orange bg-orange-50 text-brand-orange' : 'border-slate-200 hover:border-slate-300'}`}><p className="text-lg font-black">{length} m</p><p className="text-xs font-bold text-slate-500">{length === 6 ? 'Más vendido' : length === 8 ? 'Bajo consulta' : 'Medida habitual'}</p></button>)}
-      </div>
-      <div className="mt-6 grid gap-3 sm:grid-cols-3">
-        {[{label:'2,40 metros',value:2.4,option:'2.40 m' as const,helper:'Ancho estándar'}, {label:'2,50 metros',value:2.5,option:'2.50 m' as const,helper:'Opción habitual'}, {label:'Otro ancho',value:null,option:'Otro ancho' as const,helper:'Bajo consulta'}].map((option) => {
-          const selected = config.widthOption === option.option;
-          const customWidth = parseNumberInput(config.customWidth);
-          const widthValue = option.value ?? (Number.isNaN(customWidth) ? config.width : customWidth);
-          return <button key={option.label} onClick={() => setMeasure(config.length, widthValue, option.option, config.customWidth)} className={`rounded-2xl border p-4 text-left transition ${selected ? 'border-brand-blue bg-blue-50 text-brand-blue' : 'border-slate-200 hover:border-slate-300'}`}><p className="font-black">{option.label}</p><p className="mt-1 text-xs text-slate-500">{option.helper}</p></button>;
-        })}
-      </div>
-      {config.widthOption === 'Otro ancho' ? <div className="mt-5 max-w-xs"><Field label="Ancho deseado en metros"><Input value={config.customWidth} onChange={(e) => setCustomWidth(e.target.value)} placeholder="Ej. 2.60" /></Field><p className="mt-2 text-xs font-semibold text-slate-500">Rango permitido: {MIN_CUSTOM_WIDTH.toLocaleString('es-ES')} m a {MAX_CUSTOM_WIDTH.toLocaleString('es-ES')} m.</p></div> : null}
-      {config.isSpecialMeasure ? <p className="mt-4 rounded-2xl bg-amber-50 p-4 text-sm font-bold text-amber-900">Esta medida se marcará como especial y puede requerir revisión técnica.</p> : null}
-    </StepShell>
-  );
-};
-
-const PanelStep = () => {
-  const { config, setPanelChoice } = useConfiguratorStore();
-  return (
-    <StepShell title="Elige el panel" subtitle="El panel estándar es sándwich blanco de 30 mm. Otros grosores o colores se marcan bajo consulta.">
-      <div className="grid gap-3 sm:grid-cols-2">
-        {panelChoices.map((choice) => <button key={choice} onClick={() => setPanelChoice(choice, config.specialThickness, config.specialColor)} className={`rounded-2xl border p-4 text-left font-black transition ${config.panelChoice === choice ? 'border-brand-orange bg-orange-50 text-brand-orange' : 'border-slate-200 hover:border-slate-300'}`}>{choice}</button>)}
-      </div>
-      <div className="mt-5 grid gap-4 sm:grid-cols-2">
-        {(config.panelChoice === 'Otro grosor de panel' || config.panelChoice === 'Otro grosor y otro color') ? <Field label="Grosor deseado"><Input value={config.specialThickness} onChange={(e) => setPanelChoice(config.panelChoice, e.target.value, config.specialColor)} placeholder="Ej. 40 mm" /></Field> : null}
-        {(config.panelChoice === 'Otro color de panel' || config.panelChoice === 'Otro grosor y otro color') ? <Field label="Color deseado"><Input value={config.specialColor} onChange={(e) => setPanelChoice(config.panelChoice, config.specialThickness, e.target.value)} placeholder="Ej. gris antracita" /></Field> : null}
-      </div>
-    </StepShell>
-  );
-};
-
-const UseStep = () => {
-  const { config, setUseType } = useConfiguratorStore();
-  return <StepShell title="Uso previsto" subtitle="Selecciona el uso principal para preparar mejor el presupuesto."><div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{uses.map((use) => <button key={use} onClick={() => setUseType(use)} className={`rounded-2xl border p-4 text-left font-black transition ${config.useType === use ? 'border-brand-orange bg-orange-50 text-brand-orange' : 'border-slate-200 hover:border-slate-300'}`}>{use}</button>)}</div></StepShell>;
-};
-
-const LocationStep = () => {
-  const { config, setLocation } = useConfiguratorStore();
-  return <StepShell title="Ubicación y plazo" subtitle="Necesitamos estos datos para estimar transporte, montaje y prioridad."><div className="grid gap-4 sm:grid-cols-2"><Field label="Provincia"><Input value={config.province} onChange={(e) => setLocation({ province: e.target.value })} placeholder="Sevilla" /></Field><Field label="Localidad"><Input value={config.city} onChange={(e) => setLocation({ city: e.target.value })} placeholder="San José de la Rinconada" /></Field><Field label="Código postal"><Input value={config.postalCode} onChange={(e) => setLocation({ postalCode: e.target.value })} placeholder="41300" /></Field><Field label="Plazo"><Select value={config.deliveryTimeline} onChange={(e) => setLocation({ deliveryTimeline: e.target.value as DeliveryTimeline })}>{timelines.map((t) => <option key={t}>{t}</option>)}</Select></Field></div></StepShell>;
-};
-
-const SummaryStep = ({ price }: { price: ReturnType<typeof calculatePrice> }) => {
-  const { config } = useConfiguratorStore();
-  return <StepShell title="Resumen de presupuesto" subtitle="Revisa la configuración antes de introducir tus datos."><div className="grid gap-5 lg:grid-cols-2"><div className="rounded-2xl bg-slate-50 p-5"><h3 className="font-black text-slate-900">Datos técnicos</h3><div className="mt-3 space-y-2 text-sm text-slate-700"><p><strong>Medidas:</strong> {config.length} x {config.width} m</p><p><strong>Metros cuadrados:</strong> {price.squareMeters} m²</p><p><strong>Panel:</strong> {config.panelType}, {config.panelThickness}, color {config.panelColor}</p><p><strong>Uso:</strong> {config.useType}</p><p><strong>Ubicación:</strong> {config.city}, {config.province}</p></div></div><div className="rounded-2xl bg-orange-50 p-5"><h3 className="font-black text-slate-900">Precio</h3><div className="mt-3 space-y-2 text-sm text-slate-800"><p><strong>Precio base:</strong> {formatCurrency(price.basePrice)}</p><p><strong>Extras:</strong> {formatCurrency(price.extrasPrice)}</p><p><strong>Precio sin IVA:</strong> {formatCurrency(price.estimatedPriceWithoutVat)}</p><p><strong>IVA 21%:</strong> {formatCurrency(price.vatAmount)}</p><p className="text-xl font-black text-brand-orange">Total con IVA: {formatCurrency(price.estimatedPriceWithVat)}</p></div></div></div><div className="mt-5 rounded-2xl bg-slate-950 p-5 text-white"><h3 className="font-black">Elementos incluidos</h3><p className="mt-2 text-sm text-slate-300">{price.summary.includedList.join(', ')}</p><h3 className="mt-4 font-black">Extras añadidos</h3><p className="mt-2 text-sm text-slate-300">{price.summary.extrasList.length ? price.summary.extrasList.join(', ') : 'Sin extras añadidos'}</p></div><p className="mt-5 rounded-2xl bg-amber-50 p-4 text-sm font-bold text-amber-900">Precio orientativo sujeto a revisión técnica, transporte, montaje, accesos y disponibilidad de materiales.</p></StepShell>;
-};
-
-const SelectedItemPanel = ({ item }: { item: LayoutItem | null }) => {
-  const { setDivisionOrientation, updateItem, resizeBathroom } = useConfiguratorStore();
-  if (!item) return <p className="mt-4 rounded-2xl bg-slate-50 p-4 text-sm font-semibold text-slate-600">Selecciona un elemento del plano para ver sus opciones.</p>;
-  const isDivision = item.type === 'interior_room' || item.type === 'full_bathroom' || item.type === 'wall_partition';
-  const updateBathroomWidth = (value: string) => {
-    const parsed = parseNumberInput(value);
-    if (!Number.isNaN(parsed)) resizeBathroom(item.id, parsed, item.height);
-  };
-  const updateBathroomHeight = (value: string) => {
-    const parsed = parseNumberInput(value);
-    if (!Number.isNaN(parsed)) resizeBathroom(item.id, item.width, parsed);
-  };
-
-  return (
-    <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
-      <p className="font-black text-slate-900">Seleccionado: {item.label}</p>
-      <p className="mt-1 text-sm text-slate-600">X {item.x.toFixed(2)} m · Y {item.y.toFixed(2)} m · {item.width.toFixed(2)} x {item.height.toFixed(2)} m</p>
-      {item.parentId ? <p className="mt-2 rounded-xl bg-blue-50 p-3 text-sm font-semibold text-blue-900">Elemento interno del baño. Puedes arrastrarlo para colocarlo dentro del bloque.</p> : null}
-      {isDivision ? <div className="mt-3 flex flex-wrap gap-2"><Button variant="outline" onClick={() => setDivisionOrientation(item.id, 'transversal')}>Transversal</Button><Button variant="outline" onClick={() => setDivisionOrientation(item.id, 'longitudinal')}>Longitudinal</Button>{item.type === 'full_bathroom' ? <Button variant="outline" onClick={() => updateItem(item.id, { hasShowerTray: !item.hasShowerTray })}>{item.hasShowerTray === false ? 'Añadir ducha' : 'Sin plato de ducha (-100 €)'}</Button> : null}</div> : null}
-      {item.type === 'full_bathroom' ? (
-        <div className="mt-4 grid gap-4 sm:grid-cols-2">
-          <Field label="Ancho del baño (m)"><Input value={item.width.toFixed(2)} onChange={(event) => updateBathroomWidth(event.target.value)} /></Field>
-          <Field label="Fondo del baño (m)"><Input value={item.height.toFixed(2)} onChange={(event) => updateBathroomHeight(event.target.value)} /></Field>
-          <p className="rounded-xl bg-amber-50 p-3 text-xs font-semibold text-amber-900 sm:col-span-2">El bloque de baño se puede ampliar o reducir. Sus elementos internos se mantienen dentro del bloque y se pueden recolocar arrastrándolos.</p>
-        </div>
-      ) : null}
-    </div>
-  );
-};
-
-const validateContact = (contact: ContactFormState) => {
-  const errors: Partial<Record<keyof ContactFormState, string>> = {};
-  if (contact.fullName.trim().length < 2) errors.fullName = 'Introduce tu nombre completo.';
-  if (contact.phone.trim().length < 7) errors.phone = 'Introduce un teléfono válido.';
-  if (!isValidEmail(contact.email)) errors.email = 'Introduce un email válido.';
-  if (!contact.accepted) errors.accepted = 'Debes aceptar la política de privacidad.';
-  return errors;
-};
-
-const ContactStep = ({ onSubmit, error }: { onSubmit: (contact: ContactFormState) => Promise<void>; error?: string }) => {
-  const { config } = useConfiguratorStore();
-  const [contact, setContact] = useState<ContactFormState>({
-    fullName: '',
-    phone: '',
-    email: '',
-    intendedUse: config.useType,
-    comments: '',
-    accepted: false,
-    newsletterSubscribed: false,
-  });
-  const [errors, setErrors] = useState<Partial<Record<keyof ContactFormState, string>>>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const updateContact = <K extends keyof ContactFormState>(key: K, value: ContactFormState[K]) => {
-    setContact((previous) => ({ ...previous, [key]: value }));
-    setErrors((previous) => ({ ...previous, [key]: undefined }));
-  };
-
-  const submit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const validationErrors = validateContact(contact);
-    setErrors(validationErrors);
-    if (Object.keys(validationErrors).length) return;
-
-    setIsSubmitting(true);
-    try {
-      await onSubmit(contact);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  return (
-    <StepShell title="Datos del cliente" subtitle="Generaremos el PDF y guardaremos la solicitud para preparar el presupuesto.">
-      <form noValidate onSubmit={submit} className="space-y-4">
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Nombre completo" error={errors.fullName}>
-            <Input autoComplete="name" value={contact.fullName} onChange={(event) => updateContact('fullName', event.target.value)} />
-          </Field>
-          <Field label="Teléfono" error={errors.phone}>
-            <Input autoComplete="tel" value={contact.phone} onChange={(event) => updateContact('phone', event.target.value)} />
-          </Field>
-          <Field label="Email" error={errors.email}>
-            <Input type="email" autoComplete="email" value={contact.email} onChange={(event) => updateContact('email', event.target.value)} />
-          </Field>
-          <Field label="Uso previsto">
-            <Input value={contact.intendedUse} onChange={(event) => updateContact('intendedUse', event.target.value)} />
-          </Field>
-        </div>
-        <Field label="Comentarios">
-          <Textarea rows={4} value={contact.comments} onChange={(event) => updateContact('comments', event.target.value)} placeholder="Cuéntanos detalles de transporte, montaje, accesos, acabados, etc." />
-        </Field>
-        <label className="flex items-start gap-3 rounded-2xl bg-slate-50 p-4 text-sm font-semibold text-slate-700">
-          <input type="checkbox" className="mt-1" checked={contact.accepted} onChange={(event) => updateContact('accepted', event.target.checked)} />
-          <span>Acepto la política de privacidad y el tratamiento de mis datos para gestionar la solicitud.</span>
-        </label>
-        {errors.accepted ? <p className="text-sm font-semibold text-red-600">{errors.accepted}</p> : null}
-        <label className="flex items-start gap-3 rounded-2xl bg-blue-50 p-4 text-sm font-semibold text-blue-900">
-          <input type="checkbox" className="mt-1" checked={contact.newsletterSubscribed} onChange={(event) => updateContact('newsletterSubscribed', event.target.checked)} />
-          <span>Quiero recibir novedades u ofertas.</span>
-        </label>
-        {error ? <p className="rounded-2xl bg-red-50 p-4 text-sm font-semibold text-red-700">{error}</p> : null}
-        <Button type="submit" disabled={isSubmitting}>
-          <Download size={18} /> {isSubmitting ? 'Generando...' : 'Guardar solicitud y descargar PDF'}
-        </Button>
-      </form>
-    </StepShell>
-  );
-};
+const MeasuresStep = () => { const { config, setMeasure } = useConfiguratorStore(); const setCustomWidth = (value: string) => { const parsed = parseNumberInput(value); const nextWidth = Number.isNaN(parsed) || parsed <= 0 ? config.width : parsed; setMeasure(config.length, nextWidth, 'Otro ancho', value); }; return <StepShell title="Elige las medidas de tu módulo" subtitle="El modelo recomendado es 6 x 2,40 m, desde 4.750 € sin IVA."><div className="grid gap-4 sm:grid-cols-3">{[3,4,5,6,7,8].map((length) => <button key={length} onClick={() => setMeasure(length, config.width, config.widthOption, config.customWidth)} className={`rounded-2xl border p-4 text-left transition ${config.length === length ? 'border-brand-orange bg-orange-50 text-brand-orange' : 'border-slate-200 hover:border-slate-300'}`}><p className="text-lg font-black">{length} m</p><p className="text-xs font-bold text-slate-500">{length === 6 ? 'Más vendido' : length === 8 ? 'Bajo consulta' : 'Medida habitual'}</p></button>)}</div><div className="mt-6 grid gap-3 sm:grid-cols-3">{[{label:'2,40 metros',value:2.4,option:'2.40 m' as const,helper:'Ancho estándar'}, {label:'2,50 metros',value:2.5,option:'2.50 m' as const,helper:'Opción habitual'}, {label:'Otro ancho',value:null,option:'Otro ancho' as const,helper:'Bajo consulta'}].map((option) => { const selected = config.widthOption === option.option; const customWidth = parseNumberInput(config.customWidth); const widthValue = option.value ?? (Number.isNaN(customWidth) ? config.width : customWidth); return <button key={option.label} onClick={() => setMeasure(config.length, widthValue, option.option, config.customWidth)} className={`rounded-2xl border p-4 text-left transition ${selected ? 'border-brand-blue bg-blue-50 text-brand-blue' : 'border-slate-200 hover:border-slate-300'}`}><p className="font-black">{option.label}</p><p className="mt-1 text-xs text-slate-500">{option.helper}</p></button>; })}</div>{config.widthOption === 'Otro ancho' ? <div className="mt-5 max-w-xs"><Field label="Ancho deseado en metros"><Input value={config.customWidth} onChange={(e) => setCustomWidth(e.target.value)} placeholder="Ej. 2.60" /></Field><p className="mt-2 text-xs font-semibold text-slate-500">Rango permitido: {MIN_CUSTOM_WIDTH.toLocaleString('es-ES')} m a {MAX_CUSTOM_WIDTH.toLocaleString('es-ES')} m.</p></div> : null}{config.isSpecialMeasure ? <p className="mt-4 rounded-2xl bg-amber-50 p-4 text-sm font-bold text-amber-900">Esta medida se marcará como especial y puede requerir revisión técnica.</p> : null}</StepShell>; };
+const PanelStep = () => { const { config, setPanelChoice } = useConfiguratorStore(); return <StepShell title="Elige el panel" subtitle="El panel estándar es sándwich blanco de 30 mm. Otros grosores o colores se marcan bajo consulta."><div className="grid gap-3 sm:grid-cols-2">{panelChoices.map((choice) => <button key={choice} onClick={() => setPanelChoice(choice, config.specialThickness, config.specialColor)} className={`rounded-2xl border p-4 text-left font-black transition ${config.panelChoice === choice ? 'border-brand-orange bg-orange-50 text-brand-orange' : 'border-slate-200 hover:border-slate-300'}`}>{choice}</button>)}</div><div className="mt-5 grid gap-4 sm:grid-cols-2">{(config.panelChoice === 'Otro grosor de panel' || config.panelChoice === 'Otro grosor y otro color') ? <Field label="Grosor deseado"><Input value={config.specialThickness} onChange={(e) => setPanelChoice(config.panelChoice, e.target.value, config.specialColor)} placeholder="Ej. 40 mm" /></Field> : null}{(config.panelChoice === 'Otro color de panel' || config.panelChoice === 'Otro grosor y otro color') ? <Field label="Color deseado"><Input value={config.specialColor} onChange={(e) => setPanelChoice(config.panelChoice, config.specialThickness, e.target.value)} placeholder="Ej. gris antracita" /></Field> : null}</div></StepShell>; };
+const UseStep = () => { const { config, setUseType } = useConfiguratorStore(); return <StepShell title="Uso previsto" subtitle="Selecciona el uso principal para preparar mejor el presupuesto."><div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{uses.map((use) => <button key={use} onClick={() => setUseType(use)} className={`rounded-2xl border p-4 text-left font-black transition ${config.useType === use ? 'border-brand-orange bg-orange-50 text-brand-orange' : 'border-slate-200 hover:border-slate-300'}`}>{use}</button>)}</div></StepShell>; };
+const LocationStep = () => { const { config, setLocation } = useConfiguratorStore(); return <StepShell title="Ubicación y plazo" subtitle="Necesitamos estos datos para estimar transporte, montaje y prioridad."><div className="grid gap-4 sm:grid-cols-2"><Field label="Provincia"><Input value={config.province} onChange={(e) => setLocation({ province: e.target.value })} placeholder="Sevilla" /></Field><Field label="Localidad"><Input value={config.city} onChange={(e) => setLocation({ city: e.target.value })} placeholder="San José de la Rinconada" /></Field><Field label="Código postal"><Input value={config.postalCode} onChange={(e) => setLocation({ postalCode: e.target.value })} placeholder="41300" /></Field><Field label="Plazo"><Select value={config.deliveryTimeline} onChange={(e) => setLocation({ deliveryTimeline: e.target.value as DeliveryTimeline })}>{timelines.map((t) => <option key={t}>{t}</option>)}</Select></Field></div></StepShell>; };
+const SummaryStep = ({ price }: { price: ReturnType<typeof calculatePrice> }) => { const { config } = useConfiguratorStore(); return <StepShell title="Resumen de presupuesto" subtitle="Revisa la configuración antes de introducir tus datos."><div className="grid gap-5 lg:grid-cols-2"><div className="rounded-2xl bg-slate-50 p-5"><h3 className="font-black text-slate-900">Datos técnicos</h3><div className="mt-3 space-y-2 text-sm text-slate-700"><p><strong>Medidas:</strong> {config.length} x {config.width} m</p><p><strong>Metros cuadrados:</strong> {price.squareMeters} m²</p><p><strong>Panel:</strong> {config.panelType}, {config.panelThickness}, color {config.panelColor}</p><p><strong>Uso:</strong> {config.useType}</p><p><strong>Ubicación:</strong> {config.city}, {config.province}</p></div></div><div className="rounded-2xl bg-orange-50 p-5"><h3 className="font-black text-slate-900">Precio</h3><div className="mt-3 space-y-2 text-sm text-slate-800"><p><strong>Precio base:</strong> {formatCurrency(price.basePrice)}</p><p><strong>Extras:</strong> {formatCurrency(price.extrasPrice)}</p><p><strong>Precio sin IVA:</strong> {formatCurrency(price.estimatedPriceWithoutVat)}</p><p><strong>IVA 21%:</strong> {formatCurrency(price.vatAmount)}</p><p className="text-xl font-black text-brand-orange">Total con IVA: {formatCurrency(price.estimatedPriceWithVat)}</p></div></div></div><div className="mt-5 rounded-2xl bg-slate-950 p-5 text-white"><h3 className="font-black">Elementos incluidos</h3><p className="mt-2 text-sm text-slate-300">{price.summary.includedList.join(', ')}</p><h3 className="mt-4 font-black">Extras añadidos</h3><p className="mt-2 text-sm text-slate-300">{price.summary.extrasList.length ? price.summary.extrasList.join(', ') : 'Sin extras añadidos'}</p></div><p className="mt-5 rounded-2xl bg-amber-50 p-4 text-sm font-bold text-amber-900">Precio orientativo sujeto a revisión técnica, transporte, montaje, accesos y disponibilidad de materiales.</p></StepShell>; };
+const SelectedItemPanel = ({ item }: { item: LayoutItem | null }) => { const { setDivisionOrientation, updateItem, resizeBathroom } = useConfiguratorStore(); if (!item) return <p className="mt-4 rounded-2xl bg-slate-50 p-4 text-sm font-semibold text-slate-600">Selecciona un elemento del plano para ver sus opciones.</p>; const isDivision = item.type === 'interior_room' || item.type === 'full_bathroom' || item.type === 'wall_partition'; const updateBathroomWidth = (value: string) => { const parsed = parseNumberInput(value); if (!Number.isNaN(parsed)) resizeBathroom(item.id, parsed, item.height); }; const updateBathroomHeight = (value: string) => { const parsed = parseNumberInput(value); if (!Number.isNaN(parsed)) resizeBathroom(item.id, item.width, parsed); }; return <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4"><p className="font-black text-slate-900">Seleccionado: {item.label}</p><p className="mt-1 text-sm text-slate-600">X {item.x.toFixed(2)} m · Y {item.y.toFixed(2)} m · {item.width.toFixed(2)} x {item.height.toFixed(2)} m</p>{item.parentId ? <p className="mt-2 rounded-xl bg-blue-50 p-3 text-sm font-semibold text-blue-900">Elemento interno del baño. Puedes arrastrarlo para colocarlo dentro del bloque.</p> : null}{isDivision ? <div className="mt-3 flex flex-wrap gap-2"><Button variant="outline" onClick={() => setDivisionOrientation(item.id, 'transversal')}>Transversal</Button><Button variant="outline" onClick={() => setDivisionOrientation(item.id, 'longitudinal')}>Longitudinal</Button>{item.type === 'full_bathroom' ? <Button variant="outline" onClick={() => updateItem(item.id, { hasShowerTray: !item.hasShowerTray })}>{item.hasShowerTray === false ? 'Añadir ducha' : 'Sin plato de ducha (-100 €)'}</Button> : null}</div> : null}{item.type === 'full_bathroom' ? <div className="mt-4 grid gap-4 sm:grid-cols-2"><Field label="Ancho del baño (m)"><Input value={item.width.toFixed(2)} onChange={(event) => updateBathroomWidth(event.target.value)} /></Field><Field label="Fondo del baño (m)"><Input value={item.height.toFixed(2)} onChange={(event) => updateBathroomHeight(event.target.value)} /></Field><p className="rounded-xl bg-amber-50 p-3 text-xs font-semibold text-amber-900 sm:col-span-2">El bloque de baño se puede ampliar o reducir. Sus elementos internos se mantienen dentro del bloque y se pueden recolocar arrastrándolos.</p></div> : null}</div>; };
+const validateContact = (contact: ContactFormState) => { const errors: Partial<Record<keyof ContactFormState, string>> = {}; if (contact.fullName.trim().length < 2) errors.fullName = 'Introduce tu nombre completo.'; if (contact.phone.trim().length < 7) errors.phone = 'Introduce un teléfono válido.'; if (!isValidEmail(contact.email)) errors.email = 'Introduce un email válido.'; if (!contact.accepted) errors.accepted = 'Debes aceptar la política de privacidad.'; return errors; };
+const ContactStep = ({ onSubmit, error }: { onSubmit: (contact: ContactFormState) => Promise<void>; error?: string }) => { const { config } = useConfiguratorStore(); const [contact, setContact] = useState<ContactFormState>({ fullName: '', phone: '', email: '', intendedUse: config.useType, comments: '', accepted: false, newsletterSubscribed: false }); const [errors, setErrors] = useState<Partial<Record<keyof ContactFormState, string>>>({}); const [isSubmitting, setIsSubmitting] = useState(false); const updateContact = <K extends keyof ContactFormState>(key: K, value: ContactFormState[K]) => { setContact((previous) => ({ ...previous, [key]: value })); setErrors((previous) => ({ ...previous, [key]: undefined })); }; const submit = async (event: React.FormEvent<HTMLFormElement>) => { event.preventDefault(); const validationErrors = validateContact(contact); setErrors(validationErrors); if (Object.keys(validationErrors).length) return; setIsSubmitting(true); try { await onSubmit(contact); } finally { setIsSubmitting(false); } }; return <StepShell title="Datos del cliente" subtitle="Generaremos el PDF y guardaremos la solicitud para preparar el presupuesto."><form noValidate onSubmit={submit} className="space-y-4"><div className="grid gap-4 sm:grid-cols-2"><Field label="Nombre completo" error={errors.fullName}><Input autoComplete="name" value={contact.fullName} onChange={(event) => updateContact('fullName', event.target.value)} /></Field><Field label="Teléfono" error={errors.phone}><Input autoComplete="tel" value={contact.phone} onChange={(event) => updateContact('phone', event.target.value)} /></Field><Field label="Email" error={errors.email}><Input type="email" autoComplete="email" value={contact.email} onChange={(event) => updateContact('email', event.target.value)} /></Field><Field label="Uso previsto"><Input value={contact.intendedUse} onChange={(event) => updateContact('intendedUse', event.target.value)} /></Field></div><Field label="Comentarios"><Textarea rows={4} value={contact.comments} onChange={(event) => updateContact('comments', event.target.value)} placeholder="Cuéntanos detalles de transporte, montaje, accesos, acabados, etc." /></Field><label className="flex items-start gap-3 rounded-2xl bg-slate-50 p-4 text-sm font-semibold text-slate-700"><input type="checkbox" className="mt-1" checked={contact.accepted} onChange={(event) => updateContact('accepted', event.target.checked)} /><span>Acepto la política de privacidad y el tratamiento de mis datos para gestionar la solicitud.</span></label>{errors.accepted ? <p className="text-sm font-semibold text-red-600">{errors.accepted}</p> : null}<label className="flex items-start gap-3 rounded-2xl bg-blue-50 p-4 text-sm font-semibold text-blue-900"><input type="checkbox" className="mt-1" checked={contact.newsletterSubscribed} onChange={(event) => updateContact('newsletterSubscribed', event.target.checked)} /><span>Quiero recibir novedades u ofertas.</span></label>{error ? <p className="rounded-2xl bg-red-50 p-4 text-sm font-semibold text-red-700">{error}</p> : null}<Button type="submit" disabled={isSubmitting}><Download size={18} /> {isSubmitting ? 'Generando...' : 'Guardar solicitud y descargar PDF'}</Button></form></StepShell>; };
