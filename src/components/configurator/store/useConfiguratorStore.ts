@@ -1,7 +1,7 @@
 import { create } from 'zustand';
-import type { ConfiguratorState, DeliveryTimeline, DivisionOrientation, LayoutItem, LayoutItemType, PanelChoice, UseType } from '../../../types';
+import type { ConfiguratorState, DeliveryTimeline, DivisionOrientation, EdgeSide, LayoutItem, LayoutItemType, PanelChoice, UseType } from '../../../types';
 import { createBaseLayoutItems, getDefaultItemSize, ITEM_LABELS, ITEM_PRICES } from '../../../utils/pricing';
-import { normalizeBathroomChildItem, normalizeEdgeItem, normalizeInsideItem } from '../cad/utils/coordinates';
+import { clamp, normalizeBathroomChildItem, normalizeEdgeItem, normalizeInsideItem, snapMeters } from '../cad/utils/coordinates';
 
 const initialConfig: ConfiguratorState = {
   length: 6,
@@ -49,9 +49,9 @@ type Store = {
 
 const cloneLayout = (items: LayoutItem[]) => items.map((item) => ({ ...item }));
 
-const isEdgeType = (type: LayoutItemType) => ['base_door', 'additional_door', 'base_window_80x80', 'window_80x80', 'large_window'].includes(type);
+const isEdgeType = (type: LayoutItemType) => ['base_door', 'additional_door', 'base_window_80x80', 'window_80x80', 'large_window', 'bathroom_window_40x40'].includes(type);
 const isDivisionType = (type: LayoutItemType) => ['wall_partition', 'interior_room', 'full_bathroom'].includes(type);
-const isBathroomChildType = (type: LayoutItemType) => ['bathroom_door', 'bathroom_window_40x40', 'bathroom_light_point', 'bathroom_socket'].includes(type);
+const isBathroomChildType = (type: LayoutItemType) => ['bathroom_door', 'bathroom_light_point', 'bathroom_socket'].includes(type);
 
 const duplicateTypeMap: Partial<Record<LayoutItemType, LayoutItemType>> = {
   base_door: 'additional_door',
@@ -60,6 +60,7 @@ const duplicateTypeMap: Partial<Record<LayoutItemType, LayoutItemType>> = {
   additional_socket: 'additional_socket',
   additional_door: 'additional_door',
   window_80x80: 'window_80x80',
+  bathroom_window_40x40: 'bathroom_window_40x40',
   large_window: 'large_window',
   wall_partition: 'wall_partition',
   interior_room: 'interior_room',
@@ -79,6 +80,41 @@ const normalizeItemForModule = (item: LayoutItem, x: number, y: number, length: 
   return item.zone === 'edge'
     ? normalizeEdgeItem(item, x, y, length, width)
     : normalizeInsideItem(item, x, y, length, width);
+};
+
+const rotateEdgeItemToNextSide = (item: LayoutItem, length: number, width: number): LayoutItem => {
+  const sides: EdgeSide[] = ['top', 'right', 'bottom', 'left'];
+  const currentSide = item.side ?? 'top';
+  const nextSide = sides[(sides.indexOf(currentSide) + 1) % sides.length];
+  const openingLength = Math.max(item.width, item.height);
+  const centerX = item.x + item.width / 2;
+  const centerY = item.y + item.height / 2;
+
+  if (nextSide === 'top') {
+    return { ...item, side: 'top', rotation: 0, width: openingLength, height: 0.1, x: clamp(snapMeters(centerX - openingLength / 2), 0, Math.max(0, length - openingLength)), y: 0 };
+  }
+  if (nextSide === 'right') {
+    return { ...item, side: 'right', rotation: 90, width: 0.1, height: openingLength, x: length - 0.1, y: clamp(snapMeters(centerY - openingLength / 2), 0, Math.max(0, width - openingLength)) };
+  }
+  if (nextSide === 'bottom') {
+    return { ...item, side: 'bottom', rotation: 180, width: openingLength, height: 0.1, x: clamp(snapMeters(centerX - openingLength / 2), 0, Math.max(0, length - openingLength)), y: width - 0.1 };
+  }
+  return { ...item, side: 'left', rotation: 270, width: 0.1, height: openingLength, x: 0, y: clamp(snapMeters(centerY - openingLength / 2), 0, Math.max(0, width - openingLength)) };
+};
+
+const rotateInsideItem = (item: LayoutItem, length: number, width: number): LayoutItem => {
+  if (isDivisionType(item.type)) {
+    const nextOrientation: DivisionOrientation = item.orientation === 'longitudinal' ? 'transversal' : 'longitudinal';
+    return normalizeInsideItem({ ...item, orientation: nextOrientation }, item.x, item.y, length, width);
+  }
+
+  const nextRotation = ((item.rotation + 90) % 360) as LayoutItem['rotation'];
+  if (item.width === item.height) return { ...item, rotation: nextRotation };
+
+  const centerX = item.x + item.width / 2;
+  const centerY = item.y + item.height / 2;
+  const rotated = { ...item, rotation: nextRotation, width: item.height, height: item.width };
+  return normalizeInsideItem(rotated, centerX - rotated.width / 2, centerY - rotated.height / 2, length, width);
 };
 
 const createBathroomChildren = (bathroom: LayoutItem): LayoutItem[] => [
@@ -300,15 +336,19 @@ export const useConfiguratorStore = create<Store>((set, get) => ({
     }));
   },
   rotateSelected: () => {
-    const { selectedItemId } = get();
+    const { selectedItemId, config } = get();
     if (!selectedItemId) return;
-    get().updateItem(selectedItemId, {}, true);
+    const before = cloneLayout(config.layoutItems);
     set((state) => ({
+      undoStack: [...state.undoStack.slice(-30), before],
+      redoStack: [],
       config: {
         ...state.config,
         layoutItems: state.config.layoutItems.map((item) => {
           if (item.id !== selectedItemId) return item;
-          return normalizeItemForModule({ ...item, rotation: (((item.rotation + 90) % 360) as LayoutItem['rotation']) }, item.x, item.y, state.config.length, state.config.width, state.config.layoutItems);
+          return item.zone === 'edge'
+            ? rotateEdgeItemToNextSide(item, state.config.length, state.config.width)
+            : rotateInsideItem(item, state.config.length, state.config.width);
         }),
       },
     }));
