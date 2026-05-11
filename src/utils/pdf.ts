@@ -14,7 +14,6 @@ const quoteNumber = () => {
 };
 
 const cleanText = (value: unknown) => String(value ?? '').replace(/\s+/g, ' ').trim();
-
 const safeFileName = (value: string) => cleanText(value).toLowerCase().replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '') || 'cliente';
 
 const addHeader = (doc: jsPDF, number: string, date: string) => {
@@ -91,12 +90,10 @@ const drawPriceTable = (doc: jsPDF, price: PriceResult, y: number) => {
     ['Subtotal sin IVA', formatCurrency(price.estimatedPriceWithoutVat)],
     ['IVA 21%', formatCurrency(price.vatAmount)],
   ];
-
   doc.setDrawColor(226, 232, 240);
   doc.setFillColor(248, 250, 252);
   doc.roundedRect(MARGIN, y, CONTENT_WIDTH, 48, 3, 3, 'FD');
   sectionTitle(doc, 'Resumen económico', MARGIN + 5, y + 8);
-
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
   let cursor = y + 17;
@@ -108,7 +105,6 @@ const drawPriceTable = (doc: jsPDF, price: PriceResult, y: number) => {
     doc.setFont('helvetica', 'normal');
     cursor += 6;
   });
-
   doc.setTextColor(249, 115, 22);
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(13);
@@ -126,11 +122,9 @@ const addPlanPage = (doc: jsPDF, number: string, date: string, cadImage?: string
   doc.setFontSize(8.5);
   doc.setTextColor(71, 85, 105);
   doc.text('Plano visual generado desde el configurador. Las medidas y posiciones son orientativas y deben revisarse antes de fabricación.', MARGIN, 55);
-
   doc.setFillColor(2, 6, 23);
   doc.setDrawColor(51, 65, 85);
   doc.roundedRect(MARGIN, 63, CONTENT_WIDTH, 118, 3, 3, 'FD');
-
   if (cadImage) {
     try {
       doc.addImage(cadImage, 'PNG', MARGIN + 4, 67, CONTENT_WIDTH - 8, 110, undefined, 'FAST');
@@ -146,7 +140,6 @@ const addPlanPage = (doc: jsPDF, number: string, date: string, cadImage?: string
     doc.text('Plano no capturado. Vuelve al paso CAD y continúa de nuevo para incluirlo.', PAGE_WIDTH / 2, 123, { align: 'center' });
     doc.setTextColor(15, 23, 42);
   }
-
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(9);
   doc.setTextColor(15, 23, 42);
@@ -164,50 +157,31 @@ const addPlanPage = (doc: jsPDF, number: string, date: string, cadImage?: string
   });
 };
 
-export const downloadConfiguratorPdf = ({ contact, config, price, cadImage }: { contact: ContactFormState; config: ConfiguratorState; price: PriceResult; cadImage?: string | null }) => {
+export interface GeneratedConfiguratorPdf {
+  number: string;
+  fileName: string;
+  blob: Blob;
+}
+
+export const downloadConfiguratorPdf = ({ contact, config, price, cadImage }: { contact: ContactFormState; config: ConfiguratorState; price: PriceResult; cadImage?: string | null }): GeneratedConfiguratorPdf => {
   const doc = new jsPDF({ unit: 'mm', format: 'a4', compress: true });
   const number = quoteNumber();
   const date = new Date().toLocaleDateString('es-ES');
-
   addHeader(doc, number, date);
   addFooter(doc, 1);
-
   let y = 45;
-  const leftHeight = drawInfoBox(doc, 'Datos de empresa', [
-    company.name,
-    `CIF: ${company.cif}`,
-    `Tel: ${company.phone}`,
-    `Email: ${company.email}`,
-    company.address,
-  ], MARGIN, y, 86);
-
-  const rightHeight = drawInfoBox(doc, 'Datos del cliente', [
-    contact.fullName,
-    `Tel: ${contact.phone}`,
-    `Email: ${contact.email || '-'}`,
-    `${config.city || '-'}, ${config.province || '-'}`,
-    `CP: ${config.postalCode || '-'}`,
-  ], 110, y, 86);
-
+  const leftHeight = drawInfoBox(doc, 'Datos de empresa', [company.name, `CIF: ${company.cif}`, `Tel: ${company.phone}`, `Email: ${company.email}`, company.address], MARGIN, y, 86);
+  const rightHeight = drawInfoBox(doc, 'Datos del cliente', [contact.fullName, `Tel: ${contact.phone}`, `Email: ${contact.email || '-'}`, `${config.city || '-'}, ${config.province || '-'}`, `CP: ${config.postalCode || '-'}`], 110, y, 86);
   y += Math.max(leftHeight, rightHeight) + 10;
   y = ensureSpace(doc, y, 55, number, date);
-
   sectionTitle(doc, 'Configuración técnica', MARGIN, y);
   y += 7;
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
-  const configLines = [
-    `Medidas: ${config.length} x ${config.width} m · ${price.squareMeters} m²`,
-    `Panel: ${config.panelType}, ${config.panelThickness}, color ${config.panelColor}`,
-    `Uso previsto: ${config.useType}`,
-    `Plazo indicado: ${config.deliveryTimeline}`,
-    `Ubicación: ${config.city || '-'}, ${config.province || '-'} ${config.postalCode ? `(${config.postalCode})` : ''}`,
-  ];
-  configLines.forEach((line) => {
+  [`Medidas: ${config.length} x ${config.width} m · ${price.squareMeters} m²`, `Panel: ${config.panelType}, ${config.panelThickness}, color ${config.panelColor}`, `Uso previsto: ${config.useType}`, `Plazo indicado: ${config.deliveryTimeline}`, `Ubicación: ${config.city || '-'}, ${config.province || '-'} ${config.postalCode ? `(${config.postalCode})` : ''}`].forEach((line) => {
     doc.text(cleanText(line), MARGIN, y);
     y += 5.4;
   });
-
   y += 3;
   y = ensureSpace(doc, y, 45, number, date);
   sectionTitle(doc, 'Incluido de serie', MARGIN, y);
@@ -215,7 +189,6 @@ export const downloadConfiguratorPdf = ({ contact, config, price, cadImage }: { 
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8.5);
   y += drawWrappedText(doc, price.summary.includedList.join(', '), MARGIN, y, CONTENT_WIDTH, 4.6) + 5;
-
   y = ensureSpace(doc, y, 45, number, date);
   sectionTitle(doc, 'Extras añadidos', MARGIN, y);
   y += 7;
@@ -224,11 +197,9 @@ export const downloadConfiguratorPdf = ({ contact, config, price, cadImage }: { 
     y = ensureSpace(doc, y, 7, number, date);
     y += drawWrappedText(doc, `• ${extra}`, MARGIN, y, CONTENT_WIDTH, 4.6) + 1.2;
   });
-
   y = ensureSpace(doc, y + 5, 56, number, date);
   drawPriceTable(doc, price, y);
   y += 58;
-
   y = ensureSpace(doc, y, 35, number, date);
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(9);
@@ -240,9 +211,10 @@ export const downloadConfiguratorPdf = ({ contact, config, price, cadImage }: { 
   doc.setFontSize(8);
   drawWrappedText(doc, 'Esta factura proforma no constituye factura definitiva. Precio orientativo pendiente de revisión técnica, transporte, montaje, accesos, forma de pago y disponibilidad de materiales.', MARGIN + 5, y + 14, CONTENT_WIDTH - 10, 4);
   doc.setTextColor(15, 23, 42);
-
   addPlanPage(doc, number, date, cadImage);
-
   const name = safeFileName(contact.fullName);
-  doc.save(`factura-proforma-${name}-${number}.pdf`);
+  const fileName = `factura-proforma-${name}-${number}.pdf`;
+  const blob = doc.output('blob');
+  doc.save(fileName);
+  return { number, fileName, blob };
 };
