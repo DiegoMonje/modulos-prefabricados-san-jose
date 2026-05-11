@@ -48,6 +48,7 @@ export type LayoutZone = 'edge' | 'inside';
 export type EdgeSide = 'top' | 'right' | 'bottom' | 'left';
 export type DivisionOrientation = 'transversal' | 'longitudinal';
 export type BathroomChildType = 'door' | 'window' | 'light' | 'socket';
+export type DoorSwing = 'in' | 'out';
 
 export interface LayoutItem {
   id: string;
@@ -63,6 +64,7 @@ export interface LayoutItem {
   price: number;
   included?: boolean;
   orientation?: DivisionOrientation;
+  doorSwing?: DoorSwing;
   hasShowerTray?: boolean;
   parentId?: string;
   bathroomChildType?: BathroomChildType;
