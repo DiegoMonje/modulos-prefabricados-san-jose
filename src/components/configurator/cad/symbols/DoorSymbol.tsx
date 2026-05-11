@@ -16,6 +16,7 @@ export const DoorSymbol = ({
   color,
   side,
   swing = 'in',
+  rotation,
 }: {
   x: number;
   y: number;
@@ -24,13 +25,14 @@ export const DoorSymbol = ({
   color: string;
   side?: EdgeSide;
   swing?: DoorSwing;
+  rotation?: 0 | 90 | 180 | 270;
 }) => {
   const size = Math.max(width, height, 32);
-  const rotation = rotationForSide(side);
+  const finalRotation = side ? rotationForSide(side) : rotation ?? 0;
   const swingDirection = swing === 'out' ? -1 : 1;
 
   return (
-    <Group x={x} y={y} rotation={rotation} offsetX={rotation === 90 || rotation === 180 ? size : 0} offsetY={rotation === 180 || rotation === 270 ? size : 0}>
+    <Group x={x} y={y} rotation={finalRotation} offsetX={finalRotation === 90 || finalRotation === 180 ? size : 0} offsetY={finalRotation === 180 || finalRotation === 270 ? size : 0}>
       <Line points={[0, 0, size, 0]} stroke={color} strokeWidth={4} lineCap="round" />
       <Line points={[0, 0, 0, size * swingDirection]} stroke={color} strokeWidth={4} lineCap="round" />
       <Arc x={0} y={0} innerRadius={size - 2} outerRadius={size - 1} angle={90 * swingDirection} rotation={0} stroke={color} strokeWidth={2} dash={[6, 5]} />
