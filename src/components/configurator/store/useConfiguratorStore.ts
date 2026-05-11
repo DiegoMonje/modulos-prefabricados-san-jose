@@ -39,6 +39,7 @@ type Store = {
   moveItem: (id: string, x: number, y: number) => void;
   removeSelected: () => void;
   rotateSelected: () => void;
+  toggleSelectedDoorSwing: () => void;
   duplicateSelected: () => void;
   setDivisionOrientation: (id: string, orientation: DivisionOrientation) => void;
   resizeBathroom: (id: string, width: number, height: number) => void;
@@ -52,7 +53,6 @@ const cloneLayout = (items: LayoutItem[]) => items.map((item) => ({ ...item }));
 const isDoorType = (type: LayoutItemType) => ['base_door', 'additional_door', 'interior_door', 'bathroom_door'].includes(type);
 const isEdgeType = (type: LayoutItemType) => ['base_door', 'additional_door', 'base_window_80x80', 'window_80x80', 'large_window', 'bathroom_window_40x40'].includes(type);
 const isDivisionType = (type: LayoutItemType) => ['wall_partition', 'interior_room', 'full_bathroom'].includes(type);
-const isBathroomChildType = (type: LayoutItemType) => ['bathroom_door', 'bathroom_light_point', 'bathroom_socket'].includes(type);
 
 const duplicateTypeMap: Partial<Record<LayoutItemType, LayoutItemType>> = {
   base_door: 'additional_door',
@@ -76,7 +76,7 @@ const duplicateTypeMap: Partial<Record<LayoutItemType, LayoutItemType>> = {
 };
 
 const normalizeItemForModule = (item: LayoutItem, x: number, y: number, length: number, width: number, items: LayoutItem[] = []) => {
-  if (isBathroomChildType(item.type) && item.parentId) {
+  if (item.parentId) {
     const parent = items.find((candidate) => candidate.id === item.parentId);
     if (parent) return normalizeBathroomChildItem(item, parent, x, y);
   }
@@ -87,8 +87,6 @@ const normalizeItemForModule = (item: LayoutItem, x: number, y: number, length: 
 };
 
 const rotateEdgeItemToNextSide = (item: LayoutItem, length: number, width: number): LayoutItem => {
-  if (isDoorType(item.type)) return { ...item, doorSwing: item.doorSwing === 'out' ? 'in' : 'out' };
-
   const sides: EdgeSide[] = ['top', 'right', 'bottom', 'left'];
   const currentSide = item.side ?? 'top';
   const nextSide = sides[(sides.indexOf(currentSide) + 1) % sides.length];
@@ -109,8 +107,6 @@ const rotateEdgeItemToNextSide = (item: LayoutItem, length: number, width: numbe
 };
 
 const rotateInsideItem = (item: LayoutItem, length: number, width: number): LayoutItem => {
-  if (isDoorType(item.type)) return { ...item, doorSwing: item.doorSwing === 'out' ? 'in' : 'out' };
-
   if (isDivisionType(item.type)) {
     const nextOrientation: DivisionOrientation = item.orientation === 'longitudinal' ? 'transversal' : 'longitudinal';
     return normalizeInsideItem({ ...item, orientation: nextOrientation }, item.x, item.y, length, width);
@@ -363,11 +359,25 @@ export const useConfiguratorStore = create<Store>((set, get) => ({
       },
     }));
   },
+  toggleSelectedDoorSwing: () => {
+    const { selectedItemId, config } = get();
+    if (!selectedItemId) return;
+    const selected = config.layoutItems.find((item) => item.id === selectedItemId);
+    if (!selected || !isDoorType(selected.type)) return;
+    set((state) => ({
+      undoStack: [...state.undoStack.slice(-30), cloneLayout(state.config.layoutItems)],
+      redoStack: [],
+      config: {
+        ...state.config,
+        layoutItems: state.config.layoutItems.map((item) => item.id === selectedItemId ? { ...item, doorSwing: item.doorSwing === 'out' ? 'in' : 'out' } : item),
+      },
+    }));
+  },
   duplicateSelected: () => {
     const { selectedItemId, config } = get();
     if (!selectedItemId) return;
     const selected = config.layoutItems.find((item) => item.id === selectedItemId);
-    if (!selected || isBathroomChildType(selected.type)) return;
+    if (!selected || selected.parentId) return;
 
     const duplicateType = duplicateTypeMap[selected.type];
     if (!duplicateType) return;
