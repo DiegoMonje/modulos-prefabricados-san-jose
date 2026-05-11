@@ -10,14 +10,15 @@ export interface CadValidationIssue {
   relatedItemId?: string;
 }
 
-const OPENING_TYPES = ['base_door', 'additional_door', 'base_window_80x80', 'window_80x80', 'large_window'];
+const OPENING_TYPES = ['base_door', 'additional_door', 'base_window_80x80', 'window_80x80', 'large_window', 'bathroom_window_40x40'];
 const DIVISION_TYPES = ['interior_room', 'full_bathroom', 'wall_partition'];
-const TECHNICAL_INSIDE_TYPES = ['base_socket', 'additional_socket', 'base_light_point', 'base_electrical_panel', 'air_conditioning'];
+const TECHNICAL_INSIDE_TYPES = ['base_socket', 'additional_socket', 'base_light_point', 'additional_light_point', 'base_electrical_panel', 'air_conditioning', 'toilet', 'sink', 'shower_tray'];
 const MIN_OPENING_DISTANCE_TO_CORNER = 0.2;
 
 const isOpening = (item: LayoutItem) => item.zone === 'edge' && OPENING_TYPES.includes(item.type);
 const isDivision = (item: LayoutItem) => DIVISION_TYPES.includes(item.type);
 const isTechnicalInsideItem = (item: LayoutItem) => item.zone === 'inside' && TECHNICAL_INSIDE_TYPES.includes(item.type);
+const isInteriorDoor = (item: LayoutItem) => item.type === 'interior_door';
 
 export const boxesOverlap = (a: LayoutItem, b: LayoutItem, padding = 0.02) =>
   a.x + padding < b.x + b.width &&
@@ -41,6 +42,20 @@ const openingDistanceToNearestCorner = (item: LayoutItem, length: number, width:
     return Math.min(item.y, Math.max(0, width - (item.y + item.height)));
   }
   return Infinity;
+};
+
+const isDoorCloseToPartition = (door: LayoutItem, partition: LayoutItem) => {
+  const doorCenterX = door.x + door.width / 2;
+  const doorCenterY = door.y + door.height / 2;
+  const partitionCenterX = partition.x + partition.width / 2;
+  const partitionCenterY = partition.y + partition.height / 2;
+  const horizontalPartition = partition.width >= partition.height;
+
+  if (horizontalPartition) {
+    return door.x < partition.x + partition.width && door.x + door.width > partition.x && Math.abs(doorCenterY - partitionCenterY) < 0.25;
+  }
+
+  return door.y < partition.y + partition.height && door.y + door.height > partition.y && Math.abs(doorCenterX - partitionCenterX) < 0.25;
 };
 
 export const validateCadLayout = (items: LayoutItem[], length: number, width: number): CadValidationIssue[] => {
@@ -110,6 +125,20 @@ export const validateCadLayout = (items: LayoutItem[], length: number, width: nu
         severity: 'warning',
         itemId: item.id,
         message: 'La habitación debería tener al menos 1,50 m de ancho útil.',
+      });
+    }
+  });
+
+  const interiorDoors = items.filter(isInteriorDoor);
+  const partitions = items.filter((item) => item.type === 'wall_partition' || item.type === 'interior_room' || item.type === 'full_bathroom');
+  interiorDoors.forEach((door) => {
+    const hasPartition = partitions.some((partition) => isDoorCloseToPartition(door, partition));
+    if (!hasPartition) {
+      issues.push({
+        id: issueKey('interior-door-floating', door),
+        severity: 'warning',
+        itemId: door.id,
+        message: `${door.label} debería colocarse sobre un tabique o pared interior.`,
       });
     }
   });
