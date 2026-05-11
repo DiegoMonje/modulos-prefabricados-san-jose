@@ -1,6 +1,8 @@
 import type { ConfiguratorState, ContactFormState, LeadRow, LeadStatus, PriceResult } from '../types';
 import { isSupabaseConfigured, supabase } from '../lib/supabase';
 
+const QUOTES_BUCKET = 'quotes';
+
 const assertSupabase = () => {
   if (!isSupabaseConfigured || !supabase) {
     throw new Error('Supabase no está configurado. Añade VITE_SUPABASE_URL y VITE_SUPABASE_ANON_KEY.');
@@ -8,7 +10,33 @@ const assertSupabase = () => {
   return supabase;
 };
 
-export const createLead = async ({ contact, config, price }: { contact: ContactFormState; config: ConfiguratorState; price: PriceResult }) => {
+const uploadQuotePdf = async ({ leadId, quoteNumber, fileName, pdfBlob }: { leadId: string; quoteNumber: string; fileName: string; pdfBlob: Blob }) => {
+  const client = assertSupabase();
+  const path = `${leadId}/${fileName}`;
+  const { error: uploadError } = await client.storage
+    .from(QUOTES_BUCKET)
+    .upload(path, pdfBlob, {
+      contentType: 'application/pdf',
+      upsert: true,
+    });
+
+  if (uploadError) throw uploadError;
+
+  const { data } = client.storage.from(QUOTES_BUCKET).getPublicUrl(path);
+  return data.publicUrl || path;
+};
+
+export const createLead = async ({
+  contact,
+  config,
+  price,
+  pdf,
+}: {
+  contact: ContactFormState;
+  config: ConfiguratorState;
+  price: PriceResult;
+  pdf?: { number: string; fileName: string; blob: Blob } | null;
+}) => {
   const leadId = crypto.randomUUID();
   const downloadedAt = new Date().toISOString();
 
@@ -45,9 +73,10 @@ export const createLead = async ({ contact, config, price }: { contact: ContactF
 
   if (leadError) throw leadError;
 
+  const savedLeadId = leadData?.id ?? leadId;
   const summary = price.summary;
   const { error: configError } = await client.from('configurations').insert({
-    lead_id: leadData?.id ?? leadId,
+    lead_id: savedLeadId,
     length: config.length,
     width: config.width,
     square_meters: price.squareMeters,
@@ -76,6 +105,40 @@ export const createLead = async ({ contact, config, price }: { contact: ContactF
 
   if (configError) throw configError;
 
+  if (pdf?.blob) {
+    try {
+      const pdfUrl = await uploadQuotePdf({
+        leadId: savedLeadId,
+        quoteNumber: pdf.number,
+        fileName: pdf.fileName,
+        pdfBlob: pdf.blob,
+      });
+
+      await client.from('quotes').insert({
+        lead_id: savedLeadId,
+        quote_number: pdf.number,
+        quote_date: new Date().toISOString().slice(0, 10),
+        base_price: price.estimatedPriceWithoutVat,
+        iva_percentage: 21,
+        iva_amount: price.vatAmount,
+        total_price: price.estimatedPriceWithVat,
+        pdf_url: pdfUrl,
+      });
+    } catch (error) {
+      console.warn('No se pudo guardar el PDF de la proforma en Supabase Storage.', error);
+      await client.from('quotes').insert({
+        lead_id: savedLeadId,
+        quote_number: pdf.number,
+        quote_date: new Date().toISOString().slice(0, 10),
+        base_price: price.estimatedPriceWithoutVat,
+        iva_percentage: 21,
+        iva_amount: price.vatAmount,
+        total_price: price.estimatedPriceWithVat,
+        pdf_url: null,
+      });
+    }
+  }
+
   if (contact.newsletterSubscribed && contact.email) {
     await client.from('newsletter_subscribers').insert({
       full_name: contact.fullName,
@@ -88,7 +151,7 @@ export const createLead = async ({ contact, config, price }: { contact: ContactF
     });
   }
 
-  return leadData?.id ?? leadId;
+  return savedLeadId;
 };
 
 export const getLeads = async (): Promise<LeadRow[]> => {
