@@ -58,6 +58,7 @@ export const clamp = (value: number, min: number, max: number) => Math.max(min, 
 
 const openingLengthFor = (item: LayoutItem) => {
   if (item.type === 'large_window') return 1.2;
+  if (item.type === 'bathroom_window_40x40') return 0.4;
   if (['base_door', 'additional_door', 'base_window_80x80', 'window_80x80'].includes(item.type)) return 0.8;
   return Math.max(item.width, item.height);
 };
