@@ -31,6 +31,9 @@ export const ITEM_PRICES: Record<LayoutItemType, number> = {
   bathroom_window_40x40: 0,
   bathroom_light_point: 0,
   bathroom_socket: 0,
+  toilet: 350,
+  sink: 250,
+  shower_tray: 300,
   air_conditioning: 600,
 };
 
@@ -46,11 +49,14 @@ export const ITEM_LABELS: Record<LayoutItemType, string> = {
   large_window: 'Ventana grande',
   wall_partition: 'Tabique simple',
   interior_room: 'Habitación interior',
-  full_bathroom: 'Baño completo',
+  full_bathroom: 'Baño completo prediseñado',
   bathroom_door: 'Puerta del baño',
   bathroom_window_40x40: 'Ventana 40x40 del baño',
   bathroom_light_point: 'Punto de luz del baño',
   bathroom_socket: 'Enchufe del baño',
+  toilet: 'Váter con fontanería y montaje',
+  sink: 'Lavabo con fontanería y montaje',
+  shower_tray: 'Plato de ducha con fontanería y montaje',
   air_conditioning: 'Aire acondicionado',
 };
 
@@ -151,6 +157,12 @@ export const getDefaultItemSize = (type: LayoutItemType) => {
       return { width: 0.7, height: 0.08 };
     case 'bathroom_window_40x40':
       return { width: 0.4, height: 0.08 };
+    case 'toilet':
+      return { width: 0.42, height: 0.62 };
+    case 'sink':
+      return { width: 0.52, height: 0.42 };
+    case 'shower_tray':
+      return { width: 0.8, height: 0.8 };
     case 'air_conditioning':
       return { width: 0.55, height: 0.28 };
     default:
@@ -191,6 +203,9 @@ export const summarizeLayoutItems = (items: LayoutItem[]): LayoutSummary => {
   const additionalSockets = count('additional_socket');
   const windows80x80 = count('window_80x80');
   const largeWindows = count('large_window');
+  const toilets = count('toilet');
+  const sinks = count('sink');
+  const showerTrays = count('shower_tray');
   const hasAirConditioning = count('air_conditioning') > 0;
 
   const includedList = [
@@ -210,7 +225,10 @@ export const summarizeLayoutItems = (items: LayoutItem[]): LayoutSummary => {
   if (largeWindows) extrasList.push(`${largeWindows} ventana(s) grande(s)`);
   if (wallPartitions) extrasList.push(`${wallPartitions} tabique(s) simple(s)`);
   if (interiorRooms) extrasList.push(`${interiorRooms} habitación(es) interior(es) · incluye puerta, ventana 80x80, punto de luz y enchufe`);
-  if (fullBathrooms) extrasList.push(`${fullBathrooms} baño(s) completo(s) configurable(s) · puerta, ventana 40x40, punto de luz y enchufe colocables dentro del bloque`);
+  if (toilets) extrasList.push(`${toilets} váter(es) · incluye fontanería y mano de obra`);
+  if (sinks) extrasList.push(`${sinks} lavabo(s) · incluye fontanería y mano de obra`);
+  if (showerTrays) extrasList.push(`${showerTrays} plato(s) de ducha · incluye fontanería y mano de obra`);
+  if (fullBathrooms) extrasList.push(`${fullBathrooms} baño(s) completo(s) prediseñado(s)`);
   if (hasAirConditioning) extrasList.push('aire acondicionado');
 
   return {
@@ -223,8 +241,11 @@ export const summarizeLayoutItems = (items: LayoutItem[]): LayoutSummary => {
     wallPartitions,
     interiorRooms,
     fullBathrooms,
+    toilets,
+    sinks,
+    showerTrays,
     hasAirConditioning,
-    hasFullBathroom: fullBathrooms > 0,
+    hasFullBathroom: fullBathrooms > 0 || toilets > 0 || sinks > 0 || showerTrays > 0,
   };
 };
 
