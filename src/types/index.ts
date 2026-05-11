@@ -39,6 +39,9 @@ export type LayoutItemType =
   | 'bathroom_window_40x40'
   | 'bathroom_light_point'
   | 'bathroom_socket'
+  | 'toilet'
+  | 'sink'
+  | 'shower_tray'
   | 'air_conditioning';
 
 export type LayoutZone = 'edge' | 'inside';
@@ -106,6 +109,9 @@ export interface LayoutSummary {
   wallPartitions: number;
   interiorRooms: number;
   fullBathrooms: number;
+  toilets: number;
+  sinks: number;
+  showerTrays: number;
   hasAirConditioning: boolean;
   hasFullBathroom: boolean;
 }
