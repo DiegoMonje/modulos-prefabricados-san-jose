@@ -1,8 +1,9 @@
+import type { ReactNode } from 'react';
 import { Circle, Ellipse, Group, Line, Path, Rect, Text } from 'react-konva';
 
 type Rotation = 0 | 90 | 180 | 270;
 
-const RotatableGroup = ({ x, y, width, height, rotation = 0, children }: { x: number; y: number; width: number; height: number; rotation?: Rotation; children: React.ReactNode }) => {
+const RotatableGroup = ({ x, y, width, height, rotation = 0, children }: { x: number; y: number; width: number; height: number; rotation?: Rotation; children: ReactNode }) => {
   const cx = x + width / 2;
   const cy = y + height / 2;
   return (
