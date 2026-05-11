@@ -40,8 +40,8 @@ export const DoorSymbol = ({
   if (horizontal) {
     const wallY = y + height / 2;
     const hingeX = hingeAtEnd ? x + width : x;
-    const leafEndX = hingeAtEnd ? hingeX - openingLength : hingeX + openingLength;
-    const leafEndY = wallY + openingLength * swingSign;
+    const leafEndX = hingeX;
+    const leafEndY = hingeAtEnd ? wallY - openingLength * swingSign : wallY + openingLength * swingSign;
     const arcRotation = hingeAtEnd ? 180 : 0;
     const arcAngle = 90 * swingSign;
 
@@ -56,8 +56,8 @@ export const DoorSymbol = ({
 
   const wallX = x + width / 2;
   const hingeY = hingeAtEnd ? y + height : y;
-  const leafEndX = wallX - openingLength * swingSign;
-  const leafEndY = hingeAtEnd ? hingeY - openingLength : hingeY + openingLength;
+  const leafEndX = hingeAtEnd ? wallX + openingLength * swingSign : wallX - openingLength * swingSign;
+  const leafEndY = hingeY;
   const arcRotation = hingeAtEnd ? 270 : 90;
   const arcAngle = 90 * swingSign;
 
