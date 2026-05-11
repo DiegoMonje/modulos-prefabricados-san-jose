@@ -3,6 +3,12 @@ import { isSupabaseConfigured, supabase } from '../lib/supabase';
 
 const QUOTES_BUCKET = 'quotes';
 
+export interface CreateLeadResult {
+  leadId: string;
+  saved: boolean;
+  warnings: string[];
+}
+
 const assertSupabase = () => {
   if (!isSupabaseConfigured || !supabase) {
     throw new Error('Supabase no está configurado. Añade VITE_SUPABASE_URL y VITE_SUPABASE_ANON_KEY.');
@@ -10,7 +16,14 @@ const assertSupabase = () => {
   return supabase;
 };
 
-const uploadQuotePdf = async ({ leadId, quoteNumber, fileName, pdfBlob }: { leadId: string; quoteNumber: string; fileName: string; pdfBlob: Blob }) => {
+const readableError = (error: unknown) => {
+  if (!error) return 'Error desconocido';
+  if (error instanceof Error) return error.message;
+  if (typeof error === 'object' && 'message' in error) return String((error as { message?: unknown }).message);
+  return String(error);
+};
+
+const uploadQuotePdf = async ({ leadId, fileName, pdfBlob }: { leadId: string; fileName: string; pdfBlob: Blob }) => {
   const client = assertSupabase();
   const path = `${leadId}/${fileName}`;
   const { error: uploadError } = await client.storage
@@ -36,13 +49,17 @@ export const createLead = async ({
   config: ConfiguratorState;
   price: PriceResult;
   pdf?: { number: string; fileName: string; blob: Blob } | null;
-}) => {
+}): Promise<CreateLeadResult> => {
   const leadId = crypto.randomUUID();
   const downloadedAt = new Date().toISOString();
+  const warnings: string[] = [];
 
   if (!isSupabaseConfigured || !supabase) {
-    console.warn('Supabase no está configurado. El lead no se guardará, pero PDF y WhatsApp seguirán funcionando.');
-    return leadId;
+    return {
+      leadId,
+      saved: false,
+      warnings: ['Supabase no está configurado. El PDF se descargó, pero la consulta no se guardó.'],
+    };
   }
 
   const client = supabase;
@@ -53,8 +70,8 @@ export const createLead = async ({
       full_name: contact.fullName,
       phone: contact.phone,
       email: contact.email || null,
-      province: config.province,
-      city: config.city,
+      province: config.province || '',
+      city: config.city || '',
       postal_code: config.postalCode || null,
       intended_use: contact.intendedUse || config.useType,
       comments: contact.comments || null,
@@ -71,50 +88,61 @@ export const createLead = async ({
     .select('id')
     .single();
 
-  if (leadError) throw leadError;
+  if (leadError) {
+    throw new Error(`No se pudo guardar la consulta principal en Supabase: ${readableError(leadError)}`);
+  }
 
   const savedLeadId = leadData?.id ?? leadId;
   const summary = price.summary;
-  const { error: configError } = await client.from('configurations').insert({
-    lead_id: savedLeadId,
-    length: config.length,
-    width: config.width,
-    square_meters: price.squareMeters,
-    is_special_measure: config.isSpecialMeasure,
-    panel_type: config.panelType,
-    panel_thickness: config.panelThickness,
-    panel_color: config.panelColor,
-    is_special_panel: config.isSpecialPanel,
-    use_type: config.useType,
-    extras: summary.extrasList,
-    delivery_timeline: config.deliveryTimeline,
-    base_included_door: true,
-    base_included_window_80x80: true,
-    base_included_electrical_installation: true,
-    base_included_socket_quantity: 1,
-    base_included_light_point_quantity: 1,
-    has_air_conditioning: summary.hasAirConditioning,
-    has_full_bathroom: summary.hasFullBathroom,
-    interior_rooms_quantity: summary.interiorRooms,
-    extra_windows_80x80_quantity: summary.windows80x80,
-    extra_large_windows_quantity: summary.largeWindows,
-    additional_doors_quantity: summary.additionalDoors,
-    additional_socket_quantity: summary.additionalSockets,
-    layout_json: config.layoutItems,
-  });
 
-  if (configError) throw configError;
+  try {
+    const { error: configError } = await client.from('configurations').insert({
+      lead_id: savedLeadId,
+      length: config.length,
+      width: config.width,
+      square_meters: price.squareMeters,
+      is_special_measure: config.isSpecialMeasure,
+      panel_type: config.panelType,
+      panel_thickness: config.panelThickness,
+      panel_color: config.panelColor,
+      is_special_panel: config.isSpecialPanel,
+      use_type: config.useType,
+      extras: summary.extrasList,
+      delivery_timeline: config.deliveryTimeline,
+      base_included_door: true,
+      base_included_window_80x80: true,
+      base_included_electrical_installation: true,
+      base_included_socket_quantity: 1,
+      base_included_light_point_quantity: 1,
+      has_air_conditioning: summary.hasAirConditioning,
+      has_full_bathroom: summary.hasFullBathroom,
+      interior_rooms_quantity: summary.interiorRooms,
+      extra_windows_80x80_quantity: summary.windows80x80,
+      extra_large_windows_quantity: summary.largeWindows,
+      additional_doors_quantity: summary.additionalDoors,
+      additional_socket_quantity: summary.additionalSockets,
+      layout_json: config.layoutItems,
+    });
+
+    if (configError) throw configError;
+  } catch (error) {
+    warnings.push(`La consulta se guardó, pero falló la configuración técnica: ${readableError(error)}`);
+  }
 
   if (pdf?.blob) {
+    let pdfUrl: string | null = null;
     try {
-      const pdfUrl = await uploadQuotePdf({
+      pdfUrl = await uploadQuotePdf({
         leadId: savedLeadId,
-        quoteNumber: pdf.number,
         fileName: pdf.fileName,
         pdfBlob: pdf.blob,
       });
+    } catch (error) {
+      warnings.push(`La consulta se guardó, pero no se pudo subir el PDF. Revisa el bucket Storage '${QUOTES_BUCKET}': ${readableError(error)}`);
+    }
 
-      await client.from('quotes').insert({
+    try {
+      const { error: quoteError } = await client.from('quotes').insert({
         lead_id: savedLeadId,
         quote_number: pdf.number,
         quote_date: new Date().toISOString().slice(0, 10),
@@ -124,34 +152,30 @@ export const createLead = async ({
         total_price: price.estimatedPriceWithVat,
         pdf_url: pdfUrl,
       });
+      if (quoteError) throw quoteError;
     } catch (error) {
-      console.warn('No se pudo guardar el PDF de la proforma en Supabase Storage.', error);
-      await client.from('quotes').insert({
-        lead_id: savedLeadId,
-        quote_number: pdf.number,
-        quote_date: new Date().toISOString().slice(0, 10),
-        base_price: price.estimatedPriceWithoutVat,
-        iva_percentage: 21,
-        iva_amount: price.vatAmount,
-        total_price: price.estimatedPriceWithVat,
-        pdf_url: null,
-      });
+      warnings.push(`La consulta se guardó, pero no se pudo registrar la proforma en la tabla quotes: ${readableError(error)}`);
     }
   }
 
   if (contact.newsletterSubscribed && contact.email) {
-    await client.from('newsletter_subscribers').insert({
-      full_name: contact.fullName,
-      email: contact.email,
-      phone: contact.phone,
-      province: config.province,
-      city: config.city,
-      source: 'configurador_cad_2d',
-      active: true,
-    });
+    try {
+      const { error: newsletterError } = await client.from('newsletter_subscribers').insert({
+        full_name: contact.fullName,
+        email: contact.email,
+        phone: contact.phone,
+        province: config.province || '',
+        city: config.city || '',
+        source: 'configurador_cad_2d',
+        active: true,
+      });
+      if (newsletterError) throw newsletterError;
+    } catch (error) {
+      warnings.push(`La consulta se guardó, pero no se pudo guardar la suscripción newsletter: ${readableError(error)}`);
+    }
   }
 
-  return savedLeadId;
+  return { leadId: savedLeadId, saved: true, warnings };
 };
 
 export const getLeads = async (): Promise<LeadRow[]> => {
