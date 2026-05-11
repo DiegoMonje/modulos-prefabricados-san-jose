@@ -16,6 +16,33 @@ export const AirConditioningSymbol = ({ x, y, width, height, color }: { x: numbe
   </Group>
 );
 
+export const ToiletSymbol = ({ x, y, width, height, color }: { x: number; y: number; width: number; height: number; color: string }) => (
+  <Group>
+    <Rect x={x + width * 0.18} y={y + height * 0.05} width={width * 0.64} height={height * 0.22} stroke={color} strokeWidth={2} cornerRadius={4} />
+    <Ellipse x={x + width * 0.5} y={y + height * 0.58} radiusX={width * 0.32} radiusY={height * 0.28} stroke={color} strokeWidth={2.2} />
+    <Text x={x} y={y + height * 0.38} width={width} align="center" text="WC" fontSize={Math.max(9, Math.min(width, height) * 0.22)} fontStyle="bold" fill={color} />
+  </Group>
+);
+
+export const SinkSymbol = ({ x, y, width, height, color }: { x: number; y: number; width: number; height: number; color: string }) => (
+  <Group>
+    <Ellipse x={x + width * 0.5} y={y + height * 0.46} radiusX={width * 0.38} radiusY={height * 0.3} stroke={color} strokeWidth={2.2} />
+    <Circle x={x + width * 0.5} y={y + height * 0.46} radius={Math.max(2, Math.min(width, height) * 0.06)} fill={color} />
+    <Line points={[x + width * 0.5, y + height * 0.12, x + width * 0.5, y + height * 0.3]} stroke={color} strokeWidth={2} />
+    <Text x={x} y={y + height * 0.72} width={width} align="center" text="LV" fontSize={Math.max(8, Math.min(width, height) * 0.2)} fontStyle="bold" fill={color} />
+  </Group>
+);
+
+export const ShowerTraySymbol = ({ x, y, width, height, color }: { x: number; y: number; width: number; height: number; color: string }) => (
+  <Group>
+    <Rect x={x} y={y} width={width} height={height} stroke={color} strokeWidth={2.4} cornerRadius={6} />
+    <Line points={[x + width * 0.12, y + height * 0.2, x + width * 0.88, y + height * 0.8]} stroke={color} strokeWidth={1.3} dash={[4, 4]} />
+    <Line points={[x + width * 0.88, y + height * 0.2, x + width * 0.12, y + height * 0.8]} stroke={color} strokeWidth={1.3} dash={[4, 4]} />
+    <Circle x={x + width * 0.5} y={y + height * 0.5} radius={Math.max(3, Math.min(width, height) * 0.06)} stroke={color} strokeWidth={2} />
+    <Text x={x} y={y + height * 0.08} width={width} align="center" text="DUCHA" fontSize={Math.max(8, Math.min(width, height) * 0.13)} fontStyle="bold" fill={color} />
+  </Group>
+);
+
 export const BathroomFixtures = ({ x, y, width, height, color }: { x: number; y: number; width: number; height: number; color: string }) => (
   <Group>
     <Ellipse x={x + width * 0.25} y={y + height * 0.35} radiusX={width * 0.08} radiusY={height * 0.12} stroke={color} strokeWidth={2} />
