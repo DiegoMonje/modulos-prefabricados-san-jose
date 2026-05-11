@@ -1,4 +1,4 @@
-import { Group, Rect, Text } from 'react-konva';
+import { Group, Rect } from 'react-konva';
 import type { LayoutItem } from '../../../types';
 import type { PlanGeometry } from './utils/coordinates';
 import { itemToBox, pxToMeters } from './utils/coordinates';
@@ -32,15 +32,15 @@ const CadObjectSymbol = ({ item, selected, geometry, hasError, hasWarning }: { i
   const box = itemToBox(item, geometry);
   const color = colorFor(item, selected, hasError, hasWarning);
 
-  if (isDoor(item)) return <DoorSymbol x={box.x} y={box.y} width={box.width} height={box.height} color={color} side={item.side} />;
+  if (isDoor(item)) return <DoorSymbol x={box.x} y={box.y} width={box.width} height={box.height} color={color} side={item.side} swing={item.doorSwing ?? 'in'} rotation={item.rotation} />;
   if (isWindow(item)) return <WindowSymbol x={box.x} y={box.y} width={box.width} height={box.height} color={color} />;
   if (isSocket(item)) return <SocketSymbol x={box.x} y={box.y} width={box.width} height={box.height} color={color} />;
   if (isLight(item)) return <LightSymbol x={box.x} y={box.y} width={box.width} height={box.height} color={color} />;
   if (item.type === 'base_electrical_panel') return <ElectricalPanelSymbol x={box.x} y={box.y} width={box.width} height={box.height} color={color} />;
   if (item.type === 'air_conditioning') return <AirConditioningSymbol x={box.x} y={box.y} width={box.width} height={box.height} color={color} />;
-  if (item.type === 'toilet') return <ToiletSymbol x={box.x} y={box.y} width={box.width} height={box.height} color={color} />;
-  if (item.type === 'sink') return <SinkSymbol x={box.x} y={box.y} width={box.width} height={box.height} color={color} />;
-  if (item.type === 'shower_tray') return <ShowerTraySymbol x={box.x} y={box.y} width={box.width} height={box.height} color={color} />;
+  if (item.type === 'toilet') return <ToiletSymbol x={box.x} y={box.y} width={box.width} height={box.height} color={color} rotation={item.rotation} />;
+  if (item.type === 'sink') return <SinkSymbol x={box.x} y={box.y} width={box.width} height={box.height} color={color} rotation={item.rotation} />;
+  if (item.type === 'shower_tray') return <ShowerTraySymbol x={box.x} y={box.y} width={box.width} height={box.height} color={color} rotation={item.rotation} />;
   if (item.type === 'wall_partition') return <Rect x={box.x} y={box.y} width={box.width} height={box.height} fill={color} opacity={0.95} shadowBlur={4} />;
   if (item.type === 'interior_room') {
     return (
@@ -147,12 +147,6 @@ export const CadObjectsLayer = ({
                   dash={[7, 5]}
                   fill={hasError ? 'rgba(239,68,68,0.08)' : hasWarning ? 'rgba(245,158,11,0.08)' : 'rgba(251,146,60,0.08)'}
                 />
-                {selected ? (
-                  <>
-                    <Rect x={box.x} y={Math.max(8, box.y - 28)} width={Math.max(112, item.label.length * 6)} height={20} fill="#020617" cornerRadius={5} stroke="#475569" />
-                    <Text x={box.x + 7} y={Math.max(12, box.y - 24)} text={item.label} fontSize={10} fontStyle="bold" fill="#f8fafc" />
-                  </>
-                ) : null}
               </Group>
             ) : null}
           </Group>
