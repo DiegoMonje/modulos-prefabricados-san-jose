@@ -8,7 +8,6 @@ import { calculatePlanGeometry } from './utils/coordinates';
 import { CadGrid } from './CadGrid';
 import { CadObjectsLayer } from './CadObjectsLayer';
 import { CadRulers } from './CadRulers';
-import { CadSelectionLayer } from './CadSelectionLayer';
 import { CadWalls } from './CadWalls';
 
 export const CadStage = forwardRef<Konva.Stage, {
@@ -39,7 +38,6 @@ export const CadStage = forwardRef<Konva.Stage, {
   const warningCount = validationIssues.filter((issue) => issue.severity === 'warning').length;
   const errorItemIds = useMemo(() => validationIssues.flatMap((issue) => issue.severity === 'error' ? [issue.itemId, issue.relatedItemId].filter(Boolean) as string[] : []), [validationIssues]);
   const warningItemIds = useMemo(() => validationIssues.flatMap((issue) => issue.severity === 'warning' ? [issue.itemId, issue.relatedItemId].filter(Boolean) as string[] : []), [validationIssues]);
-  const selectedItem = items.find((item) => item.id === selectedItemId) || null;
 
   return (
     <div>
@@ -76,7 +74,6 @@ export const CadStage = forwardRef<Konva.Stage, {
           </Layer>
           <Layer>
             <CadObjectsLayer items={items} selectedItemId={selectedItemId} geometry={geometry} errorItemIds={errorItemIds} warningItemIds={warningItemIds} onSelect={onSelect} onMove={onMove} />
-            <CadSelectionLayer selectedItem={selectedItem} geometry={geometry} />
           </Layer>
           <Layer listening={false}>
             <Text
