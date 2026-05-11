@@ -24,10 +24,12 @@ const MAX_CUSTOM_WIDTH = 3.5;
 
 const parseNumberInput = (value: string) => Number(value.replace(',', '.'));
 
+const requiredString = (message: string) => z.string({ required_error: message }).trim().min(1, message);
+
 const contactSchema = z.object({
-  fullName: z.string().min(2, 'Introduce tu nombre completo.'),
-  phone: z.string().min(7, 'Introduce un teléfono válido.'),
-  email: z.string().email('Introduce un email válido.'),
+  fullName: requiredString('Introduce tu nombre completo.').min(2, 'Introduce tu nombre completo.'),
+  phone: requiredString('Introduce un teléfono válido.').min(7, 'Introduce un teléfono válido.'),
+  email: requiredString('Introduce un email válido.').email('Introduce un email válido.'),
   intendedUse: z.string().optional().default(''),
   comments: z.string().optional().default(''),
   accepted: z.boolean().refine(Boolean, 'Debes aceptar la política de privacidad.'),
@@ -189,14 +191,21 @@ export const ConfiguratorPage = ({ onBack }: { onBack: () => void }) => {
               <ContactStep
                 onSubmit={async (contact) => {
                   setSubmitError('');
+                  const currentCadImage = cadImage ?? captureCadImage();
+
                   try {
-                    const currentCadImage = cadImage ?? captureCadImage();
-                    await createLead({ contact, config, price });
                     downloadConfiguratorPdf({ contact, config, price, cadImage: currentCadImage });
                     sessionStorage.setItem('last_contact', JSON.stringify(contact));
                     setSubmitted(true);
                   } catch (error) {
-                    setSubmitError(error instanceof Error ? error.message : 'No se pudo guardar la solicitud o generar el PDF.');
+                    setSubmitError(error instanceof Error ? error.message : 'No se pudo generar el PDF en este navegador.');
+                    return;
+                  }
+
+                  try {
+                    await createLead({ contact, config, price });
+                  } catch (error) {
+                    console.warn('La solicitud no se pudo guardar, pero el PDF se generó correctamente.', error);
                   }
                 }}
                 error={submitError}
@@ -332,7 +341,9 @@ const ContactStep = ({ onSubmit, error }: { onSubmit: (contact: ContactFormState
   const { config } = useConfiguratorStore();
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<ContactFormValues>({
     resolver: zodResolver(contactSchema),
+    mode: 'onChange',
+    reValidateMode: 'onChange',
     defaultValues: { fullName: '', phone: '', email: '', intendedUse: config.useType, comments: '', accepted: false, newsletterSubscribed: false },
   });
-  return <StepShell title="Datos del cliente" subtitle="Generaremos el PDF y guardaremos la solicitud para preparar el presupuesto."><form onSubmit={handleSubmit((values) => onSubmit(values as ContactFormState))} className="space-y-4"><div className="grid gap-4 sm:grid-cols-2"><Field label="Nombre completo" error={errors.fullName?.message}><Input {...register('fullName')} /></Field><Field label="Teléfono" error={errors.phone?.message}><Input {...register('phone')} /></Field><Field label="Email" error={errors.email?.message}><Input type="email" {...register('email')} /></Field><Field label="Uso previsto"><Input {...register('intendedUse')} /></Field></div><Field label="Comentarios"><Textarea rows={4} {...register('comments')} placeholder="Cuéntanos detalles de transporte, montaje, accesos, acabados, etc." /></Field><label className="flex items-start gap-3 rounded-2xl bg-slate-50 p-4 text-sm font-semibold text-slate-700"><input type="checkbox" className="mt-1" {...register('accepted')} /><span>Acepto la política de privacidad y el tratamiento de mis datos para gestionar la solicitud.</span></label>{errors.accepted?.message ? <p className="text-sm font-semibold text-red-600">{errors.accepted.message}</p> : null}<label className="flex items-start gap-3 rounded-2xl bg-blue-50 p-4 text-sm font-semibold text-blue-900"><input type="checkbox" className="mt-1" {...register('newsletterSubscribed')} /><span>Quiero recibir novedades u ofertas.</span></label>{error ? <p className="rounded-2xl bg-red-50 p-4 text-sm font-semibold text-red-700">{error}</p> : null}<Button type="submit" disabled={isSubmitting}><Download size={18} /> {isSubmitting ? 'Generando...' : 'Guardar solicitud y descargar PDF'}</Button></form></StepShell>;
+  return <StepShell title="Datos del cliente" subtitle="Generaremos el PDF y guardaremos la solicitud para preparar el presupuesto."><form noValidate onSubmit={handleSubmit((values) => onSubmit(values as ContactFormState))} className="space-y-4"><div className="grid gap-4 sm:grid-cols-2"><Field label="Nombre completo" error={errors.fullName?.message}><Input autoComplete="name" {...register('fullName')} /></Field><Field label="Teléfono" error={errors.phone?.message}><Input autoComplete="tel" {...register('phone')} /></Field><Field label="Email" error={errors.email?.message}><Input type="email" autoComplete="email" {...register('email')} /></Field><Field label="Uso previsto"><Input {...register('intendedUse')} /></Field></div><Field label="Comentarios"><Textarea rows={4} {...register('comments')} placeholder="Cuéntanos detalles de transporte, montaje, accesos, acabados, etc." /></Field><label className="flex items-start gap-3 rounded-2xl bg-slate-50 p-4 text-sm font-semibold text-slate-700"><input type="checkbox" className="mt-1" {...register('accepted')} /><span>Acepto la política de privacidad y el tratamiento de mis datos para gestionar la solicitud.</span></label>{errors.accepted?.message ? <p className="text-sm font-semibold text-red-600">{errors.accepted.message}</p> : null}<label className="flex items-start gap-3 rounded-2xl bg-blue-50 p-4 text-sm font-semibold text-blue-900"><input type="checkbox" className="mt-1" {...register('newsletterSubscribed')} /><span>Quiero recibir novedades u ofertas.</span></label>{error ? <p className="rounded-2xl bg-red-50 p-4 text-sm font-semibold text-red-700">{error}</p> : null}<Button type="submit" disabled={isSubmitting}><Download size={18} /> {isSubmitting ? 'Generando...' : 'Guardar solicitud y descargar PDF'}</Button></form></StepShell>;
 };
