@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { FormEvent } from 'react';
-import { ArrowLeft, Download, LogOut, MessageCircle, RefreshCcw, Search, Trash2 } from 'lucide-react';
+import { ArrowLeft, Download, FileText, LogOut, MessageCircle, RefreshCcw, Search, Trash2 } from 'lucide-react';
 import type { LeadRow, LeadStatus } from '../../types';
 import { addLeadNote, deleteLead, exportNewsletterCsv, getLeads, updateLeadStatus } from '../../services/leads';
 import { getCurrentUser, signIn, signOut } from '../../services/auth';
@@ -30,9 +30,7 @@ export const AdminPanel = ({ onBack }: { onBack: () => void }) => {
 
   useEffect(() => {
     setRememberSessionState(getRememberAdminSession());
-    if (typeof window !== 'undefined') {
-      setEmail(window.localStorage.getItem(REMEMBERED_ADMIN_EMAIL_KEY) || '');
-    }
+    if (typeof window !== 'undefined') setEmail(window.localStorage.getItem(REMEMBERED_ADMIN_EMAIL_KEY) || '');
     getCurrentUser().then((user) => setLoggedIn(Boolean(user))).finally(() => setChecking(false));
   }, []);
 
@@ -74,10 +72,7 @@ export const AdminPanel = ({ onBack }: { onBack: () => void }) => {
               <Field label="Contraseña"><Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required autoComplete="current-password" /></Field>
               <label className="flex items-start gap-3 rounded-2xl bg-slate-50 p-4 text-sm font-semibold text-slate-700">
                 <input type="checkbox" className="mt-1" checked={rememberSession} onChange={(e) => updateRememberSession(e.target.checked)} />
-                <span>
-                  Mantener sesión iniciada en este dispositivo.
-                  <span className="mt-1 block text-xs font-medium text-slate-500">No se guarda la contraseña. Solo se mantiene la sesión segura de Supabase y, si está activo, el email.</span>
-                </span>
+                <span>Mantener sesión iniciada en este dispositivo.<span className="mt-1 block text-xs font-medium text-slate-500">No se guarda la contraseña. Solo se mantiene la sesión segura de Supabase y, si está activo, el email.</span></span>
               </label>
               {error ? <p className="rounded-xl bg-red-50 p-3 text-sm font-semibold text-red-700">{error}</p> : null}
               <Button type="submit" className="w-full">Entrar</Button>
@@ -177,9 +172,37 @@ const AdminDashboard = ({ onBack, onLogout }: { onBack: () => void; onLogout: ()
             <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between"><div><h2 className="text-2xl font-black text-slate-900">Solicitudes</h2><p className="text-sm text-slate-500">Gestiona los clientes interesados.</p></div><div className="flex flex-col gap-2 sm:flex-row"><div className="relative"><Search className="absolute left-3 top-3 text-slate-400" size={18} /><Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar" className="pl-9" /></div><Select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}><option value="">Todos</option>{statuses.map((s) => <option key={s}>{s}</option>)}</Select><Input value={provinceFilter} onChange={(e) => setProvinceFilter(e.target.value)} placeholder="Provincia" /></div></div>
             {loading ? <p className="py-10 text-center text-slate-500">Cargando...</p> : <div className="overflow-x-auto"><table className="w-full min-w-[980px] text-left text-sm"><thead><tr className="border-b border-slate-200 text-xs uppercase text-slate-500"><th className="py-3">Fecha</th><th>Nombre</th><th>Teléfono</th><th>Email</th><th>Provincia</th><th>Medida</th><th>Uso</th><th>Sin IVA</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>{filtered.map((lead) => { const config = lead.configurations?.[0]; return <tr key={lead.id} className="border-b border-slate-100 hover:bg-slate-50"><td className="py-3">{new Date(lead.created_at).toLocaleDateString('es-ES')}</td><td className="font-bold text-slate-900">{lead.full_name}</td><td>{lead.phone}</td><td>{lead.email || '-'}</td><td>{lead.province}</td><td>{config ? `${config.length} x ${config.width} m` : '-'}</td><td>{config?.use_type || lead.intended_use || '-'}</td><td>{formatCurrency(lead.estimated_price_without_vat || 0)}</td><td><Badge color={statusColor(lead.status)}>{lead.status}</Badge></td><td><div className="flex gap-1"><Button variant="ghost" className="px-3 py-2 text-sm" onClick={() => setSelectedLead(lead)}>Ver</Button><a href={leadWhatsApp(lead)} target="_blank" rel="noreferrer" className="rounded-lg p-2 hover:bg-slate-200"><MessageCircle size={16} /></a><button onClick={() => removeLead(lead)} className="rounded-lg p-2 text-red-600 hover:bg-red-50"><Trash2 size={16} /></button></div></td></tr>; })}</tbody></table></div>}
           </Card>
-          <Card className="h-fit">{!selectedLead ? <div className="py-10 text-center text-slate-500">Selecciona una solicitud para ver el detalle.</div> : <div><div className="mb-5 flex items-start justify-between gap-3"><div><h2 className="text-xl font-black text-slate-900">{selectedLead.full_name}</h2><p className="text-sm text-slate-500">{selectedLead.phone} · {selectedLead.city}, {selectedLead.province}</p></div><Badge color={statusColor(selectedLead.status)}>{selectedLead.status}</Badge></div><Field label="Estado comercial"><Select value={selectedLead.status} onChange={(e) => changeStatus(selectedLead, e.target.value as LeadStatus)}>{statuses.map((s) => <option key={s}>{s}</option>)}</Select></Field><div className="mt-5 rounded-2xl bg-slate-50 p-4 text-sm text-slate-700"><h3 className="mb-3 font-black text-slate-900">Configuración</h3>{selectedLead.configurations?.[0] ? <LeadConfiguration lead={selectedLead} /> : <p>No hay configuración asociada.</p>}</div><div className="mt-5 rounded-2xl bg-orange-50 p-4"><p className="text-sm font-bold text-orange-700">Precio estimado sin IVA</p><p className="text-2xl font-black text-brand-orange">{formatCurrency(selectedLead.estimated_price_without_vat || 0)}</p><p className="text-sm font-bold text-orange-900">Total con IVA: {formatCurrency(selectedLead.estimated_price_with_vat || 0)}</p></div><div className="mt-5"><h3 className="mb-3 font-black text-slate-900">Notas internas</h3><div className="space-y-2">{selectedLead.notes?.length ? selectedLead.notes.map((n) => <div key={n.id} className="rounded-xl bg-slate-50 p-3 text-sm"><p>{n.note}</p><p className="mt-1 text-xs text-slate-400">{new Date(n.created_at).toLocaleString('es-ES')}</p></div>) : <p className="text-sm text-slate-500">Sin notas todavía.</p>}</div><div className="mt-3 space-y-2"><Textarea rows={3} value={note} onChange={(e) => setNote(e.target.value)} placeholder="Añadir nota interna..." /><Button onClick={saveNote}>Guardar nota</Button></div></div></div>}</Card>
+          <Card className="h-fit">
+            {!selectedLead ? <div className="py-10 text-center text-slate-500">Selecciona una solicitud para ver el detalle.</div> : <LeadDetail lead={selectedLead} note={note} setNote={setNote} saveNote={saveNote} changeStatus={changeStatus} />}
+          </Card>
         </section>
       </main>
+    </div>
+  );
+};
+
+const LeadDetail = ({ lead, note, setNote, saveNote, changeStatus }: { lead: LeadRow; note: string; setNote: (value: string) => void; saveNote: () => void; changeStatus: (lead: LeadRow, status: LeadStatus) => Promise<void> }) => {
+  const quotes = lead.quotes || [];
+  const quoteWithPdf = quotes.find((quote) => quote.pdf_url);
+  return (
+    <div>
+      <div className="mb-5 flex items-start justify-between gap-3"><div><h2 className="text-xl font-black text-slate-900">{lead.full_name}</h2><p className="text-sm text-slate-500">{lead.phone} · {lead.city}, {lead.province}</p></div><Badge color={statusColor(lead.status)}>{lead.status}</Badge></div>
+      <Field label="Estado comercial"><Select value={lead.status} onChange={(e) => changeStatus(lead, e.target.value as LeadStatus)}>{statuses.map((s) => <option key={s}>{s}</option>)}</Select></Field>
+      <div className="mt-5 rounded-2xl bg-slate-50 p-4 text-sm text-slate-700"><h3 className="mb-3 font-black text-slate-900">Configuración</h3>{lead.configurations?.[0] ? <LeadConfiguration lead={lead} /> : <p>No hay configuración asociada.</p>}</div>
+      <div className="mt-5 rounded-2xl bg-orange-50 p-4"><p className="text-sm font-bold text-orange-700">Precio estimado sin IVA</p><p className="text-2xl font-black text-brand-orange">{formatCurrency(lead.estimated_price_without_vat || 0)}</p><p className="text-sm font-bold text-orange-900">Total con IVA: {formatCurrency(lead.estimated_price_with_vat || 0)}</p></div>
+      <div className="mt-5 rounded-2xl bg-blue-50 p-4">
+        <h3 className="mb-3 font-black text-slate-900">Proformas / documentos</h3>
+        {quoteWithPdf ? (
+          <a href={quoteWithPdf.pdf_url || '#'} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-2xl bg-slate-900 px-4 py-3 text-sm font-black text-white hover:bg-slate-800">
+            <FileText size={16} /> Ver PDF generado
+          </a>
+        ) : quotes.length ? (
+          <p className="text-sm font-semibold text-amber-900">Hay una proforma registrada, pero no tiene PDF adjunto. Revisa que exista el bucket de Supabase Storage llamado <strong>quotes</strong>.</p>
+        ) : (
+          <p className="text-sm text-slate-600">Este registro todavía no tiene PDF guardado. Los registros nuevos sí intentarán guardar una copia en Supabase Storage.</p>
+        )}
+      </div>
+      <div className="mt-5"><h3 className="mb-3 font-black text-slate-900">Notas internas</h3><div className="space-y-2">{lead.notes?.length ? lead.notes.map((n) => <div key={n.id} className="rounded-xl bg-slate-50 p-3 text-sm"><p>{n.note}</p><p className="mt-1 text-xs text-slate-400">{new Date(n.created_at).toLocaleString('es-ES')}</p></div>) : <p className="text-sm text-slate-500">Sin notas todavía.</p>}</div><div className="mt-3 space-y-2"><Textarea rows={3} value={note} onChange={(e) => setNote(e.target.value)} placeholder="Añadir nota interna..." /><Button onClick={saveNote}>Guardar nota</Button></div></div>
     </div>
   );
 };
