@@ -50,6 +50,10 @@ type Store = {
 
 const cloneLayout = (items: LayoutItem[]) => items.map((item) => ({ ...item }));
 
+const DOOR_LENGTH = 0.8;
+const INTERIOR_DOOR_THICKNESS = 0.08;
+const SNAP_TO_PARTITION_DISTANCE = 0.45;
+
 const isDoorType = (type: LayoutItemType) => ['base_door', 'additional_door', 'interior_door', 'bathroom_door'].includes(type);
 const isEdgeType = (type: LayoutItemType) => ['base_door', 'additional_door', 'base_window_80x80', 'window_80x80', 'large_window', 'bathroom_window_40x40'].includes(type);
 const isDivisionType = (type: LayoutItemType) => ['wall_partition', 'interior_room', 'full_bathroom'].includes(type);
@@ -75,7 +79,83 @@ const duplicateTypeMap: Partial<Record<LayoutItemType, LayoutItemType>> = {
   air_conditioning: 'air_conditioning',
 };
 
+const isHorizontalRotation = (rotation: LayoutItem['rotation']) => rotation === 0 || rotation === 180;
+const isHorizontalPartition = (partition: LayoutItem) => partition.width >= partition.height;
+
+const distanceToPartition = (item: LayoutItem, partition: LayoutItem, x: number, y: number) => {
+  const horizontalDoor = isHorizontalRotation(item.rotation);
+  const doorWidth = horizontalDoor ? DOOR_LENGTH : INTERIOR_DOOR_THICKNESS;
+  const doorHeight = horizontalDoor ? INTERIOR_DOOR_THICKNESS : DOOR_LENGTH;
+  const doorCenterX = x + doorWidth / 2;
+  const doorCenterY = y + doorHeight / 2;
+  const partitionCenterX = partition.x + partition.width / 2;
+  const partitionCenterY = partition.y + partition.height / 2;
+
+  if (isHorizontalPartition(partition) !== horizontalDoor) return Number.POSITIVE_INFINITY;
+
+  return horizontalDoor
+    ? Math.abs(doorCenterY - partitionCenterY)
+    : Math.abs(doorCenterX - partitionCenterX);
+};
+
+const normalizeInteriorDoor = (item: LayoutItem, x: number, y: number, length: number, width: number, items: LayoutItem[]): LayoutItem => {
+  const horizontalDoor = isHorizontalRotation(item.rotation);
+  const doorWidth = horizontalDoor ? DOOR_LENGTH : INTERIOR_DOOR_THICKNESS;
+  const doorHeight = horizontalDoor ? INTERIOR_DOOR_THICKNESS : DOOR_LENGTH;
+  const doorCenterX = x + doorWidth / 2;
+  const doorCenterY = y + doorHeight / 2;
+  const partitions = items.filter((candidate) => candidate.type === 'wall_partition');
+  const compatible = partitions
+    .map((partition) => ({ partition, distance: distanceToPartition({ ...item, width: doorWidth, height: doorHeight }, partition, x, y) }))
+    .filter(({ distance }) => Number.isFinite(distance))
+    .sort((a, b) => a.distance - b.distance);
+
+  const nearest = compatible[0];
+  if (nearest && nearest.distance <= SNAP_TO_PARTITION_DISTANCE) {
+    const { partition } = nearest;
+    if (horizontalDoor) {
+      const normalizedX = clamp(snapMeters(doorCenterX - DOOR_LENGTH / 2), partition.x, Math.max(partition.x, partition.x + partition.width - DOOR_LENGTH));
+      const normalizedY = clamp(snapMeters(partition.y + partition.height / 2 - INTERIOR_DOOR_THICKNESS / 2), 0, Math.max(0, width - INTERIOR_DOOR_THICKNESS));
+      return {
+        ...item,
+        x: normalizedX,
+        y: normalizedY,
+        width: DOOR_LENGTH,
+        height: INTERIOR_DOOR_THICKNESS,
+        rotation: item.rotation === 180 ? 180 : 0,
+        zone: 'inside',
+        side: undefined,
+      };
+    }
+
+    const normalizedX = clamp(snapMeters(partition.x + partition.width / 2 - INTERIOR_DOOR_THICKNESS / 2), 0, Math.max(0, length - INTERIOR_DOOR_THICKNESS));
+    const normalizedY = clamp(snapMeters(doorCenterY - DOOR_LENGTH / 2), partition.y, Math.max(partition.y, partition.y + partition.height - DOOR_LENGTH));
+    return {
+      ...item,
+      x: normalizedX,
+      y: normalizedY,
+      width: INTERIOR_DOOR_THICKNESS,
+      height: DOOR_LENGTH,
+      rotation: item.rotation === 270 ? 270 : 90,
+      zone: 'inside',
+      side: undefined,
+    };
+  }
+
+  return {
+    ...item,
+    width: doorWidth,
+    height: doorHeight,
+    zone: 'inside',
+    side: undefined,
+    x: clamp(snapMeters(x), 0, Math.max(0, length - doorWidth)),
+    y: clamp(snapMeters(y), 0, Math.max(0, width - doorHeight)),
+  };
+};
+
 const normalizeItemForModule = (item: LayoutItem, x: number, y: number, length: number, width: number, items: LayoutItem[] = []) => {
+  if (item.type === 'interior_door') return normalizeInteriorDoor(item, x, y, length, width, items);
+
   if (item.parentId) {
     const parent = items.find((candidate) => candidate.id === item.parentId);
     if (parent) return normalizeBathroomChildItem(item, parent, x, y);
@@ -106,7 +186,24 @@ const rotateEdgeItemToNextSide = (item: LayoutItem, length: number, width: numbe
   return { ...item, side: 'left', rotation: 270, width: 0.1, height: openingLength, x: 0, y: clamp(snapMeters(centerY - openingLength / 2), 0, Math.max(0, width - openingLength)) };
 };
 
-const rotateInsideItem = (item: LayoutItem, length: number, width: number): LayoutItem => {
+const rotateInsideItem = (item: LayoutItem, length: number, width: number, items: LayoutItem[]): LayoutItem => {
+  if (item.type === 'interior_door') {
+    const nextRotation = ((item.rotation + 90) % 360) as LayoutItem['rotation'];
+    const centerX = item.x + item.width / 2;
+    const centerY = item.y + item.height / 2;
+    const horizontal = isHorizontalRotation(nextRotation);
+    const nextWidth = horizontal ? DOOR_LENGTH : INTERIOR_DOOR_THICKNESS;
+    const nextHeight = horizontal ? INTERIOR_DOOR_THICKNESS : DOOR_LENGTH;
+    return normalizeInteriorDoor(
+      { ...item, rotation: nextRotation, width: nextWidth, height: nextHeight, side: undefined, zone: 'inside' },
+      centerX - nextWidth / 2,
+      centerY - nextHeight / 2,
+      length,
+      width,
+      items,
+    );
+  }
+
   if (isDivisionType(item.type)) {
     const nextOrientation: DivisionOrientation = item.orientation === 'longitudinal' ? 'transversal' : 'longitudinal';
     return normalizeInsideItem({ ...item, orientation: nextOrientation }, item.x, item.y, length, width);
@@ -354,7 +451,7 @@ export const useConfiguratorStore = create<Store>((set, get) => ({
           if (item.id !== selectedItemId) return item;
           return item.zone === 'edge'
             ? rotateEdgeItemToNextSide(item, state.config.length, state.config.width)
-            : rotateInsideItem(item, state.config.length, state.config.width);
+            : rotateInsideItem(item, state.config.length, state.config.width, state.config.layoutItems);
         }),
       },
     }));
