@@ -6,7 +6,7 @@ import { DoorSymbol } from './symbols/DoorSymbol';
 import { WindowSymbol } from './symbols/WindowSymbol';
 import { SocketSymbol } from './symbols/SocketSymbol';
 import { LightSymbol } from './symbols/LightSymbol';
-import { AirConditioningSymbol, BathroomFixtures, ElectricalPanelSymbol, RoomDetails } from './symbols/TechnicalSymbols';
+import { AirConditioningSymbol, BathroomFixtures, ElectricalPanelSymbol, RoomDetails, ShowerTraySymbol, SinkSymbol, ToiletSymbol } from './symbols/TechnicalSymbols';
 import type { KonvaEventObject } from 'konva/lib/Node';
 
 const colorFor = (item: LayoutItem, selected: boolean, hasError: boolean, hasWarning: boolean) => {
@@ -16,6 +16,7 @@ const colorFor = (item: LayoutItem, selected: boolean, hasError: boolean, hasWar
   if (item.type.includes('window')) return '#7dd3fc';
   if (item.type.includes('light')) return '#fbbf24';
   if (item.type.includes('socket')) return '#e2e8f0';
+  if (['toilet', 'sink', 'shower_tray'].includes(item.type)) return '#67e8f9';
   if (item.type === 'air_conditioning') return '#c4b5fd';
   if (item.type === 'full_bathroom') return '#5eead4';
   return '#f8fafc';
@@ -37,6 +38,9 @@ const CadObjectSymbol = ({ item, selected, geometry, hasError, hasWarning }: { i
   if (isLight(item)) return <LightSymbol x={box.x} y={box.y} width={box.width} height={box.height} color={color} />;
   if (item.type === 'base_electrical_panel') return <ElectricalPanelSymbol x={box.x} y={box.y} width={box.width} height={box.height} color={color} />;
   if (item.type === 'air_conditioning') return <AirConditioningSymbol x={box.x} y={box.y} width={box.width} height={box.height} color={color} />;
+  if (item.type === 'toilet') return <ToiletSymbol x={box.x} y={box.y} width={box.width} height={box.height} color={color} />;
+  if (item.type === 'sink') return <SinkSymbol x={box.x} y={box.y} width={box.width} height={box.height} color={color} />;
+  if (item.type === 'shower_tray') return <ShowerTraySymbol x={box.x} y={box.y} width={box.width} height={box.height} color={color} />;
   if (item.type === 'wall_partition') return <Rect x={box.x} y={box.y} width={box.width} height={box.height} fill={color} opacity={0.95} shadowBlur={4} />;
   if (item.type === 'interior_room') {
     return (
