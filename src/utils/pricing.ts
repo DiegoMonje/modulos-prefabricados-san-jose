@@ -28,7 +28,7 @@ export const ITEM_PRICES: Record<LayoutItemType, number> = {
   interior_room: 700,
   full_bathroom: 1500,
   bathroom_door: 0,
-  bathroom_window_40x40: 0,
+  bathroom_window_40x40: 150,
   bathroom_light_point: 0,
   bathroom_socket: 0,
   toilet: 350,
@@ -51,7 +51,7 @@ export const ITEM_LABELS: Record<LayoutItemType, string> = {
   interior_room: 'Habitación interior',
   full_bathroom: 'Baño completo prediseñado',
   bathroom_door: 'Puerta del baño',
-  bathroom_window_40x40: 'Ventana 40x40 del baño',
+  bathroom_window_40x40: 'Ventana 40x40 baño',
   bathroom_light_point: 'Punto de luz del baño',
   bathroom_socket: 'Enchufe del baño',
   toilet: 'Váter con fontanería y montaje',
@@ -156,7 +156,7 @@ export const getDefaultItemSize = (type: LayoutItemType) => {
     case 'bathroom_door':
       return { width: 0.7, height: 0.08 };
     case 'bathroom_window_40x40':
-      return { width: 0.4, height: 0.08 };
+      return { width: 0.4, height: 0.1 };
     case 'toilet':
       return { width: 0.42, height: 0.62 };
     case 'sink':
@@ -202,6 +202,7 @@ export const summarizeLayoutItems = (items: LayoutItem[]): LayoutSummary => {
   const additionalDoors = count('additional_door');
   const additionalSockets = count('additional_socket');
   const windows80x80 = count('window_80x80');
+  const bathroomWindows40x40 = count('bathroom_window_40x40');
   const largeWindows = count('large_window');
   const toilets = count('toilet');
   const sinks = count('sink');
@@ -222,6 +223,7 @@ export const summarizeLayoutItems = (items: LayoutItem[]): LayoutSummary => {
   if (additionalSockets) extrasList.push(`${additionalSockets} enchufe(s) adicional(es)`);
   if (additionalDoors) extrasList.push(`${additionalDoors} puerta(s) adicional(es)`);
   if (windows80x80) extrasList.push(`${windows80x80} ventana(s) 80x80 extra`);
+  if (bathroomWindows40x40) extrasList.push(`${bathroomWindows40x40} ventana(s) 40x40 para baño`);
   if (largeWindows) extrasList.push(`${largeWindows} ventana(s) grande(s)`);
   if (wallPartitions) extrasList.push(`${wallPartitions} tabique(s) simple(s)`);
   if (interiorRooms) extrasList.push(`${interiorRooms} habitación(es) interior(es) · incluye puerta, ventana 80x80, punto de luz y enchufe`);
@@ -237,6 +239,7 @@ export const summarizeLayoutItems = (items: LayoutItem[]): LayoutSummary => {
     additionalSockets,
     additionalDoors,
     windows80x80,
+    bathroomWindows40x40,
     largeWindows,
     wallPartitions,
     interiorRooms,
