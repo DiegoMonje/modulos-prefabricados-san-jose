@@ -29,7 +29,9 @@ export type LayoutItemType =
   | 'base_light_point'
   | 'base_electrical_panel'
   | 'additional_socket'
+  | 'additional_light_point'
   | 'additional_door'
+  | 'interior_door'
   | 'window_80x80'
   | 'large_window'
   | 'wall_partition'
@@ -105,7 +107,9 @@ export interface LayoutSummary {
   includedList: string[];
   extrasList: string[];
   additionalSockets: number;
+  additionalLightPoints: number;
   additionalDoors: number;
+  interiorDoors: number;
   windows80x80: number;
   bathroomWindows40x40: number;
   largeWindows: number;
