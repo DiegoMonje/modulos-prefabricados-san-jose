@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 250" role="img" aria-label="Módulos Prefabricados San José">
+  <rect width="980" height="250" fill="#ffffff"/>
+  <image href="/logo-sanjose.svg" x="22" y="24" width="202" height="202" preserveAspectRatio="xMidYMid meet"/>
+  <rect x="250" y="44" width="4" height="162" rx="2" fill="#ff7a00"/>
+  <text x="295" y="92" fill="#031b3d" font-family="Inter, Arial, Helvetica, sans-serif" font-size="48" font-weight="900" letter-spacing="-1.5">Módulos Prefabricados</text>
+  <text x="295" y="190" font-family="Inter, Arial, Helvetica, sans-serif" font-size="106" font-weight="900" letter-spacing="-4">
+    <tspan fill="#031b3d">San </tspan><tspan fill="#ff7a00">José</tspan>
+  </text>
+</svg>
