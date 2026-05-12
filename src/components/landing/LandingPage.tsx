@@ -11,6 +11,14 @@ type LandingPageProps = {
   onAdmin: () => void;
 };
 
+type GalleryImage = {
+  src: string;
+  title: string;
+  description: string;
+  alt: string;
+  featured?: boolean;
+};
+
 const navItems = [
   ['Servicios', '#servicios'],
   ['Galería', '#galeria'],
@@ -50,7 +58,7 @@ const models = [
   ['Especial', '8 x 2,40 m', 'Bajo consulta técnica y transporte'],
 ] as const;
 
-const galleryImages = [
+const galleryImages: readonly GalleryImage[] = [
   {
     src: '/images/hero-modulo-prefabricado-jardin.webp',
     title: 'Módulo exterior premium',
@@ -82,15 +90,19 @@ const galleryImages = [
     description: 'Panel blanco, instalación eléctrica, iluminación y aire acondicionado.',
     alt: 'Interior acondicionado de módulo prefabricado con instalación eléctrica',
   },
-] as const;
+];
 
-const SectionHeader = ({ eyebrow, title, description, align = 'center' }: { eyebrow: string; title: string; description?: string; align?: 'left' | 'center' }) => (
-  <div className={align === 'center' ? 'mx-auto max-w-3xl text-center' : 'max-w-3xl'}>
-    <p className="text-xs font-black uppercase tracking-[0.22em] text-brand-orange">{eyebrow}</p>
-    <h2 className="mt-3 text-3xl font-black tracking-tight text-slate-950 md:text-5xl">{title}</h2>
-    {description ? <p className="mt-4 text-base leading-8 text-slate-600 md:text-lg">{description}</p> : null}
-  </div>
-);
+const SectionHeader = ({ eyebrow, title, description, align = 'center', tone = 'light' }: { eyebrow: string; title: string; description?: string; align?: 'left' | 'center'; tone?: 'light' | 'dark' }) => {
+  const isDark = tone === 'dark';
+
+  return (
+    <div className={align === 'center' ? 'mx-auto max-w-3xl text-center' : 'max-w-3xl'}>
+      <p className="text-xs font-black uppercase tracking-[0.22em] text-brand-orange">{eyebrow}</p>
+      <h2 className={`mt-3 text-3xl font-black tracking-tight md:text-5xl ${isDark ? 'text-white' : 'text-slate-950'}`}>{title}</h2>
+      {description ? <p className={`mt-4 text-base leading-8 md:text-lg ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>{description}</p> : null}
+    </div>
+  );
+};
 
 export const LandingPage = ({ onStart, onLegalPage, onAdmin }: LandingPageProps) => (
   <div className="min-h-screen bg-stone-50 text-slate-950">
@@ -257,7 +269,7 @@ const ServicesSection = () => (
   <section id="servicios" className="bg-slate-950 py-16 text-white md:py-20">
     <div className="container-page grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:items-start">
       <div>
-        <SectionHeader align="left" eyebrow="Aplicaciones" title="Módulos para uso real, no soluciones genéricas" description="Fabricamos para particulares, obras, negocios y empresas que necesitan una solución práctica, resistente y adaptada al uso previsto." />
+        <SectionHeader align="left" tone="dark" eyebrow="Aplicaciones" title="Módulos para uso real, no soluciones genéricas" description="Fabricamos para particulares, obras, negocios y empresas que necesitan una solución práctica, resistente y adaptada al uso previsto." />
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
         {useCases.map(([title, description], index) => (
