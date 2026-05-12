@@ -1,5 +1,6 @@
 import { Building2, Calculator, CheckCircle2, Clock3, FileText, Image as ImageIcon, Mail, MapPin, MessageCircle, Phone, Ruler, ShieldCheck, Sparkles } from 'lucide-react';
 import { company, whatsappContactUrl } from '../../config/company';
+import { SocialLinks } from '../ui/SocialLinks';
 import { Button, Card } from '../ui/Ui';
 
 const useCases = [
@@ -60,29 +61,7 @@ const galleryImages = [
 
 export const LandingPage = ({ onStart, onLegalPage, onAdmin }: { onStart: () => void; onLegalPage: (page: 'aviso-legal' | 'privacidad' | 'cookies') => void; onAdmin: () => void }) => (
   <div className="min-h-screen bg-brand-light">
-    <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/90">
-      <div className="container-page flex min-w-0 flex-col gap-3 py-2.5 sm:flex-row sm:items-center sm:justify-between sm:gap-4 lg:py-3">
-        <div className="flex min-w-0 items-center justify-between gap-3">
-          <a href="#inicio" aria-label="Volver al inicio" className="flex min-w-0 flex-1 items-center sm:flex-none">
-            <img src="/logo-sanjose-horizontal.svg" alt="Módulos Prefabricados San José" className="h-11 w-auto max-w-[190px] object-contain min-[380px]:max-w-[230px] sm:h-14 sm:max-w-[300px] lg:h-[72px] lg:max-w-[420px]" />
-          </a>
-          <a href={`tel:${company.phoneHref}`} className="inline-flex shrink-0 items-center justify-center rounded-2xl border border-slate-200 bg-slate-50 p-3 text-slate-800 shadow-sm transition hover:bg-white sm:hidden" aria-label="Llamar por teléfono">
-            <Phone size={19} />
-          </a>
-        </div>
-        <nav className="hidden items-center gap-6 text-sm font-black text-slate-600 lg:flex">
-          <button onClick={onStart} className="hover:text-brand-orange">Calculadora</button>
-          <a href="#servicios" className="hover:text-brand-orange">Servicios</a>
-          <a href="#galeria" className="hover:text-brand-orange">Galería</a>
-          <a href="#modelos" className="hover:text-brand-orange">Modelos</a>
-          <a href="#contacto" className="hover:text-brand-orange">Contacto</a>
-        </nav>
-        <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:shrink-0 sm:items-center">
-          <a href={`tel:${company.phoneHref}`} className="hidden sm:inline-flex"><Button variant="outline" className="w-full whitespace-nowrap px-4"><Phone size={18} /> Llamar</Button></a>
-          <a href={whatsappContactUrl} target="_blank" rel="noreferrer" className="col-span-2 sm:col-span-1"><Button variant="secondary" className="w-full whitespace-nowrap px-4"><MessageCircle size={18} /> WhatsApp</Button></a>
-        </div>
-      </div>
-    </header>
+    <Header onStart={onStart} />
 
     <main id="inicio">
       <section className="relative overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-blue-950 text-white">
@@ -258,16 +237,44 @@ export const LandingPage = ({ onStart, onLegalPage, onAdmin }: { onStart: () => 
   </div>
 );
 
+const Header = ({ onStart }: { onStart: () => void }) => (
+  <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-white/90">
+    <div className="container-page flex min-w-0 flex-col gap-3 py-3 lg:flex-row lg:items-center lg:justify-between">
+      <div className="flex min-w-0 items-center justify-between gap-3">
+        <a href="#inicio" aria-label="Volver al inicio" className="flex min-w-0 flex-1 items-center lg:flex-none">
+          <img src="/logo-sanjose-horizontal.svg" alt="Módulos Prefabricados San José" className="h-12 w-auto max-w-[230px] object-contain sm:h-14 sm:max-w-[310px] lg:h-16 lg:max-w-[360px]" />
+        </a>
+        <div className="flex shrink-0 items-center gap-2 lg:hidden">
+          <SocialLinks className="hidden min-[390px]:flex" />
+          <a href={`tel:${company.phoneHref}`} className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-800 shadow-sm transition hover:bg-slate-50" aria-label="Llamar por teléfono"><Phone size={19} /></a>
+        </div>
+      </div>
+      <nav className="hidden items-center gap-6 text-sm font-black text-slate-600 lg:flex">
+        <button onClick={onStart} className="hover:text-brand-orange">Calculadora</button>
+        <a href="#servicios" className="hover:text-brand-orange">Servicios</a>
+        <a href="#galeria" className="hover:text-brand-orange">Galería</a>
+        <a href="#modelos" className="hover:text-brand-orange">Modelos</a>
+        <a href="#contacto" className="hover:text-brand-orange">Contacto</a>
+      </nav>
+      <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:shrink-0 sm:items-center">
+        <a href={`tel:${company.phoneHref}`} className="hidden sm:inline-flex"><Button variant="outline" className="w-full whitespace-nowrap px-4"><Phone size={18} /> Llamar</Button></a>
+        <a href={whatsappContactUrl} target="_blank" rel="noreferrer" className="col-span-2 sm:col-span-1"><Button variant="secondary" className="w-full whitespace-nowrap px-4"><MessageCircle size={18} /> WhatsApp</Button></a>
+        <SocialLinks className="hidden lg:flex" />
+      </div>
+    </div>
+  </header>
+);
+
 const Footer = ({ onLegalPage, onAdmin }: { onLegalPage: (page: 'aviso-legal' | 'privacidad' | 'cookies') => void; onAdmin: () => void }) => (
   <footer className="bg-slate-950 text-white">
     <div className="border-b border-white/10 bg-gradient-to-r from-slate-950 via-slate-900 to-brand-navy">
-      <div className="container-page grid gap-5 py-8 md:grid-cols-[1.4fr_1fr] md:items-center">
+      <div className="container-page grid gap-6 py-10 lg:grid-cols-[1.25fr_0.75fr] lg:items-center">
         <div>
           <p className="text-xs font-black uppercase tracking-[0.22em] text-brand-orange">Empresa registrada en Sevilla</p>
-          <h2 className="mt-2 text-2xl font-black sm:text-3xl">Fabricación responsable de casetas y módulos prefabricados</h2>
+          <h2 className="mt-2 max-w-3xl text-2xl font-black sm:text-3xl">Fabricación responsable de casetas y módulos prefabricados</h2>
           <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-300">Atención directa, presupuesto personalizado y soluciones a medida para particulares, obras, fincas, oficinas y empresas.</p>
         </div>
-        <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-1 lg:grid-cols-2">
+        <div className="flex flex-col gap-3 sm:flex-row lg:justify-end">
           <a href={`tel:${company.phoneHref}`} className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/15 bg-white/10 px-5 py-3 font-black text-white transition hover:bg-white/15"><Phone size={18} /> Llamar</a>
           <a href={whatsappContactUrl} target="_blank" rel="noreferrer" className="inline-flex items-center justify-center gap-2 rounded-2xl bg-brand-green px-5 py-3 font-black text-white transition hover:bg-emerald-700"><MessageCircle size={18} /> WhatsApp</a>
         </div>
@@ -276,11 +283,15 @@ const Footer = ({ onLegalPage, onAdmin }: { onLegalPage: (page: 'aviso-legal' | 
 
     <div className="container-page grid gap-8 py-10 sm:grid-cols-2 lg:grid-cols-[1.35fr_1fr_1fr_0.8fr]">
       <div className="min-w-0">
-        <img src="/logo-sanjose-horizontal.svg" alt="Módulos Prefabricados San José" className="h-12 w-auto max-w-[240px] rounded-xl bg-white p-2 sm:max-w-[280px]" />
+        <img src="/logo-sanjose-horizontal.svg" alt="Módulos Prefabricados San José" className="h-14 w-auto max-w-[280px] rounded-2xl bg-white p-2" />
         <p className="mt-5 max-w-md text-sm leading-7 text-slate-300">{company.activity}. Fabricamos módulos con panel sándwich para uso profesional y particular, con orientación técnica y presupuesto revisado según cada proyecto.</p>
         <div className="mt-5 flex flex-wrap gap-2 text-xs font-black text-slate-300">
           <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">CIF {company.cif}</span>
           <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">Sevilla y Andalucía</span>
+        </div>
+        <div className="mt-5">
+          <p className="mb-2 text-xs font-black uppercase tracking-[0.18em] text-slate-500">Síguenos</p>
+          <SocialLinks variant="dark" />
         </div>
       </div>
 
@@ -314,9 +325,9 @@ const Footer = ({ onLegalPage, onAdmin }: { onLegalPage: (page: 'aviso-legal' | 
     </div>
 
     <div className="border-t border-white/10">
-      <div className="container-page flex flex-col gap-2 py-5 text-center text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between sm:text-left">
+      <div className="container-page flex flex-col gap-2 py-5 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between">
         <p>© {new Date().getFullYear()} {company.name}. Todos los derechos reservados.</p>
-        <p>Diseño responsive optimizado para móvil, tablet y escritorio.</p>
+        <p>Presupuestos orientativos sujetos a revisión técnica.</p>
       </div>
     </div>
   </footer>
