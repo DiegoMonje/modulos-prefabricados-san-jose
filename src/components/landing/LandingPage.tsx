@@ -19,7 +19,6 @@ const models = [
   ['Proyecto especial', '8 x 2,40 m', 'Bajo consulta técnica y transporte'],
 ] as const;
 
-
 const galleryImages = [
   {
     src: '/images/caseta-prefabricada-frontal-finca.webp',
@@ -62,13 +61,9 @@ const galleryImages = [
 export const LandingPage = ({ onStart, onLegalPage, onAdmin }: { onStart: () => void; onLegalPage: (page: 'aviso-legal' | 'privacidad' | 'cookies') => void; onAdmin: () => void }) => (
   <div className="min-h-screen bg-brand-light">
     <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur">
-      <div className="container-page flex items-center justify-between gap-4 py-4">
-        <a href="#inicio" className="flex items-center gap-3">
-          <img src="/logo-sanjose.svg" alt="Módulos Prefabricados San José" className="h-14 w-14 rounded-2xl object-contain shadow-sm" />
-          <div>
-            <p className="font-black text-slate-900">{company.name}</p>
-            <p className="text-xs font-semibold text-slate-500">Casetas y módulos prefabricados en Sevilla</p>
-          </div>
+      <div className="container-page flex items-center justify-between gap-4 py-3">
+        <a href="#inicio" aria-label="Volver al inicio" className="flex shrink-0 items-center">
+          <img src="/logo-sanjose-horizontal.svg" alt="Módulos Prefabricados San José" className="h-16 w-auto max-w-[300px] object-contain sm:max-w-[360px] lg:h-[72px] lg:max-w-[420px]" />
         </a>
         <nav className="hidden items-center gap-6 text-sm font-black text-slate-600 lg:flex">
           <button onClick={onStart} className="hover:text-brand-orange">Calculadora</button>
