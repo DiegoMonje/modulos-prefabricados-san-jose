@@ -13,55 +13,64 @@ type LandingPageProps = {
 
 const navItems = [
   ['Servicios', '#servicios'],
-  ['Configurador', '#calculadora'],
-  ['Galería', '#galeria'],
+  ['Proyectos', '#proyectos'],
   ['Proceso', '#proceso'],
-  ['Modelos', '#modelos'],
   ['Contacto', '#contacto'],
 ] as const;
 
-const useCases = [
+const services = [
   {
-    title: 'Casetas para fincas',
-    description: 'Para herramientas, maquinaria, aperos o zonas auxiliares en terrenos particulares.',
-    image: '/images/caseta-prefabricada-frontal-finca.webp',
-    alt: 'Caseta prefabricada blanca frontal para finca',
-  },
-  {
-    title: 'Módulos oficina',
-    description: 'Espacios de trabajo para empresas, talleres, obras o negocios que necesitan una solución rápida.',
+    title: 'Oficinas modulares',
+    description: 'Espacios de trabajo rápidos de instalar para obras, empresas y negocios.',
     image: '/images/interior-modulo-prefabricado-oficina.webp',
     alt: 'Interior acondicionado de módulo prefabricado con instalación eléctrica',
+    className: 'md:col-span-2 md:row-span-2',
   },
   {
-    title: 'Casetas de obra',
-    description: 'Módulos resistentes para obras, almacenes temporales, vestuarios o zonas de trabajo.',
-    image: '/images/modulo-prefabricado-obra-dos-ventanas.webp',
-    alt: 'Módulo prefabricado de obra con dos ventanas',
+    title: 'Casetas para fincas',
+    description: 'Almacenaje, aperos, herramientas y uso auxiliar en terrenos particulares.',
+    image: '/images/caseta-prefabricada-frontal-finca.webp',
+    alt: 'Caseta prefabricada blanca frontal para finca',
+    className: '',
   },
   {
-    title: 'Vestuarios y almacenes',
-    description: 'Soluciones para trabajadores, instalaciones deportivas, empresas y almacenamiento profesional.',
+    title: 'Bodegas y almacenes',
+    description: 'Soluciones resistentes para guardar material, mercancía o maquinaria.',
     image: '/images/modulo-prefabricado-finca-dos-ventanas.webp',
     alt: 'Módulo prefabricado largo para finca con dos ventanas',
+    className: '',
+  },
+  {
+    title: 'Proyectos especiales',
+    description: 'Medidas, paneles, distribuciones y acabados bajo consulta técnica.',
+    image: '/images/modulo-prefabricado-perspectiva-jardin.webp',
+    alt: 'Módulo prefabricado visto en perspectiva en entorno ajardinado',
+    className: 'md:col-span-2',
   },
 ] as const;
 
-const galleryImages = [
+const stats = [
+  ['+500', 'proyectos orientados', Building2],
+  ['10+', 'años de experiencia sectorial', ShieldCheck],
+  ['3-8 m', 'medidas habituales', Ruler],
+  ['24/48 h', 'respuesta comercial habitual', FileText],
+] as const;
+
+const projects = [
   {
     src: '/images/hero-modulo-prefabricado-jardin.webp',
-    title: 'Módulo instalado en exterior',
+    title: 'Módulo exterior con acabado blanco',
     alt: 'Módulo prefabricado con panel sándwich blanco instalado en jardín',
+  },
+  {
+    src: '/images/modulo-prefabricado-obra-dos-ventanas.webp',
+    title: 'Módulo de obra con dos ventanas',
+    alt: 'Módulo prefabricado de obra con dos ventanas',
   },
   {
     src: '/images/caseta-prefabricada-compacta-olivar.webp',
     title: 'Caseta compacta para finca',
     alt: 'Caseta prefabricada compacta instalada en olivar',
-  },
-  {
-    src: '/images/modulo-prefabricado-perspectiva-jardin.webp',
-    title: 'Acabado exterior limpio',
-    alt: 'Módulo prefabricado visto en perspectiva en entorno ajardinado',
   },
   {
     src: '/images/interior-modulo-prefabricado-oficina.webp',
@@ -71,10 +80,10 @@ const galleryImages = [
 ] as const;
 
 const processSteps = [
-  ['01', 'Eliges medidas y uso', 'Definimos longitud, ancho, uso previsto y ubicación de instalación.'],
-  ['02', 'Configuras distribución', 'Añades puertas, ventanas, enchufes, iluminación, baño u otros extras.'],
-  ['03', 'Envías la solicitud', 'La web prepara la información para revisar el proyecto con más claridad.'],
-  ['04', 'Confirmamos presupuesto', 'Comprobamos transporte, montaje, accesos y detalles técnicos finales.'],
+  ['01', 'Brief del proyecto', 'Definimos uso, medidas, ubicación, accesos y necesidades reales.'],
+  ['02', 'Configuración', 'Seleccionas panel, puertas, ventanas, distribución y extras principales.'],
+  ['03', 'Revisión técnica', 'Comprobamos transporte, montaje, instalación y detalles finales.'],
+  ['04', 'Presupuesto final', 'Recibes una propuesta clara con precio, condiciones y alcance.'],
 ] as const;
 
 const models = [
@@ -86,27 +95,26 @@ const models = [
   ['8 x 2,40 m', 'Especial', 'Bajo consulta técnica y transporte'],
 ] as const;
 
-const SectionIntro = ({ eyebrow, title, description }: { eyebrow: string; title: string; description?: string }) => (
-  <div className="max-w-3xl">
-    <p className="text-xs font-black uppercase tracking-[0.18em] text-brand-orange">{eyebrow}</p>
-    <h2 className="mt-3 text-3xl font-black tracking-tight text-slate-950 md:text-4xl">{title}</h2>
-    {description ? <p className="mt-4 text-base leading-8 text-slate-600">{description}</p> : null}
+const SectionIntro = ({ eyebrow, title, description, center = false }: { eyebrow: string; title: string; description?: string; center?: boolean }) => (
+  <div className={center ? 'mx-auto max-w-3xl text-center' : 'max-w-3xl'}>
+    <p className="text-xs font-black uppercase tracking-[0.22em] text-brand-orange">{eyebrow}</p>
+    <h2 className="mt-3 text-3xl font-black tracking-tight text-slate-950 md:text-5xl">{title}</h2>
+    {description ? <p className="mt-5 text-base leading-8 text-slate-600 md:text-lg">{description}</p> : null}
   </div>
 );
 
 export const LandingPage = ({ onStart, onLegalPage, onAdmin }: LandingPageProps) => (
-  <div className="min-h-screen bg-slate-50 text-slate-950">
+  <div className="min-h-screen bg-[#F9FAFB] text-slate-950">
     <Header onStart={onStart} />
 
     <main id="inicio">
       <HeroSection onStart={onStart} />
-      <TrustSection />
-      <UseCasesSection />
-      <ConfiguratorSection onStart={onStart} />
-      <GallerySection />
+      <StatsSection />
+      <ServicesBento onStart={onStart} />
+      <ProjectShowcase />
       <ProcessSection />
       <ModelsSection onStart={onStart} />
-      <ContactCta onStart={onStart} />
+      <ContactSection onStart={onStart} />
     </main>
 
     <Footer onLegalPage={onLegalPage} onAdmin={onAdmin} onStart={onStart} />
@@ -114,195 +122,145 @@ export const LandingPage = ({ onStart, onLegalPage, onAdmin }: LandingPageProps)
 );
 
 const Header = ({ onStart }: { onStart: () => void }) => (
-  <header className="sticky top-0 z-50 border-b border-slate-200 bg-white">
-    <div className="hidden border-b border-slate-200 bg-slate-950 text-white lg:block">
-      <div className="container-page flex h-9 items-center justify-between text-xs font-semibold text-slate-300">
-        <span className="inline-flex items-center gap-2"><MapPin size={14} className="text-brand-orange" /> San José de la Rinconada · Sevilla</span>
-        <div className="flex items-center gap-5">
-          <span>CIF {company.cif}</span>
-          <a href={`tel:${company.phoneHref}`} className="inline-flex items-center gap-2 hover:text-white"><Phone size={14} /> {company.phone}</a>
-          <a href={`mailto:${company.email}`} className="hover:text-white">{company.email}</a>
-        </div>
-      </div>
-    </div>
-
-    <div className="container-page flex items-center justify-between gap-3 py-3">
+  <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/90 backdrop-blur-xl">
+    <div className="container-page flex items-center justify-between gap-4 py-3">
       <a href="#inicio" aria-label="Volver al inicio" className="flex min-w-0 items-center">
-        <img src="/logo-sanjose-horizontal.svg" alt="Módulos Prefabricados San José" className="h-10 w-auto max-w-[210px] object-contain sm:h-11 sm:max-w-[260px] lg:h-12 lg:max-w-[310px]" />
+        <img src="/logo-sanjose-horizontal.svg" alt="Módulos Prefabricados San José" className="h-10 w-auto max-w-[220px] object-contain sm:h-12 sm:max-w-[290px]" />
       </a>
 
-      <nav aria-label="Navegación principal" className="hidden items-center gap-6 text-sm font-black text-slate-700 lg:flex">
-        {navItems.map(([label, href]) => <a key={href} href={href} className="hover:text-brand-orange">{label}</a>)}
+      <nav aria-label="Navegación principal" className="hidden items-center gap-7 text-sm font-black text-slate-700 lg:flex">
+        {navItems.map(([label, href]) => <a key={href} href={href} className="transition hover:text-brand-orange">{label}</a>)}
       </nav>
 
       <div className="flex shrink-0 items-center gap-2">
-        <button onClick={onStart} className="hidden rounded-md bg-brand-orange px-4 py-2.5 text-sm font-black text-white transition hover:bg-orange-600 sm:inline-flex">Calcular precio</button>
-        <a href={whatsappContactUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-md bg-brand-green px-3 py-2.5 text-sm font-black text-white transition hover:bg-emerald-700"><MessageCircle size={17} /><span className="hidden sm:inline">WhatsApp</span></a>
+        <button onClick={onStart} className="hidden rounded-full bg-slate-950 px-4 py-2.5 text-sm font-black text-white shadow-lg shadow-slate-950/10 transition hover:-translate-y-0.5 hover:bg-slate-800 sm:inline-flex">Calcular precio</button>
+        <a href={whatsappContactUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-full bg-brand-green px-4 py-2.5 text-sm font-black text-white shadow-lg shadow-emerald-900/15 transition hover:-translate-y-0.5 hover:bg-emerald-700"><MessageCircle size={17} /><span className="hidden sm:inline">WhatsApp</span></a>
       </div>
     </div>
 
     <nav aria-label="Navegación móvil" className="border-t border-slate-100 bg-white lg:hidden">
       <div className="container-page flex gap-2 overflow-x-auto py-2 text-xs font-bold text-slate-700">
-        <button onClick={onStart} className="whitespace-nowrap rounded-md bg-brand-orange px-3 py-2 text-white">Calcular precio</button>
-        {navItems.map(([label, href]) => <a key={href} href={href} className="whitespace-nowrap rounded-md border border-slate-200 bg-white px-3 py-2">{label}</a>)}
+        <button onClick={onStart} className="whitespace-nowrap rounded-full bg-slate-950 px-3 py-2 text-white">Calcular precio</button>
+        {navItems.map(([label, href]) => <a key={href} href={href} className="whitespace-nowrap rounded-full border border-slate-200 bg-white px-3 py-2">{label}</a>)}
       </div>
     </nav>
   </header>
 );
 
 const HeroSection = ({ onStart }: { onStart: () => void }) => (
-  <section className="border-b border-slate-200 bg-white">
-    <div className="container-page grid gap-10 py-10 md:py-14 lg:grid-cols-[0.92fr_1.08fr] lg:items-center lg:py-16">
-      <div>
-        <p className="text-xs font-black uppercase tracking-[0.18em] text-brand-orange">Fabricación de módulos prefabricados en Sevilla</p>
-        <h1 className="mt-4 text-4xl font-black tracking-tight text-slate-950 md:text-6xl">Casetas y módulos prefabricados a medida en Sevilla</h1>
-        <p className="mt-5 max-w-2xl text-lg leading-8 text-slate-700">Fabricamos casetas y módulos con panel sándwich para fincas, obras, oficinas, vestuarios y almacenes. Configura medidas, distribución y extras para recibir una orientación de precio y solicitar revisión final.</p>
+  <section className="relative isolate min-h-[720px] overflow-hidden bg-slate-950 text-white">
+    <img src="/images/hero-modulo-prefabricado-jardin.webp" alt="Módulo prefabricado con panel sándwich blanco instalado en jardín" className="absolute inset-0 h-full w-full object-cover opacity-55" fetchPriority="high" />
+    <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/78 to-slate-950/25" />
+    <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(249,115,22,0.22),transparent_28%)]" />
 
-        <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-          <Button onClick={onStart} className="rounded-md px-6 py-4 text-base"><Calculator size={19} /> Calcular precio</Button>
-          <a href={whatsappContactUrl} target="_blank" rel="noreferrer" className="inline-flex items-center justify-center gap-2 rounded-md border border-slate-300 bg-white px-6 py-4 text-base font-black text-slate-900 transition hover:bg-slate-50"><MessageCircle size={19} /> Pedir presupuesto por WhatsApp</a>
+    <div className="container-page relative flex min-h-[720px] items-center py-16">
+      <div className="max-w-4xl">
+        <p className="inline-flex rounded-full border border-white/15 bg-white/10 px-4 py-2 text-xs font-black uppercase tracking-[0.22em] text-orange-100 backdrop-blur">Construcción modular en Sevilla</p>
+        <h1 className="mt-7 text-5xl font-black tracking-tight md:text-7xl lg:text-8xl">Construcción Modular: Rápida, Sólida, Sostenible</h1>
+        <p className="mt-7 max-w-2xl text-lg leading-8 text-slate-200 md:text-xl">Fabricamos casetas y módulos prefabricados con panel sándwich para oficinas, fincas, obras, almacenes y proyectos especiales.</p>
+
+        <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+          <button onClick={onStart} className="group relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-full bg-gradient-to-r from-brand-orange to-orange-500 px-7 py-4 text-base font-black text-white shadow-2xl shadow-orange-950/30 transition hover:-translate-y-0.5">
+            <span className="absolute inset-y-0 -left-10 w-10 rotate-12 bg-white/30 transition duration-700 group-hover:left-[120%]" />
+            <Calculator size={19} /> Calcular precio
+          </button>
+          <a href={whatsappContactUrl} target="_blank" rel="noreferrer" className="inline-flex items-center justify-center gap-2 rounded-full border border-white/20 bg-white/10 px-7 py-4 text-base font-black text-white backdrop-blur transition hover:-translate-y-0.5 hover:bg-white/15"><MessageCircle size={19} /> Pedir presupuesto por WhatsApp</a>
         </div>
 
-        <div className="mt-8 border-l-4 border-brand-orange bg-slate-50 p-5">
-          <p className="text-sm font-bold text-slate-600">Modelo orientativo más solicitado</p>
-          <p className="mt-1 text-2xl font-black text-slate-950">6 x 2,40 m · desde 4.750 € sin IVA</p>
-          <p className="mt-2 text-sm leading-6 text-slate-600">Precio sujeto a medidas finales, extras, transporte, montaje, accesos y revisión técnica.</p>
-        </div>
-      </div>
-
-      <div>
-        <img src="/images/hero-modulo-prefabricado-jardin.webp" alt="Módulo prefabricado con panel sándwich blanco instalado en jardín" className="h-[310px] w-full object-cover md:h-[470px]" fetchPriority="high" />
-        <div className="grid border border-t-0 border-slate-200 bg-slate-50 sm:grid-cols-3">
-          {['Panel sándwich', 'Fabricación a medida', 'Atención directa'].map((item) => <div key={item} className="border-b border-slate-200 p-4 text-sm font-black text-slate-800 last:border-b-0 sm:border-b-0 sm:border-r sm:last:border-r-0"><CheckCircle2 size={17} className="mb-2 text-brand-green" />{item}</div>)}
+        <div className="mt-10 grid max-w-3xl gap-3 sm:grid-cols-3">
+          {['Panel sándwich', 'Fabricación a medida', 'Presupuesto revisado'].map((item) => <span key={item} className="border border-white/10 bg-white/10 px-4 py-3 text-sm font-bold text-slate-100 backdrop-blur"><CheckCircle2 size={17} className="mb-2 text-brand-green" />{item}</span>)}
         </div>
       </div>
     </div>
   </section>
 );
 
-const TrustSection = () => (
-  <section className="bg-slate-50 py-8">
-    <div className="container-page grid gap-px overflow-hidden border border-slate-200 bg-slate-200 md:grid-cols-4">
-      {[
-        ['Empresa', company.name],
-        ['CIF', company.cif],
-        ['Ubicación', 'San José de la Rinconada, Sevilla'],
-        ['Contacto', company.phone],
-      ].map(([label, value]) => (
-        <div key={label} className="bg-white p-5">
-          <p className="text-xs font-black uppercase tracking-[0.16em] text-slate-500">{label}</p>
-          <p className="mt-2 text-sm font-black leading-6 text-slate-950">{value}</p>
+const StatsSection = () => (
+  <section className="border-b border-slate-200 bg-white py-10">
+    <div className="container-page grid gap-px overflow-hidden rounded-2xl border border-slate-200 bg-slate-200 md:grid-cols-4">
+      {stats.map(([number, label, Icon]) => (
+        <div key={number} className="bg-white p-6">
+          <Icon size={24} className="text-brand-orange" />
+          <p className="mt-5 text-4xl font-black tracking-tight text-slate-950">{number}</p>
+          <p className="mt-2 text-sm font-bold uppercase tracking-[0.12em] text-slate-500">{label}</p>
         </div>
       ))}
     </div>
   </section>
 );
 
-const UseCasesSection = () => (
-  <section id="servicios" className="bg-white py-14 md:py-20">
+const ServicesBento = ({ onStart }: { onStart: () => void }) => (
+  <section id="servicios" className="bg-[#F9FAFB] py-20 md:py-28">
     <div className="container-page">
-      <div className="grid gap-8 lg:grid-cols-[0.75fr_1.25fr] lg:items-start">
-        <SectionIntro eyebrow="Tipos de módulos" title="Soluciones para finca, obra, oficina y almacén" description="Una estructura de catálogo clara para entender qué podemos fabricar y qué uso tiene cada módulo." />
-        <div className="border-y border-slate-200">
-          {useCases.map((item, index) => (
-            <article key={item.title} className="grid gap-5 border-b border-slate-200 py-6 last:border-b-0 md:grid-cols-[190px_1fr] md:items-center">
-              <img src={item.image} alt={item.alt} className="h-36 w-full object-cover" loading="lazy" />
-              <div className="grid gap-4 md:grid-cols-[1fr_auto] md:items-center">
-                <div>
-                  <p className="text-xs font-black uppercase tracking-[0.16em] text-slate-500">0{index + 1}</p>
-                  <h3 className="mt-1 text-2xl font-black text-slate-950">{item.title}</h3>
-                  <p className="mt-2 max-w-2xl leading-7 text-slate-600">{item.description}</p>
-                </div>
-                <a href="#calculadora" className="text-sm font-black text-brand-orange hover:text-orange-700">Configurar →</a>
-              </div>
-            </article>
-          ))}
-        </div>
+      <div className="mb-12 flex flex-col justify-between gap-6 md:flex-row md:items-end">
+        <SectionIntro eyebrow="Servicios" title="Soluciones modulares para empresa, obra y finca" description="Un catálogo claro de módulos prefabricados pensado para proyectos funcionales, rápidos de instalar y adaptados al uso real." />
+        <Button onClick={onStart} className="rounded-full"><Calculator size={18} /> Configurar módulo</Button>
       </div>
-    </div>
-  </section>
-);
 
-const ConfiguratorSection = ({ onStart }: { onStart: () => void }) => (
-  <section id="calculadora" className="border-y border-slate-200 bg-slate-100 py-14 md:py-20">
-    <div className="container-page grid gap-8 lg:grid-cols-[1fr_0.9fr] lg:items-center">
-      <div>
-        <SectionIntro eyebrow="Calculadora de presupuesto" title="Configura lo básico antes de pedir presupuesto" description="La herramienta no sustituye la revisión técnica. Sirve para definir medidas, panel, puertas, ventanas y extras, y enviarnos una solicitud más precisa." />
-        <Button onClick={onStart} className="mt-7 rounded-md"><Calculator size={18} /> Abrir configurador</Button>
-      </div>
-      <div className="border border-slate-300 bg-white">
-        <div className="border-b border-slate-200 p-5">
-          <p className="text-sm font-black uppercase tracking-[0.16em] text-slate-500">Qué puedes definir</p>
-        </div>
-        <div className="grid gap-px bg-slate-200 sm:grid-cols-2">
-          {['Medidas del módulo', 'Tipo y grosor de panel', 'Puertas y ventanas', 'Enchufes e iluminación', 'Baño y distribución', 'Ubicación y plazo'].map((item) => (
-            <div key={item} className="bg-white p-5 text-sm font-black text-slate-800"><CheckCircle2 size={17} className="mb-2 text-brand-green" />{item}</div>
-          ))}
-        </div>
-      </div>
-    </div>
-  </section>
-);
-
-const GallerySection = () => (
-  <section id="galeria" className="bg-white py-14 md:py-20">
-    <div className="container-page">
-      <div className="mb-8 flex flex-col justify-between gap-5 md:flex-row md:items-end">
-        <SectionIntro eyebrow="Ejemplos reales" title="Imágenes de módulos y acabados" description="La galería tiene más peso visual porque el producto físico debe verse con claridad." />
-        <p className="max-w-sm text-sm leading-6 text-slate-500">Las imágenes sirven como referencia de formato, proporción, puertas, ventanas e interiores.</p>
-      </div>
-      <div className="grid gap-4 lg:grid-cols-[1.35fr_0.65fr]">
-        <div>
-          <img src={galleryImages[0].src} alt={galleryImages[0].alt} className="h-[340px] w-full object-cover md:h-[560px]" loading="lazy" />
-          <p className="mt-3 text-sm font-bold text-slate-700">{galleryImages[0].title}</p>
-        </div>
-        <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-1">
-          {galleryImages.slice(1).map((image) => (
-            <div key={image.src}>
-              <img src={image.src} alt={image.alt} className="h-40 w-full object-cover md:h-44" loading="lazy" />
-              <p className="mt-2 text-sm font-bold text-slate-700">{image.title}</p>
+      <div className="grid auto-rows-[310px] gap-5 md:grid-cols-4">
+        {services.map((service) => (
+          <article key={service.title} className={`${service.className} group relative overflow-hidden rounded-2xl bg-slate-950 shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl`}>
+            <img src={service.image} alt={service.alt} className="absolute inset-0 h-full w-full object-cover opacity-70 transition duration-500 group-hover:scale-105 group-hover:opacity-85" loading="lazy" />
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent" />
+            <div className="absolute inset-x-0 bottom-0 p-6 text-white">
+              <h3 className="text-2xl font-black tracking-tight">{service.title}</h3>
+              <p className="mt-2 max-w-md text-sm leading-6 text-slate-200">{service.description}</p>
             </div>
-          ))}
-        </div>
+          </article>
+        ))}
+      </div>
+    </div>
+  </section>
+);
+
+const ProjectShowcase = () => (
+  <section id="proyectos" className="bg-white py-20 md:py-28">
+    <div className="container-page">
+      <SectionIntro center eyebrow="Showcase" title="Proyectos y acabados con presencia profesional" description="Imágenes grandes, limpias y orientadas a mostrar el producto físico: exterior, volumen, ventanas, puertas e interior acondicionado." />
+      <div className="mt-12 grid gap-5 md:grid-cols-2">
+        {projects.map((project, index) => (
+          <figure key={project.src} className={`${index === 0 ? 'md:col-span-2' : ''} group overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200 transition hover:-translate-y-1 hover:shadow-xl`}>
+            <img src={project.src} alt={project.alt} className={`${index === 0 ? 'h-[360px] md:h-[560px]' : 'h-[320px]'} w-full object-cover transition duration-500 group-hover:scale-[1.03]`} loading="lazy" />
+            <figcaption className="px-5 py-4 text-sm font-black text-slate-800">{project.title}</figcaption>
+          </figure>
+        ))}
       </div>
     </div>
   </section>
 );
 
 const ProcessSection = () => (
-  <section id="proceso" className="border-y border-slate-200 bg-slate-950 py-14 text-white md:py-20">
-    <div className="container-page">
-      <div className="grid gap-8 lg:grid-cols-[0.75fr_1.25fr]">
-        <div>
-          <p className="text-xs font-black uppercase tracking-[0.18em] text-brand-orange">Proceso de trabajo</p>
-          <h2 className="mt-3 text-3xl font-black tracking-tight md:text-4xl">De la idea al presupuesto final</h2>
-          <p className="mt-4 leading-8 text-slate-300">Un proceso directo para ordenar la información antes de fabricar o presupuestar.</p>
-        </div>
-        <div className="grid gap-px bg-white/10 md:grid-cols-4">
-          {processSteps.map(([number, title, description]) => (
-            <div key={number} className="bg-slate-950 p-5">
-              <p className="text-sm font-black text-brand-orange">{number}</p>
-              <h3 className="mt-3 font-black">{title}</h3>
-              <p className="mt-2 text-sm leading-6 text-slate-300">{description}</p>
-            </div>
-          ))}
-        </div>
+  <section id="proceso" className="bg-slate-950 py-20 text-white md:py-28">
+    <div className="container-page grid gap-10 lg:grid-cols-[0.75fr_1.25fr]">
+      <div>
+        <p className="text-xs font-black uppercase tracking-[0.22em] text-brand-orange">Proceso</p>
+        <h2 className="mt-3 text-3xl font-black tracking-tight md:text-5xl">De la idea al módulo fabricado</h2>
+        <p className="mt-5 leading-8 text-slate-300">Un proceso comercial claro para ordenar medidas, uso, extras, transporte y montaje antes del presupuesto final.</p>
+      </div>
+      <div className="grid gap-4 md:grid-cols-2">
+        {processSteps.map(([number, title, description]) => (
+          <div key={number} className="rounded-2xl border border-white/10 bg-white/[0.04] p-6 transition hover:bg-white/[0.07]">
+            <p className="text-sm font-black text-brand-orange">{number}</p>
+            <h3 className="mt-4 text-xl font-black">{title}</h3>
+            <p className="mt-3 text-sm leading-7 text-slate-300">{description}</p>
+          </div>
+        ))}
       </div>
     </div>
   </section>
 );
 
 const ModelsSection = ({ onStart }: { onStart: () => void }) => (
-  <section id="modelos" className="bg-slate-50 py-14 md:py-20">
+  <section id="modelos" className="bg-[#F9FAFB] py-20 md:py-28">
     <div className="container-page">
-      <div className="mb-8 flex flex-col justify-between gap-5 md:flex-row md:items-end">
-        <SectionIntro eyebrow="Medidas habituales" title="Modelos frecuentes" description="Formatos habituales para orientar el presupuesto inicial. Las medidas especiales se estudian bajo consulta." />
-        <Button onClick={onStart} className="rounded-md"><Ruler size={18} /> Comparar medidas</Button>
+      <div className="mb-10 flex flex-col justify-between gap-6 md:flex-row md:items-end">
+        <SectionIntro eyebrow="Medidas" title="Modelos habituales" description="Formatos frecuentes para orientar el presupuesto. Las configuraciones especiales se estudian bajo revisión técnica." />
+        <Button onClick={onStart} className="rounded-full"><Ruler size={18} /> Comparar medidas</Button>
       </div>
-      <div className="overflow-hidden border border-slate-200 bg-white">
+      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         {models.map(([measure, title, usage]) => (
           <div key={measure} className="grid gap-3 border-b border-slate-200 p-5 last:border-b-0 md:grid-cols-[180px_190px_1fr] md:items-center">
-            <p className="text-2xl font-black text-slate-950">{measure}</p>
+            <p className="text-3xl font-black text-slate-950">{measure}</p>
             <p className="font-black text-brand-orange">{title}</p>
             <p className="text-sm leading-6 text-slate-600">{usage}</p>
           </div>
@@ -312,19 +270,37 @@ const ModelsSection = ({ onStart }: { onStart: () => void }) => (
   </section>
 );
 
-const ContactCta = ({ onStart }: { onStart: () => void }) => (
-  <section id="contacto" className="bg-white py-14 md:py-20">
-    <div className="container-page grid gap-8 border border-slate-200 bg-slate-50 p-6 md:p-8 lg:grid-cols-[1fr_auto] lg:items-center">
+const ContactSection = ({ onStart }: { onStart: () => void }) => (
+  <section id="contacto" className="bg-white py-20 md:py-28">
+    <div className="container-page grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
       <div>
-        <p className="text-xs font-black uppercase tracking-[0.18em] text-brand-orange">Contacto</p>
-        <h2 className="mt-3 text-3xl font-black tracking-tight text-slate-950 md:text-4xl">Solicita presupuesto para tu módulo prefabricado</h2>
-        <p className="mt-4 max-w-3xl leading-8 text-slate-600">Llámanos o envíanos tu configuración para revisar medidas, extras, transporte, montaje y disponibilidad.</p>
+        <SectionIntro eyebrow="Contacto" title="Cuéntanos qué módulo necesitas" description="Puedes usar el configurador o enviarnos tus datos. Revisaremos medidas, extras, transporte y montaje para preparar una respuesta comercial." />
+        <div className="mt-8 space-y-4 text-sm font-bold text-slate-700">
+          <a href={`tel:${company.phoneHref}`} className="flex items-center gap-3 hover:text-brand-orange"><Phone size={18} /> {company.phone}</a>
+          <a href={`mailto:${company.email}`} className="flex items-center gap-3 hover:text-brand-orange"><Mail size={18} /> {company.email}</a>
+          <p className="flex items-start gap-3"><MapPin size={18} /> {company.address}</p>
+        </div>
+        <Button onClick={onStart} className="mt-8 rounded-full"><Calculator size={18} /> Abrir configurador</Button>
       </div>
-      <div className="flex flex-col gap-3 sm:flex-row lg:flex-col">
-        <Button onClick={onStart} className="rounded-md"><Calculator size={18} /> Calcular precio</Button>
-        <a href={whatsappContactUrl} target="_blank" rel="noreferrer" className="inline-flex items-center justify-center gap-2 rounded-md bg-brand-green px-5 py-3 font-black text-white transition hover:bg-emerald-700"><MessageCircle size={18} /> WhatsApp</a>
-        <a href={`tel:${company.phoneHref}`} className="inline-flex items-center justify-center gap-2 rounded-md border border-slate-300 bg-white px-5 py-3 font-black text-slate-900 transition hover:bg-slate-50"><Phone size={18} /> Llamar</a>
-      </div>
+
+      <form action={`mailto:${company.email}`} method="post" encType="text/plain" className="rounded-2xl border border-slate-200 bg-[#F9FAFB] p-6 shadow-xl shadow-slate-950/5 md:p-8">
+        <div className="grid gap-5 md:grid-cols-2">
+          <label className="block text-sm font-black text-slate-700">Nombre
+            <input name="nombre" required className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 font-semibold outline-none transition focus:border-brand-orange focus:ring-4 focus:ring-orange-100" placeholder="Tu nombre" />
+          </label>
+          <label className="block text-sm font-black text-slate-700">Teléfono
+            <input name="telefono" required className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 font-semibold outline-none transition focus:border-brand-orange focus:ring-4 focus:ring-orange-100" placeholder="600 000 000" />
+          </label>
+          <label className="block text-sm font-black text-slate-700 md:col-span-2">Email
+            <input name="email" type="email" className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 font-semibold outline-none transition focus:border-brand-orange focus:ring-4 focus:ring-orange-100" placeholder="tu@email.com" />
+          </label>
+          <label className="block text-sm font-black text-slate-700 md:col-span-2">Proyecto
+            <textarea name="proyecto" required rows={5} className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 font-semibold outline-none transition focus:border-brand-orange focus:ring-4 focus:ring-orange-100" placeholder="Medidas, uso, ubicación, puertas, ventanas o extras..." />
+          </label>
+        </div>
+        <button type="submit" className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-brand-orange to-orange-500 px-6 py-4 font-black text-white shadow-lg shadow-orange-950/20 transition hover:-translate-y-0.5 hover:from-orange-600 hover:to-orange-500"><FileText size={18} /> Enviar solicitud</button>
+        <p className="mt-4 text-xs leading-5 text-slate-500">El formulario abre tu cliente de correo para enviar la solicitud. También puedes contactarnos por WhatsApp.</p>
+      </form>
     </div>
   </section>
 );
@@ -333,9 +309,9 @@ const Footer = ({ onLegalPage, onAdmin, onStart }: LandingPageProps) => (
   <footer className="bg-slate-950 text-white">
     <div className="container-page grid gap-8 py-10 md:grid-cols-2 lg:grid-cols-[1.25fr_0.8fr_0.9fr_0.7fr]">
       <div>
-        <div className="inline-flex bg-white p-2"><img src="/logo-sanjose-horizontal.svg" alt="Módulos Prefabricados San José" className="h-11 w-auto max-w-[250px] object-contain" /></div>
+        <div className="inline-flex rounded-xl bg-white p-2"><img src="/logo-sanjose-horizontal.svg" alt="Módulos Prefabricados San José" className="h-11 w-auto max-w-[250px] object-contain" /></div>
         <p className="mt-5 max-w-md text-sm leading-7 text-slate-300">{company.activity}. Presupuesto personalizado para particulares, obras, fincas, oficinas y empresas.</p>
-        <div className="mt-5 flex flex-wrap gap-2 text-xs font-bold text-slate-300"><span className="border border-white/10 px-3 py-1">CIF {company.cif}</span><span className="border border-white/10 px-3 py-1">Sevilla y Andalucía</span></div>
+        <div className="mt-5 flex flex-wrap gap-2 text-xs font-bold text-slate-300"><span className="rounded-full border border-white/10 px-3 py-1">CIF {company.cif}</span><span className="rounded-full border border-white/10 px-3 py-1">Sevilla y Andalucía</span></div>
         <div className="mt-5"><SocialLinks variant="dark" /></div>
       </div>
 
@@ -372,7 +348,7 @@ const Footer = ({ onLegalPage, onAdmin, onStart }: LandingPageProps) => (
     <div className="border-t border-white/10">
       <div className="container-page flex flex-col gap-2 py-5 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between">
         <p>© {new Date().getFullYear()} {company.name}. Todos los derechos reservados.</p>
-        <p>Casetas y módulos prefabricados con panel sándwich.</p>
+        <p>Construcción modular rápida, sólida y sostenible.</p>
       </div>
     </div>
   </footer>
