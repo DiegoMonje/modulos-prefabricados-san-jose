@@ -1,4 +1,4 @@
-import { Calculator, CheckCircle2, Clock3, FileText, Image as ImageIcon, MapPin, MessageCircle, Phone, Ruler, ShieldCheck, Sparkles } from 'lucide-react';
+import { Building2, Calculator, CheckCircle2, Clock3, FileText, Image as ImageIcon, Mail, MapPin, MessageCircle, Phone, Ruler, ShieldCheck, Sparkles } from 'lucide-react';
 import { company, whatsappContactUrl } from '../../config/company';
 import { Button, Card } from '../ui/Ui';
 
@@ -60,11 +60,16 @@ const galleryImages = [
 
 export const LandingPage = ({ onStart, onLegalPage, onAdmin }: { onStart: () => void; onLegalPage: (page: 'aviso-legal' | 'privacidad' | 'cookies') => void; onAdmin: () => void }) => (
   <div className="min-h-screen bg-brand-light">
-    <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur">
-      <div className="container-page flex items-center justify-between gap-4 py-3">
-        <a href="#inicio" aria-label="Volver al inicio" className="flex shrink-0 items-center">
-          <img src="/logo-sanjose-horizontal.svg" alt="Módulos Prefabricados San José" className="h-16 w-auto max-w-[300px] object-contain sm:max-w-[360px] lg:h-[72px] lg:max-w-[420px]" />
-        </a>
+    <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/90">
+      <div className="container-page flex min-w-0 flex-col gap-3 py-2.5 sm:flex-row sm:items-center sm:justify-between sm:gap-4 lg:py-3">
+        <div className="flex min-w-0 items-center justify-between gap-3">
+          <a href="#inicio" aria-label="Volver al inicio" className="flex min-w-0 flex-1 items-center sm:flex-none">
+            <img src="/logo-sanjose-horizontal.svg" alt="Módulos Prefabricados San José" className="h-11 w-auto max-w-[190px] object-contain min-[380px]:max-w-[230px] sm:h-14 sm:max-w-[300px] lg:h-[72px] lg:max-w-[420px]" />
+          </a>
+          <a href={`tel:${company.phoneHref}`} className="inline-flex shrink-0 items-center justify-center rounded-2xl border border-slate-200 bg-slate-50 p-3 text-slate-800 shadow-sm transition hover:bg-white sm:hidden" aria-label="Llamar por teléfono">
+            <Phone size={19} />
+          </a>
+        </div>
         <nav className="hidden items-center gap-6 text-sm font-black text-slate-600 lg:flex">
           <button onClick={onStart} className="hover:text-brand-orange">Calculadora</button>
           <a href="#servicios" className="hover:text-brand-orange">Servicios</a>
@@ -72,9 +77,9 @@ export const LandingPage = ({ onStart, onLegalPage, onAdmin }: { onStart: () => 
           <a href="#modelos" className="hover:text-brand-orange">Modelos</a>
           <a href="#contacto" className="hover:text-brand-orange">Contacto</a>
         </nav>
-        <div className="flex gap-2">
-          <a href={`tel:${company.phoneHref}`} className="hidden sm:inline-flex"><Button variant="outline"><Phone size={18} /> Llamar</Button></a>
-          <a href={whatsappContactUrl} target="_blank" rel="noreferrer"><Button variant="secondary"><MessageCircle size={18} /> WhatsApp</Button></a>
+        <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:shrink-0 sm:items-center">
+          <a href={`tel:${company.phoneHref}`} className="hidden sm:inline-flex"><Button variant="outline" className="w-full whitespace-nowrap px-4"><Phone size={18} /> Llamar</Button></a>
+          <a href={whatsappContactUrl} target="_blank" rel="noreferrer" className="col-span-2 sm:col-span-1"><Button variant="secondary" className="w-full whitespace-nowrap px-4"><MessageCircle size={18} /> WhatsApp</Button></a>
         </div>
       </div>
     </header>
@@ -241,9 +246,9 @@ export const LandingPage = ({ onStart, onLegalPage, onAdmin }: { onStart: () => 
             <h2 className="mt-2 text-2xl font-black">Solicita presupuesto para tu caseta prefabricada</h2>
             <p className="mt-2 text-slate-300">Llámanos o envíanos tu configuración por WhatsApp para confirmar medidas, extras, transporte y montaje.</p>
           </div>
-          <div className="flex flex-col gap-3 sm:flex-row">
-            <a href={`tel:${company.phoneHref}`}><Button variant="outline" className="border-white/30 bg-white/10 text-white hover:bg-white/20"><Phone size={18} /> Llamar</Button></a>
-            <Button onClick={onStart}>Calcular mi módulo</Button>
+          <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
+            <a href={`tel:${company.phoneHref}`}><Button variant="outline" className="w-full border-white/30 bg-white/10 text-white hover:bg-white/20 sm:w-auto"><Phone size={18} /> Llamar</Button></a>
+            <Button onClick={onStart} className="w-full sm:w-auto">Calcular mi módulo</Button>
           </div>
         </div>
       </section>
@@ -254,31 +259,65 @@ export const LandingPage = ({ onStart, onLegalPage, onAdmin }: { onStart: () => 
 );
 
 const Footer = ({ onLegalPage, onAdmin }: { onLegalPage: (page: 'aviso-legal' | 'privacidad' | 'cookies') => void; onAdmin: () => void }) => (
-  <footer className="border-t border-slate-800 bg-slate-950 text-white">
-    <div className="container-page grid gap-8 py-10 md:grid-cols-[1.2fr_1fr_1fr]">
-      <div>
-        <p className="text-lg font-black">{company.name}</p>
-        <p className="mt-3 max-w-md text-sm leading-6 text-slate-300">Casetas y módulos prefabricados con panel sándwich. Configura tu módulo, genera un plano CAD orientativo y solicita presupuesto personalizado.</p>
-        <p className="mt-4 text-xs font-black uppercase tracking-[0.18em] text-slate-500">CIF {company.cif}</p>
-      </div>
-      <div>
-        <h3 className="text-sm font-black uppercase tracking-[0.18em] text-slate-400">Contacto</h3>
-        <div className="mt-4 space-y-3 text-sm text-slate-300">
-          <a href={`tel:${company.phoneHref}`} className="flex items-center gap-3 hover:text-white"><Phone size={18} className="text-brand-orange" /> {company.phone}</a>
-          <a href={whatsappContactUrl} target="_blank" rel="noreferrer" className="flex items-center gap-3 hover:text-white"><MessageCircle size={18} className="text-brand-green" /> WhatsApp {company.phone}</a>
-          <a href={`mailto:${company.email}`} className="break-all hover:text-white">{company.email}</a>
+  <footer className="bg-slate-950 text-white">
+    <div className="border-b border-white/10 bg-gradient-to-r from-slate-950 via-slate-900 to-brand-navy">
+      <div className="container-page grid gap-5 py-8 md:grid-cols-[1.4fr_1fr] md:items-center">
+        <div>
+          <p className="text-xs font-black uppercase tracking-[0.22em] text-brand-orange">Empresa registrada en Sevilla</p>
+          <h2 className="mt-2 text-2xl font-black sm:text-3xl">Fabricación responsable de casetas y módulos prefabricados</h2>
+          <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-300">Atención directa, presupuesto personalizado y soluciones a medida para particulares, obras, fincas, oficinas y empresas.</p>
         </div>
-      </div>
-      <div>
-        <h3 className="text-sm font-black uppercase tracking-[0.18em] text-slate-400">Legal</h3>
-        <div className="mt-4 space-y-3 text-sm text-slate-300">
-          <button onClick={() => onLegalPage('aviso-legal')} className="block hover:text-white">Aviso legal</button>
-          <button onClick={() => onLegalPage('privacidad')} className="block hover:text-white">Política de privacidad</button>
-          <button onClick={() => onLegalPage('cookies')} className="block hover:text-white">Política de cookies</button>
-          <button onClick={onAdmin} className="block text-slate-500 hover:text-white">Panel privado</button>
+        <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-1 lg:grid-cols-2">
+          <a href={`tel:${company.phoneHref}`} className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/15 bg-white/10 px-5 py-3 font-black text-white transition hover:bg-white/15"><Phone size={18} /> Llamar</a>
+          <a href={whatsappContactUrl} target="_blank" rel="noreferrer" className="inline-flex items-center justify-center gap-2 rounded-2xl bg-brand-green px-5 py-3 font-black text-white transition hover:bg-emerald-700"><MessageCircle size={18} /> WhatsApp</a>
         </div>
       </div>
     </div>
-    <div className="border-t border-slate-800"><div className="container-page flex flex-col gap-2 py-5 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between"><p>© {new Date().getFullYear()} {company.name}. Todos los derechos reservados.</p><p>Presupuestos orientativos sujetos a revisión técnica.</p></div></div>
+
+    <div className="container-page grid gap-8 py-10 sm:grid-cols-2 lg:grid-cols-[1.35fr_1fr_1fr_0.8fr]">
+      <div className="min-w-0">
+        <img src="/logo-sanjose-horizontal.svg" alt="Módulos Prefabricados San José" className="h-12 w-auto max-w-[240px] rounded-xl bg-white p-2 sm:max-w-[280px]" />
+        <p className="mt-5 max-w-md text-sm leading-7 text-slate-300">{company.activity}. Fabricamos módulos con panel sándwich para uso profesional y particular, con orientación técnica y presupuesto revisado según cada proyecto.</p>
+        <div className="mt-5 flex flex-wrap gap-2 text-xs font-black text-slate-300">
+          <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">CIF {company.cif}</span>
+          <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">Sevilla y Andalucía</span>
+        </div>
+      </div>
+
+      <div>
+        <h3 className="text-sm font-black uppercase tracking-[0.18em] text-slate-400">Contacto</h3>
+        <div className="mt-4 space-y-4 text-sm text-slate-300">
+          <a href={`tel:${company.phoneHref}`} className="flex items-center gap-3 hover:text-white"><Phone size={18} className="shrink-0 text-brand-orange" /> {company.phone}</a>
+          <a href={whatsappContactUrl} target="_blank" rel="noreferrer" className="flex items-center gap-3 hover:text-white"><MessageCircle size={18} className="shrink-0 text-brand-green" /> WhatsApp directo</a>
+          <a href={`mailto:${company.email}`} className="flex min-w-0 items-center gap-3 hover:text-white"><Mail size={18} className="shrink-0 text-brand-blue" /> <span className="break-all">{company.email}</span></a>
+        </div>
+      </div>
+
+      <div>
+        <h3 className="text-sm font-black uppercase tracking-[0.18em] text-slate-400">Empresa</h3>
+        <div className="mt-4 space-y-4 text-sm text-slate-300">
+          <p className="flex items-start gap-3"><Building2 size={18} className="mt-0.5 shrink-0 text-brand-orange" /> <span>{company.name}</span></p>
+          <p className="flex items-start gap-3"><MapPin size={18} className="mt-0.5 shrink-0 text-brand-orange" /> <span>{company.address}</span></p>
+          <p className="flex items-start gap-3"><ShieldCheck size={18} className="mt-0.5 shrink-0 text-brand-green" /> <span>Presupuestos orientativos sujetos a revisión técnica, transporte y montaje.</span></p>
+        </div>
+      </div>
+
+      <div>
+        <h3 className="text-sm font-black uppercase tracking-[0.18em] text-slate-400">Legal</h3>
+        <div className="mt-4 space-y-3 text-left text-sm text-slate-300">
+          <button onClick={() => onLegalPage('aviso-legal')} className="block hover:text-white">Aviso legal</button>
+          <button onClick={() => onLegalPage('privacidad')} className="block hover:text-white">Política de privacidad</button>
+          <button onClick={() => onLegalPage('cookies')} className="block hover:text-white">Política de cookies</button>
+          <button onClick={onAdmin} className="block pt-2 text-slate-500 hover:text-white">Panel privado</button>
+        </div>
+      </div>
+    </div>
+
+    <div className="border-t border-white/10">
+      <div className="container-page flex flex-col gap-2 py-5 text-center text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between sm:text-left">
+        <p>© {new Date().getFullYear()} {company.name}. Todos los derechos reservados.</p>
+        <p>Diseño responsive optimizado para móvil, tablet y escritorio.</p>
+      </div>
+    </div>
   </footer>
 );
