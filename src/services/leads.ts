@@ -63,7 +63,7 @@ export const createLead = async ({
   }
 
   const client = supabase;
-  const { data: leadData, error: leadError } = await client
+  const { error: leadError } = await client
     .from('leads')
     .insert({
       id: leadId,
@@ -84,15 +84,13 @@ export const createLead = async ({
       download_requested: true,
       downloaded_at: downloadedAt,
       lead_source: 'configurador_cad_2d',
-    })
-    .select('id')
-    .single();
+    });
 
   if (leadError) {
     throw new Error(`No se pudo guardar la consulta principal en Supabase: ${readableError(leadError)}`);
   }
 
-  const savedLeadId = leadData?.id ?? leadId;
+  const savedLeadId = leadId;
   const summary = price.summary;
 
   try {
