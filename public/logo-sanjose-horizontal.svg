@@ -1,8 +1,63 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 250" role="img" aria-label="Módulos Prefabricados San José">
-  <image href="/logo-sanjose.svg" x="22" y="24" width="202" height="202" preserveAspectRatio="xMidYMid meet"/>
-  <rect x="250" y="44" width="4" height="162" rx="2" fill="#ff7a00"/>
-  <text x="295" y="92" fill="#031b3d" font-family="Inter, Arial, Helvetica, sans-serif" font-size="48" font-weight="900" letter-spacing="-1.5">Módulos Prefabricados</text>
-  <text x="295" y="190" font-family="Inter, Arial, Helvetica, sans-serif" font-size="106" font-weight="900" letter-spacing="-4">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2048 512" role="img" aria-label="Módulos Prefabricados San José">
+  <defs>
+    <filter id="soft" x="-15%" y="-15%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="5" stdDeviation="5" flood-color="#000814" flood-opacity="0.18"/>
+    </filter>
+  </defs>
+
+  <g transform="translate(110 -13) scale(1.08)">
+    <g fill="none" stroke-linecap="butt">
+      <path d="M58 247A198 198 0 0 1 454 247" stroke="#ff7a00" stroke-width="17"/>
+      <path d="M58 265A198 198 0 0 0 454 265" stroke="#031b3d" stroke-width="17"/>
+    </g>
+
+    <g filter="url(#soft)" stroke-linejoin="round" stroke-linecap="square">
+      <path d="M91 177 L178 112 L421 149 L421 312 L178 334 L91 304 Z" fill="#ffffff" stroke="#ffffff" stroke-width="8"/>
+      <path d="M91 177 L178 112 L178 334 L91 304 Z" fill="#f8fafc" stroke="#ffffff" stroke-width="8"/>
+      <path d="M178 112 L421 149 L421 312 L178 334 Z" fill="#ffffff" stroke="#ffffff" stroke-width="8"/>
+
+      <path d="M178 112 L178 334" stroke="#031b3d" stroke-width="10"/>
+      <path d="M91 177 L178 112 L421 149" stroke="#031b3d" stroke-width="8"/>
+      <path d="M91 304 L178 334 L421 312" stroke="#031b3d" stroke-width="8"/>
+      <path d="M421 149 L421 312" stroke="#031b3d" stroke-width="8"/>
+
+      <g stroke="#cbd5e1" stroke-width="2">
+        <path d="M112 181 L112 307"/>
+        <path d="M132 166 L132 313"/>
+        <path d="M152 151 L152 319"/>
+        <path d="M214 124 L214 331"/>
+        <path d="M251 130 L251 327"/>
+        <path d="M288 136 L288 324"/>
+        <path d="M325 141 L325 321"/>
+        <path d="M362 146 L362 318"/>
+      </g>
+
+      <rect x="232" y="173" width="52" height="136" fill="#031b3d" stroke="#ffffff" stroke-width="6"/>
+      <rect x="240" y="181" width="36" height="120" fill="#031b3d" stroke="#ffffff" stroke-width="3"/>
+      <circle cx="268" cy="246" r="4" fill="#ffffff"/>
+      <path d="M255 246 L266 246" stroke="#ffffff" stroke-width="5" stroke-linecap="round"/>
+
+      <rect x="313" y="190" width="82" height="71" fill="#031b3d" stroke="#031b3d" stroke-width="5"/>
+      <rect x="324" y="201" width="27" height="49" fill="#ffffff"/>
+      <rect x="357" y="201" width="27" height="49" fill="#ffffff"/>
+
+      <g fill="#031b3d" stroke="#ffffff" stroke-width="4">
+        <rect x="170" y="110" width="18" height="18"/>
+        <rect x="168" y="318" width="22" height="22"/>
+        <rect x="84" y="174" width="14" height="22"/>
+        <rect x="84" y="292" width="14" height="22"/>
+        <rect x="412" y="146" width="16" height="16"/>
+        <rect x="411" y="302" width="17" height="17"/>
+      </g>
+    </g>
+  </g>
+
+  <rect x="704" y="119" width="5" height="281" rx="2.5" fill="#ff7a00"/>
+
+  <text x="780" y="196" fill="#031b3d" font-family="Inter, Arial, Helvetica, sans-serif" font-size="92" font-weight="900" letter-spacing="-3">
+    Módulos Prefabricados
+  </text>
+  <text x="775" y="396" font-family="Inter, Arial, Helvetica, sans-serif" font-size="230" font-weight="900" letter-spacing="-9">
     <tspan fill="#031b3d">San </tspan><tspan fill="#ff7a00">José</tspan>
   </text>
 </svg>
