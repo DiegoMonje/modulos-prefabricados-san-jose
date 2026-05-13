@@ -32,24 +32,30 @@ export const CadStage = forwardRef<Konva.Stage, {
     return () => observer.disconnect();
   }, []);
 
+  const isCompact = availableWidth < 640;
   const geometry = useMemo(() => calculatePlanGeometry(availableWidth, length, width, zoom), [availableWidth, length, width, zoom]);
   const validationIssues = useMemo(() => validateCadLayout(items, length, width), [items, length, width]);
   const errorCount = validationIssues.filter((issue) => issue.severity === 'error').length;
   const warningCount = validationIssues.filter((issue) => issue.severity === 'warning').length;
   const errorItemIds = useMemo(() => validationIssues.flatMap((issue) => issue.severity === 'error' ? [issue.itemId, issue.relatedItemId].filter(Boolean) as string[] : []), [validationIssues]);
   const warningItemIds = useMemo(() => validationIssues.flatMap((issue) => issue.severity === 'warning' ? [issue.itemId, issue.relatedItemId].filter(Boolean) as string[] : []), [validationIssues]);
+  const titleText = isCompact ? 'PLANO CAD 2D' : 'PLANO CAD 2D · MÓDULO PREFABRICADO';
+  const subtitleText = isCompact ? `${length.toLocaleString('es-ES')} x ${width.toLocaleString('es-ES')} m · Escala visual` : 'Escala visual orientativa · unidades en metros';
+  const legendText = isCompact
+    ? 'Leyenda: P puerta · V ventana · T enchufe · PL luz'
+    : 'Leyenda: P=Puerta · V=Ventana · VG=Ventana grande · T=Enchufe · PL=Punto de luz · CE=Cuadro eléctrico · A/A=Aire acondicionado';
 
   return (
     <div>
-      <div className="mb-4 rounded-[24px] border border-amber-200 bg-amber-50 p-5 text-center text-amber-950 shadow-sm md:hidden portrait:block landscape:hidden">
-        <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-2xl bg-white text-brand-orange shadow-sm">
+      <div className="mb-4 rounded-[22px] border border-amber-200 bg-amber-50 p-4 text-center text-amber-950 shadow-sm md:hidden portrait:block landscape:hidden">
+        <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-brand-orange shadow-sm">
           <div className="relative">
-            <Smartphone size={34} />
-            <RotateCcw size={18} className="absolute -right-4 -top-3" />
+            <Smartphone size={30} />
+            <RotateCcw size={16} className="absolute -right-4 -top-3" />
           </div>
         </div>
-        <p className="text-lg font-black">Vista móvil adaptada</p>
-        <p className="mt-1 text-sm font-semibold">El plano se ajusta al ancho del móvil. Gira el teléfono si quieres editar con más precisión.</p>
+        <p className="text-base font-black">Plano móvil optimizado</p>
+        <p className="mt-1 text-sm font-semibold">Puedes verlo en vertical. Para mover elementos con más precisión, gira el móvil en horizontal.</p>
       </div>
       <div className="mb-4 rounded-2xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-950">
         <p className="font-black">Revisión técnica automática activa</p>
@@ -64,8 +70,8 @@ export const CadStage = forwardRef<Konva.Stage, {
           <Layer listening={false}>
             <Rect x={0} y={0} width={geometry.stageWidth} height={geometry.stageHeight} fill="#020617" cornerRadius={22} />
             <Rect x={12} y={12} width={geometry.stageWidth - 24} height={geometry.stageHeight - 24} stroke="#334155" strokeWidth={1} cornerRadius={18} />
-            <Text x={geometry.planX} y={22} text="PLANO CAD 2D · MÓDULO PREFABRICADO" fill="#f8fafc" fontSize={13} fontStyle="bold" letterSpacing={1.5} />
-            <Text x={geometry.planX} y={42} text="Escala visual orientativa · unidades en metros" fill="#94a3b8" fontSize={11} />
+            <Text x={geometry.planX} y={22} text={titleText} fill="#f8fafc" fontSize={isCompact ? 11 : 13} fontStyle="bold" letterSpacing={isCompact ? 1 : 1.5} width={geometry.planWidth} />
+            <Text x={geometry.planX} y={42} text={subtitleText} fill="#94a3b8" fontSize={isCompact ? 10 : 11} width={geometry.planWidth} />
           </Layer>
           <Layer listening={false}>
             <CadGrid geometry={geometry} length={length} width={width} />
@@ -79,10 +85,11 @@ export const CadStage = forwardRef<Konva.Stage, {
             <Text
               x={geometry.planX}
               y={geometry.planY + geometry.planHeight + 28}
-              text="Leyenda: P=Puerta · V=Ventana · VG=Ventana grande · T=Enchufe · PL=Punto de luz · CE=Cuadro eléctrico · A/A=Aire acondicionado"
+              text={legendText}
               fill="#cbd5e1"
-              fontSize={11}
+              fontSize={isCompact ? 10 : 11}
               fontStyle="bold"
+              width={geometry.planWidth}
             />
           </Layer>
         </Stage>
