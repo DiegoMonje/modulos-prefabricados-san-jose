@@ -14,7 +14,9 @@ export const CadRulers = ({ geometry, length, width }: { geometry: PlanGeometry;
   const widthLabelWidth = isCompact ? 96 : 132;
   const dimensionLabelY = geometry.planY - (isCompact ? 54 : 60);
   const lengthLabelX = geometry.planX + geometry.planWidth - lengthLabelWidth;
-  const widthLabelX = geometry.planX;
+  const widthLabelHeight = isCompact ? 20 : 24;
+  const widthLabelX = geometry.planX - (isCompact ? 22 : 28);
+  const widthLabelY = geometry.planY + geometry.planHeight / 2 + widthLabelWidth / 2;
 
   return (
     <Group listening={false}>
@@ -38,8 +40,8 @@ export const CadRulers = ({ geometry, length, width }: { geometry: PlanGeometry;
           </Group>
         );
       })}
-      <Rect x={widthLabelX} y={dimensionLabelY} width={widthLabelWidth} height={isCompact ? 20 : 24} fill="rgba(30,64,175,0.32)" stroke="#60a5fa" strokeWidth={1} cornerRadius={999} />
-      <Text x={widthLabelX + 8} y={dimensionLabelY + (isCompact ? 5 : 6)} width={widthLabelWidth - 16} align="center" text={isCompact ? `Ancho ${formatMeters(width)}` : `ANCHO REAL: ${formatMeters(width)}`} fill="#dbeafe" fontSize={isCompact ? 9 : 11} fontStyle="bold" />
+      <Rect x={widthLabelX} y={widthLabelY} width={widthLabelWidth} height={widthLabelHeight} fill="rgba(30,64,175,0.32)" stroke="#60a5fa" strokeWidth={1} cornerRadius={999} rotation={-90} />
+      <Text x={widthLabelX + 8} y={widthLabelY - 1} width={widthLabelWidth - 16} align="center" text={isCompact ? `Ancho ${formatMeters(width)}` : `ANCHO REAL: ${formatMeters(width)}`} fill="#dbeafe" fontSize={isCompact ? 9 : 11} fontStyle="bold" rotation={-90} />
       <Rect x={lengthLabelX} y={dimensionLabelY} width={lengthLabelWidth} height={isCompact ? 20 : 24} fill="rgba(30,64,175,0.32)" stroke="#60a5fa" strokeWidth={1} cornerRadius={999} />
       <Text x={lengthLabelX + 8} y={dimensionLabelY + (isCompact ? 5 : 6)} width={lengthLabelWidth - 16} align="center" text={isCompact ? `Largo ${formatMeters(length)}` : `LARGO REAL: ${formatMeters(length)}`} fill="#dbeafe" fontSize={isCompact ? 9 : 11} fontStyle="bold" />
     </Group>
