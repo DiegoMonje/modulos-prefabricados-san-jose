@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import type Konva from 'konva';
 import { ArrowLeft, ArrowRight, CheckCircle2, Download, MessageCircle } from 'lucide-react';
@@ -38,10 +38,24 @@ export const ConfiguratorPage = ({ onBack }: { onBack: () => void }) => {
   const [submitError, setSubmitError] = useState('');
   const [stepError, setStepError] = useState('');
   const [cadImage, setCadImage] = useState<string | null>(null);
+  const [isMobileCad, setIsMobileCad] = useState(false);
   const store = useConfiguratorStore();
   const { config, selectedItemId } = store;
   const price = useMemo(() => calculatePrice(config), [config]);
   const totalSteps = 7;
+  const maxCadZoom = isMobileCad ? 1.1 : 1.6;
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(max-width: 767px)');
+    const update = () => {
+      setIsMobileCad(mediaQuery.matches);
+      if (mediaQuery.matches) setZoom((current) => Math.min(current, 1.1));
+    };
+
+    update();
+    mediaQuery.addEventListener('change', update);
+    return () => mediaQuery.removeEventListener('change', update);
+  }, []);
 
   const next = () => setStep((prev) => Math.min(totalSteps, prev + 1));
   const prev = () => {
@@ -147,8 +161,9 @@ export const ConfiguratorPage = ({ onBack }: { onBack: () => void }) => {
               <StepShell title="Plano CAD 2D profesional" subtitle="Añade, selecciona y arrastra elementos sobre el módulo. Puertas y ventanas se ajustan a muros exteriores.">
                 <div className="grid gap-5 xl:grid-cols-[1fr_330px]">
                   <CadStage ref={stageRef} length={config.length} width={config.width} items={config.layoutItems} selectedItemId={selectedItemId} zoom={zoom} onSelect={store.selectItem} onMove={store.moveItem} />
-                  <CadToolbar onAdd={store.addItem} onUndo={store.undo} onRedo={store.redo} onDelete={store.removeSelected} onZoomIn={() => setZoom((z) => Math.min(1.6, Number((z + 0.1).toFixed(2))))} onZoomOut={() => setZoom((z) => Math.max(0.75, Number((z - 0.1).toFixed(2))))} onCenter={() => setZoom(1)} />
+                  <CadToolbar onAdd={store.addItem} onUndo={store.undo} onRedo={store.redo} onDelete={store.removeSelected} onZoomIn={() => setZoom((z) => Math.min(maxCadZoom, Number((z + 0.1).toFixed(2))))} onZoomOut={() => setZoom((z) => Math.max(0.75, Number((z - 0.1).toFixed(2))))} onCenter={() => setZoom(1)} />
                 </div>
+                {isMobileCad ? <p className="mt-3 rounded-2xl bg-slate-50 p-3 text-xs font-bold text-slate-600">En móvil el zoom se limita para evitar que el plano se salga de la pantalla.</p> : null}
                 <SelectedItemPanel item={config.layoutItems.find((i) => i.id === selectedItemId) || null} />
               </StepShell>
             )}
