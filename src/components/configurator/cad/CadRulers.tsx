@@ -10,8 +10,12 @@ export const CadRulers = ({ geometry, length, width }: { geometry: PlanGeometry;
   const rulerOffset = isCompact ? 24 : 34;
   const tickOffset = isCompact ? 30 : 42;
   const labelY = geometry.planY - (isCompact ? 18 : 24);
-  const lengthLabelWidth = isCompact ? 118 : 170;
+  const lengthLabelWidth = isCompact ? 96 : 170;
+  const widthLabelWidth = isCompact ? 96 : 132;
+  const dimensionLabelY = geometry.planY - (isCompact ? 54 : 60);
   const lengthLabelX = geometry.planX + geometry.planWidth - lengthLabelWidth;
+  const widthLabelX = geometry.planX;
+
   return (
     <Group listening={false}>
       <Line points={[geometry.planX, geometry.planY - rulerOffset, geometry.planX + geometry.planWidth, geometry.planY - rulerOffset]} stroke="#93c5fd" strokeWidth={1.2} />
@@ -34,10 +38,10 @@ export const CadRulers = ({ geometry, length, width }: { geometry: PlanGeometry;
           </Group>
         );
       })}
-      <Rect x={lengthLabelX} y={geometry.planY - (isCompact ? 54 : 60)} width={lengthLabelWidth} height={isCompact ? 20 : 24} fill="rgba(30,64,175,0.32)" stroke="#60a5fa" strokeWidth={1} cornerRadius={999} />
-      <Text x={lengthLabelX + 8} y={geometry.planY - (isCompact ? 49 : 54)} width={lengthLabelWidth - 16} align="center" text={isCompact ? `Largo ${formatMeters(length)}` : `LARGO REAL: ${formatMeters(length)}`} fill="#dbeafe" fontSize={isCompact ? 9 : 11} fontStyle="bold" />
-      <Rect x={geometry.planX + 8} y={geometry.planY + 8} width={isCompact ? 92 : 132} height={isCompact ? 20 : 24} fill="rgba(30,64,175,0.32)" stroke="#60a5fa" strokeWidth={1} cornerRadius={999} />
-      <Text x={geometry.planX + 14} y={geometry.planY + (isCompact ? 13 : 14)} width={isCompact ? 80 : 120} text={isCompact ? `Ancho ${formatMeters(width)}` : `ANCHO REAL: ${formatMeters(width)}`} fill="#dbeafe" fontSize={isCompact ? 9 : 11} fontStyle="bold" />
+      <Rect x={widthLabelX} y={dimensionLabelY} width={widthLabelWidth} height={isCompact ? 20 : 24} fill="rgba(30,64,175,0.32)" stroke="#60a5fa" strokeWidth={1} cornerRadius={999} />
+      <Text x={widthLabelX + 8} y={dimensionLabelY + (isCompact ? 5 : 6)} width={widthLabelWidth - 16} align="center" text={isCompact ? `Ancho ${formatMeters(width)}` : `ANCHO REAL: ${formatMeters(width)}`} fill="#dbeafe" fontSize={isCompact ? 9 : 11} fontStyle="bold" />
+      <Rect x={lengthLabelX} y={dimensionLabelY} width={lengthLabelWidth} height={isCompact ? 20 : 24} fill="rgba(30,64,175,0.32)" stroke="#60a5fa" strokeWidth={1} cornerRadius={999} />
+      <Text x={lengthLabelX + 8} y={dimensionLabelY + (isCompact ? 5 : 6)} width={lengthLabelWidth - 16} align="center" text={isCompact ? `Largo ${formatMeters(length)}` : `LARGO REAL: ${formatMeters(length)}`} fill="#dbeafe" fontSize={isCompact ? 9 : 11} fontStyle="bold" />
     </Group>
   );
 };
