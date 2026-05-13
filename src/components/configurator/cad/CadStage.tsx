@@ -25,7 +25,7 @@ export const CadStage = forwardRef<Konva.Stage, {
   useEffect(() => {
     const node = shellRef.current;
     if (!node) return;
-    const update = () => setAvailableWidth(Math.max(620, node.clientWidth - 24));
+    const update = () => setAvailableWidth(Math.max(300, node.clientWidth - 24));
     update();
     const observer = new ResizeObserver(update);
     observer.observe(node);
@@ -48,8 +48,8 @@ export const CadStage = forwardRef<Konva.Stage, {
             <RotateCcw size={18} className="absolute -right-4 -top-3" />
           </div>
         </div>
-        <p className="text-lg font-black">Gira el móvil</p>
-        <p className="mt-1 text-sm font-semibold">Para usar el plano 2D correctamente, pon el teléfono en horizontal.</p>
+        <p className="text-lg font-black">Vista móvil adaptada</p>
+        <p className="mt-1 text-sm font-semibold">El plano se ajusta al ancho del móvil. Gira el teléfono si quieres editar con más precisión.</p>
       </div>
       <div className="mb-4 rounded-2xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-950">
         <p className="font-black">Revisión técnica automática activa</p>
@@ -59,7 +59,7 @@ export const CadStage = forwardRef<Konva.Stage, {
             : `${errorCount} error(es) y ${warningCount} aviso(s) detectados. Los elementos afectados aparecen marcados en rojo o ámbar.`}
         </p>
       </div>
-      <div ref={shellRef} className="overflow-auto rounded-[28px] border border-slate-700/70 bg-slate-950 p-3 shadow-2xl shadow-slate-950/30">
+      <div ref={shellRef} className="overflow-auto rounded-[22px] border border-slate-700/70 bg-slate-950 p-2 shadow-2xl shadow-slate-950/30 sm:rounded-[28px] sm:p-3">
         <Stage ref={ref} width={geometry.stageWidth} height={geometry.stageHeight} onMouseDown={(event) => { if (event.target === event.target.getStage()) onSelect(null); }} onTouchStart={(event) => { if (event.target === event.target.getStage()) onSelect(null); }}>
           <Layer listening={false}>
             <Rect x={0} y={0} width={geometry.stageWidth} height={geometry.stageHeight} fill="#020617" cornerRadius={22} />
