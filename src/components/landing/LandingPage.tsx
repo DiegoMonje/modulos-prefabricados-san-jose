@@ -1,5 +1,6 @@
-import { Building2, Calculator, CheckCircle2, Clock3, FileText, Image as ImageIcon, MapPin, MessageCircle, Phone, Ruler, ShieldCheck, Sparkles } from 'lucide-react';
+import { Building2, Calculator, CheckCircle2, Clock3, FileText, Image as ImageIcon, Mail, MapPin, MessageCircle, Phone, Ruler, ShieldCheck, Sparkles } from 'lucide-react';
 import { company, whatsappContactUrl } from '../../config/company';
+import { SocialLinks } from '../ui/SocialLinks';
 import { Button, Card } from '../ui/Ui';
 
 const useCases = [
@@ -18,7 +19,6 @@ const models = [
   ['Módulo grande', '7 x 2,40 m', 'Vestuario, oficina o módulo amplio'],
   ['Proyecto especial', '8 x 2,40 m', 'Bajo consulta técnica y transporte'],
 ] as const;
-
 
 const galleryImages = [
   {
@@ -61,28 +61,7 @@ const galleryImages = [
 
 export const LandingPage = ({ onStart, onLegalPage, onAdmin }: { onStart: () => void; onLegalPage: (page: 'aviso-legal' | 'privacidad' | 'cookies') => void; onAdmin: () => void }) => (
   <div className="min-h-screen bg-brand-light">
-    <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur">
-      <div className="container-page flex items-center justify-between gap-4 py-4">
-        <a href="#inicio" className="flex items-center gap-3">
-          <div className="rounded-2xl bg-brand-navy p-3 text-white"><Building2 size={24} /></div>
-          <div>
-            <p className="font-black text-slate-900">{company.name}</p>
-            <p className="text-xs font-semibold text-slate-500">Casetas y módulos prefabricados en Sevilla</p>
-          </div>
-        </a>
-        <nav className="hidden items-center gap-6 text-sm font-black text-slate-600 lg:flex">
-          <button onClick={onStart} className="hover:text-brand-orange">Calculadora</button>
-          <a href="#servicios" className="hover:text-brand-orange">Servicios</a>
-          <a href="#galeria" className="hover:text-brand-orange">Galería</a>
-          <a href="#modelos" className="hover:text-brand-orange">Modelos</a>
-          <a href="#contacto" className="hover:text-brand-orange">Contacto</a>
-        </nav>
-        <div className="flex gap-2">
-          <a href={`tel:${company.phoneHref}`} className="hidden sm:inline-flex"><Button variant="outline"><Phone size={18} /> Llamar</Button></a>
-          <a href={whatsappContactUrl} target="_blank" rel="noreferrer"><Button variant="secondary"><MessageCircle size={18} /> WhatsApp</Button></a>
-        </div>
-      </div>
-    </header>
+    <Header onStart={onStart} />
 
     <main id="inicio">
       <section className="relative overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-blue-950 text-white">
@@ -246,9 +225,9 @@ export const LandingPage = ({ onStart, onLegalPage, onAdmin }: { onStart: () => 
             <h2 className="mt-2 text-2xl font-black">Solicita presupuesto para tu caseta prefabricada</h2>
             <p className="mt-2 text-slate-300">Llámanos o envíanos tu configuración por WhatsApp para confirmar medidas, extras, transporte y montaje.</p>
           </div>
-          <div className="flex flex-col gap-3 sm:flex-row">
-            <a href={`tel:${company.phoneHref}`}><Button variant="outline" className="border-white/30 bg-white/10 text-white hover:bg-white/20"><Phone size={18} /> Llamar</Button></a>
-            <Button onClick={onStart}>Calcular mi módulo</Button>
+          <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
+            <a href={`tel:${company.phoneHref}`}><Button variant="outline" className="w-full border-white/30 bg-white/10 text-white hover:bg-white/20 sm:w-auto"><Phone size={18} /> Llamar</Button></a>
+            <Button onClick={onStart} className="w-full sm:w-auto">Calcular mi módulo</Button>
           </div>
         </div>
       </section>
@@ -258,32 +237,135 @@ export const LandingPage = ({ onStart, onLegalPage, onAdmin }: { onStart: () => 
   </div>
 );
 
-const Footer = ({ onLegalPage, onAdmin }: { onLegalPage: (page: 'aviso-legal' | 'privacidad' | 'cookies') => void; onAdmin: () => void }) => (
-  <footer className="border-t border-slate-800 bg-slate-950 text-white">
-    <div className="container-page grid gap-8 py-10 md:grid-cols-[1.2fr_1fr_1fr]">
-      <div>
-        <p className="text-lg font-black">{company.name}</p>
-        <p className="mt-3 max-w-md text-sm leading-6 text-slate-300">Casetas y módulos prefabricados con panel sándwich. Configura tu módulo, genera un plano CAD orientativo y solicita presupuesto personalizado.</p>
-        <p className="mt-4 text-xs font-black uppercase tracking-[0.18em] text-slate-500">CIF {company.cif}</p>
-      </div>
-      <div>
-        <h3 className="text-sm font-black uppercase tracking-[0.18em] text-slate-400">Contacto</h3>
-        <div className="mt-4 space-y-3 text-sm text-slate-300">
-          <a href={`tel:${company.phoneHref}`} className="flex items-center gap-3 hover:text-white"><Phone size={18} className="text-brand-orange" /> {company.phone}</a>
-          <a href={whatsappContactUrl} target="_blank" rel="noreferrer" className="flex items-center gap-3 hover:text-white"><MessageCircle size={18} className="text-brand-green" /> WhatsApp {company.phone}</a>
-          <a href={`mailto:${company.email}`} className="break-all hover:text-white">{company.email}</a>
+const Header = ({ onStart }: { onStart: () => void }) => (
+  <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/95 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl supports-[backdrop-filter]:bg-white/90">
+    <div className="hidden bg-slate-950 text-white lg:block">
+      <div className="container-page flex h-10 items-center justify-between text-xs font-bold text-slate-300">
+        <div className="flex items-center gap-4">
+          <span className="inline-flex items-center gap-2"><ShieldCheck size={15} className="text-brand-green" /> Empresa registrada · CIF {company.cif}</span>
+          <span className="inline-flex items-center gap-2"><MapPin size={15} className="text-brand-orange" /> San José de la Rinconada, Sevilla</span>
         </div>
-      </div>
-      <div>
-        <h3 className="text-sm font-black uppercase tracking-[0.18em] text-slate-400">Legal</h3>
-        <div className="mt-4 space-y-3 text-sm text-slate-300">
-          <button onClick={() => onLegalPage('aviso-legal')} className="block hover:text-white">Aviso legal</button>
-          <button onClick={() => onLegalPage('privacidad')} className="block hover:text-white">Política de privacidad</button>
-          <button onClick={() => onLegalPage('cookies')} className="block hover:text-white">Política de cookies</button>
-          <button onClick={onAdmin} className="block text-slate-500 hover:text-white">Panel privado</button>
+        <div className="flex items-center gap-4">
+          <a href={`tel:${company.phoneHref}`} className="inline-flex items-center gap-2 transition hover:text-white"><Phone size={15} className="text-brand-orange" /> {company.phone}</a>
+          <a href={`mailto:${company.email}`} className="inline-flex items-center gap-2 transition hover:text-white"><Mail size={15} className="text-brand-blue" /> {company.email}</a>
+          <SocialLinks variant="dark" />
         </div>
       </div>
     </div>
-    <div className="border-t border-slate-800"><div className="container-page flex flex-col gap-2 py-5 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between"><p>© {new Date().getFullYear()} {company.name}. Todos los derechos reservados.</p><p>Presupuestos orientativos sujetos a revisión técnica.</p></div></div>
+
+    <div className="bg-white/95">
+      <div className="container-page flex items-center justify-between gap-4 py-3">
+        <a href="#inicio" aria-label="Volver al inicio" className="flex min-w-0 items-center rounded-2xl transition hover:opacity-90">
+          <img src="/logo-sanjose-horizontal.svg" alt="Módulos Prefabricados San José" className="h-11 w-auto max-w-[210px] object-contain sm:h-12 sm:max-w-[260px] lg:h-14 lg:max-w-[320px]" />
+        </a>
+
+        <nav aria-label="Navegación principal" className="hidden items-center gap-1 rounded-full border border-slate-200 bg-slate-50/80 p-1 text-sm font-black text-slate-600 shadow-inner lg:flex">
+          <button onClick={onStart} className="rounded-full px-4 py-2 transition hover:bg-white hover:text-brand-orange hover:shadow-sm">Calculadora</button>
+          <a href="#servicios" className="rounded-full px-4 py-2 transition hover:bg-white hover:text-brand-orange hover:shadow-sm">Servicios</a>
+          <a href="#galeria" className="rounded-full px-4 py-2 transition hover:bg-white hover:text-brand-orange hover:shadow-sm">Galería</a>
+          <a href="#modelos" className="rounded-full px-4 py-2 transition hover:bg-white hover:text-brand-orange hover:shadow-sm">Modelos</a>
+          <a href="#contacto" className="rounded-full px-4 py-2 transition hover:bg-white hover:text-brand-orange hover:shadow-sm">Contacto</a>
+        </nav>
+
+        <div className="flex shrink-0 items-center gap-2">
+          <button onClick={onStart} className="hidden items-center gap-2 rounded-2xl bg-slate-950 px-4 py-3 text-sm font-black text-white shadow-lg shadow-slate-950/10 transition hover:-translate-y-0.5 hover:bg-slate-800 xl:inline-flex"><Calculator size={17} /> Calcular</button>
+          <a href={`tel:${company.phoneHref}`} className="hidden items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-black text-slate-800 shadow-sm transition hover:-translate-y-0.5 hover:border-slate-300 hover:bg-slate-50 sm:inline-flex"><Phone size={17} /> Llamar</a>
+          <a href={whatsappContactUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-2xl bg-brand-green px-4 py-3 text-sm font-black text-white shadow-lg shadow-emerald-900/15 transition hover:-translate-y-0.5 hover:bg-emerald-700"><MessageCircle size={17} /> <span className="hidden sm:inline">WhatsApp</span></a>
+        </div>
+      </div>
+
+      <nav aria-label="Navegación móvil" className="border-t border-slate-100 lg:hidden">
+        <div className="container-page flex gap-2 overflow-x-auto py-2 text-xs font-black text-slate-600">
+          <button onClick={onStart} className="whitespace-nowrap rounded-full bg-slate-950 px-3 py-2 text-white">Calculadora</button>
+          <a href="#servicios" className="whitespace-nowrap rounded-full bg-slate-100 px-3 py-2">Servicios</a>
+          <a href="#galeria" className="whitespace-nowrap rounded-full bg-slate-100 px-3 py-2">Galería</a>
+          <a href="#modelos" className="whitespace-nowrap rounded-full bg-slate-100 px-3 py-2">Modelos</a>
+          <a href="#contacto" className="whitespace-nowrap rounded-full bg-slate-100 px-3 py-2">Contacto</a>
+        </div>
+      </nav>
+    </div>
+  </header>
+);
+
+const Footer = ({ onLegalPage, onAdmin }: { onLegalPage: (page: 'aviso-legal' | 'privacidad' | 'cookies') => void; onAdmin: () => void }) => (
+  <footer className="relative overflow-hidden bg-slate-950 text-white">
+    <div className="absolute inset-0 opacity-40" style={{ backgroundImage: 'radial-gradient(circle at 12% 18%, rgba(249,115,22,.22), transparent 28%), radial-gradient(circle at 88% 10%, rgba(29,78,216,.28), transparent 30%)' }} />
+
+    <div className="container-page relative pt-12">
+      <div className="overflow-hidden rounded-[2rem] border border-white/10 bg-gradient-to-br from-slate-900 via-brand-navy to-slate-950 p-6 shadow-2xl shadow-slate-950/40 md:p-8 lg:grid lg:grid-cols-[1.2fr_0.8fr] lg:items-center lg:gap-8">
+        <div>
+          <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-4 py-2 text-xs font-black uppercase tracking-[0.18em] text-orange-200"><Sparkles size={15} /> Proyecto a medida</span>
+          <h2 className="mt-4 max-w-3xl text-3xl font-black tracking-tight sm:text-4xl">¿Listo para diseñar tu módulo prefabricado?</h2>
+          <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-300">Te ayudamos a definir medidas, distribución, extras, transporte y montaje para preparar un presupuesto claro y profesional.</p>
+          <div className="mt-5 flex flex-wrap gap-2 text-xs font-black text-slate-200">
+            <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">Panel sándwich</span>
+            <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">Plano CAD 2D</span>
+            <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">Sevilla y Andalucía</span>
+          </div>
+        </div>
+        <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:mt-0">
+          <button onClick={onStart} className="inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-5 py-4 font-black text-slate-950 shadow-xl shadow-black/20 transition hover:-translate-y-0.5 hover:bg-slate-100"><Calculator size={18} /> Calcular precio</button>
+          <a href={whatsappContactUrl} target="_blank" rel="noreferrer" className="inline-flex items-center justify-center gap-2 rounded-2xl bg-brand-green px-5 py-4 font-black text-white shadow-xl shadow-emerald-950/20 transition hover:-translate-y-0.5 hover:bg-emerald-700"><MessageCircle size={18} /> WhatsApp</a>
+          <a href={`tel:${company.phoneHref}`} className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/15 bg-white/10 px-5 py-4 font-black text-white transition hover:bg-white/15 sm:col-span-2"><Phone size={18} /> Llamar a {company.phone}</a>
+        </div>
+      </div>
+    </div>
+
+    <div className="container-page relative grid gap-8 py-12 sm:grid-cols-2 lg:grid-cols-[1.4fr_0.85fr_1fr_0.85fr]">
+      <div className="min-w-0">
+        <div className="inline-flex rounded-3xl border border-white/10 bg-white p-3 shadow-2xl shadow-black/20">
+          <img src="/logo-sanjose-horizontal.svg" alt="Módulos Prefabricados San José" className="h-12 w-auto max-w-[260px] object-contain" />
+        </div>
+        <p className="mt-5 max-w-md text-sm leading-7 text-slate-300">{company.activity}. Fabricamos casetas y módulos con panel sándwich para uso profesional y particular, con orientación técnica y presupuesto revisado según cada proyecto.</p>
+        <div className="mt-5 grid gap-2 text-xs font-black text-slate-300 sm:max-w-md sm:grid-cols-2">
+          <span className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2">CIF {company.cif}</span>
+          <span className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2">Empresa en Sevilla</span>
+        </div>
+        <div className="mt-5">
+          <p className="mb-2 text-xs font-black uppercase tracking-[0.18em] text-slate-500">Síguenos</p>
+          <SocialLinks variant="dark" />
+        </div>
+      </div>
+
+      <div>
+        <h3 className="text-sm font-black uppercase tracking-[0.18em] text-slate-400">Servicios</h3>
+        <div className="mt-4 space-y-3 text-sm font-semibold text-slate-300">
+          <a href="#servicios" className="block transition hover:text-white">Casetas para fincas</a>
+          <a href="#servicios" className="block transition hover:text-white">Módulos oficina</a>
+          <a href="#servicios" className="block transition hover:text-white">Casetas de obra</a>
+          <a href="#servicios" className="block transition hover:text-white">Vestuarios y almacenes</a>
+          <button onClick={onStart} className="block text-left text-brand-orange transition hover:text-orange-300">Configurador CAD 2D</button>
+        </div>
+      </div>
+
+      <div>
+        <h3 className="text-sm font-black uppercase tracking-[0.18em] text-slate-400">Contacto directo</h3>
+        <div className="mt-4 space-y-4 text-sm text-slate-300">
+          <a href={`tel:${company.phoneHref}`} className="flex items-center gap-3 transition hover:text-white"><span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/10 text-brand-orange"><Phone size={17} /></span>{company.phone}</a>
+          <a href={whatsappContactUrl} target="_blank" rel="noreferrer" className="flex items-center gap-3 transition hover:text-white"><span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/10 text-brand-green"><MessageCircle size={17} /></span>WhatsApp directo</a>
+          <a href={`mailto:${company.email}`} className="flex min-w-0 items-center gap-3 transition hover:text-white"><span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/10 text-brand-blue"><Mail size={17} /></span><span className="break-all">{company.email}</span></a>
+          <p className="flex items-start gap-3"><span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/10 text-brand-orange"><MapPin size={17} /></span><span>{company.address}</span></p>
+        </div>
+      </div>
+
+      <div>
+        <h3 className="text-sm font-black uppercase tracking-[0.18em] text-slate-400">Legal y empresa</h3>
+        <div className="mt-4 space-y-3 text-left text-sm font-semibold text-slate-300">
+          <p className="flex items-start gap-3"><Building2 size={17} className="mt-0.5 shrink-0 text-brand-orange" /> <span>{company.name}</span></p>
+          <p className="flex items-start gap-3"><ShieldCheck size={17} className="mt-0.5 shrink-0 text-brand-green" /> <span>Presupuestos sujetos a revisión técnica, transporte y montaje.</span></p>
+          <button onClick={() => onLegalPage('aviso-legal')} className="block transition hover:text-white">Aviso legal</button>
+          <button onClick={() => onLegalPage('privacidad')} className="block transition hover:text-white">Política de privacidad</button>
+          <button onClick={() => onLegalPage('cookies')} className="block transition hover:text-white">Política de cookies</button>
+          <button onClick={onAdmin} className="block pt-2 text-slate-500 transition hover:text-white">Panel privado</button>
+        </div>
+      </div>
+    </div>
+
+    <div className="relative border-t border-white/10">
+      <div className="container-page flex flex-col gap-2 py-5 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between">
+        <p>© {new Date().getFullYear()} {company.name}. Todos los derechos reservados.</p>
+        <p>Diseño, fabricación y presupuesto orientativo de módulos prefabricados.</p>
+      </div>
+    </div>
   </footer>
 );

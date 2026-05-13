@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { ConfiguratorState, DeliveryTimeline, DivisionOrientation, EdgeSide, LayoutItem, LayoutItemType, PanelChoice, UseType } from '../../../types';
+import type { ConfiguratorState, DivisionOrientation, EdgeSide, LayoutItem, LayoutItemType, PanelChoice, UseType } from '../../../types';
 import { createBaseLayoutItems, getDefaultItemSize, ITEM_LABELS, ITEM_PRICES } from '../../../utils/pricing';
 import { clamp, normalizeBathroomChildItem, normalizeEdgeItem, normalizeInsideItem, snapMeters } from '../cad/utils/coordinates';
 
