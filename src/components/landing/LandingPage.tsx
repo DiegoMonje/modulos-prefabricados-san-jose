@@ -19,7 +19,6 @@ const models = [
   ['Proyecto especial', '8 x 2,40 m', 'Bajo consulta técnica y transporte'],
 ] as const;
 
-
 const galleryImages = [
   {
     src: '/images/caseta-prefabricada-frontal-finca.webp',
@@ -61,28 +60,31 @@ const galleryImages = [
 
 export const LandingPage = ({ onStart, onLegalPage, onAdmin }: { onStart: () => void; onLegalPage: (page: 'aviso-legal' | 'privacidad' | 'cookies') => void; onAdmin: () => void }) => (
   <div className="min-h-screen bg-brand-light">
-    <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur">
-      <div className="container-page flex items-center justify-between gap-4 py-4">
-        <a href="#inicio" className="flex items-center gap-3">
-          <div className="rounded-2xl bg-brand-navy p-3 text-white"><Building2 size={24} /></div>
-          <div>
-            <p className="font-black text-slate-900">{company.name}</p>
-            <p className="text-xs font-semibold text-slate-500">Casetas y módulos prefabricados en Sevilla</p>
+    <div className="sticky top-0 z-50">
+      <UrgencyBar onStart={onStart} />
+      <header className="border-b border-slate-200 bg-white/95 backdrop-blur">
+        <div className="container-page flex items-center justify-between gap-4 py-4">
+          <a href="#inicio" className="flex items-center gap-3">
+            <div className="rounded-2xl bg-brand-navy p-3 text-white"><Building2 size={24} /></div>
+            <div>
+              <p className="font-black text-slate-900">{company.name}</p>
+              <p className="text-xs font-semibold text-slate-500">Casetas y módulos prefabricados en Sevilla</p>
+            </div>
+          </a>
+          <nav className="hidden items-center gap-6 text-sm font-black text-slate-600 lg:flex">
+            <button onClick={onStart} className="hover:text-brand-orange">Calculadora</button>
+            <a href="#servicios" className="hover:text-brand-orange">Servicios</a>
+            <a href="#galeria" className="hover:text-brand-orange">Galería</a>
+            <a href="#modelos" className="hover:text-brand-orange">Modelos</a>
+            <a href="#contacto" className="hover:text-brand-orange">Contacto</a>
+          </nav>
+          <div className="flex gap-2">
+            <a href={`tel:${company.phoneHref}`} className="hidden sm:inline-flex"><Button variant="outline"><Phone size={18} /> Llamar</Button></a>
+            <a href={whatsappContactUrl} target="_blank" rel="noreferrer"><Button variant="secondary"><MessageCircle size={18} /> WhatsApp</Button></a>
           </div>
-        </a>
-        <nav className="hidden items-center gap-6 text-sm font-black text-slate-600 lg:flex">
-          <button onClick={onStart} className="hover:text-brand-orange">Calculadora</button>
-          <a href="#servicios" className="hover:text-brand-orange">Servicios</a>
-          <a href="#galeria" className="hover:text-brand-orange">Galería</a>
-          <a href="#modelos" className="hover:text-brand-orange">Modelos</a>
-          <a href="#contacto" className="hover:text-brand-orange">Contacto</a>
-        </nav>
-        <div className="flex gap-2">
-          <a href={`tel:${company.phoneHref}`} className="hidden sm:inline-flex"><Button variant="outline"><Phone size={18} /> Llamar</Button></a>
-          <a href={whatsappContactUrl} target="_blank" rel="noreferrer"><Button variant="secondary"><MessageCircle size={18} /> WhatsApp</Button></a>
         </div>
-      </div>
-    </header>
+      </header>
+    </div>
 
     <main id="inicio">
       <section className="relative overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-blue-950 text-white">
@@ -255,6 +257,23 @@ export const LandingPage = ({ onStart, onLegalPage, onAdmin }: { onStart: () => 
     </main>
 
     <Footer onLegalPage={onLegalPage} onAdmin={onAdmin} />
+  </div>
+);
+
+const UrgencyBar = ({ onStart }: { onStart: () => void }) => (
+  <div className="bg-gradient-to-r from-amber-500 via-orange-500 to-red-500 text-white shadow-sm">
+    <div className="container-page flex flex-col items-center justify-center gap-2 py-2 text-center text-xs font-black sm:flex-row sm:text-sm">
+      <span className="leading-5">
+        <span className="mr-1" aria-hidden="true">⚠️</span>
+        Cupos limitados de fabricación este mes · Solicita tu presupuesto antes de completar agenda
+      </span>
+      <button
+        onClick={onStart}
+        className="rounded-full bg-white px-3 py-1.5 text-xs font-black text-orange-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-orange-50"
+      >
+        Calcular mi módulo
+      </button>
+    </div>
   </div>
 );
 
