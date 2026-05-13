@@ -40,14 +40,9 @@ export const CadStage = forwardRef<Konva.Stage, {
   const errorItemIds = useMemo(() => validationIssues.flatMap((issue) => issue.severity === 'error' ? [issue.itemId, issue.relatedItemId].filter(Boolean) as string[] : []), [validationIssues]);
   const warningItemIds = useMemo(() => validationIssues.flatMap((issue) => issue.severity === 'warning' ? [issue.itemId, issue.relatedItemId].filter(Boolean) as string[] : []), [validationIssues]);
   const moduleLabel = `${length.toLocaleString('es-ES')} x ${width.toLocaleString('es-ES')} m`;
-  const titleText = isCompact ? 'PLANO CAD 2D' : 'MÓDULOS PREFABRICADOS SAN JOSÉ';
-  const subtitleText = isCompact ? `${moduleLabel} · Escala visual` : 'Plano técnico orientativo · módulo prefabricado a medida';
   const legendText = isCompact
     ? 'Leyenda: P puerta · V ventana · T enchufe · PL luz'
     : 'Leyenda: P=Puerta · V=Ventana · VG=Ventana grande · T=Enchufe · PL=Punto de luz · CE=Cuadro eléctrico · A/A=Aire acondicionado';
-  const chipWidth = isCompact ? 118 : 190;
-  const chipX = Math.max(geometry.planX, geometry.stageWidth - chipWidth - 24);
-  const titleWidth = Math.max(120, chipX - geometry.planX - 10);
   const legendY = geometry.planY + geometry.planHeight + 20;
   const legendHeight = isCompact ? 28 : 34;
   const status = errorCount > 0
@@ -92,16 +87,23 @@ export const CadStage = forwardRef<Konva.Stage, {
           </div>
         </div>
       </div>
+      <div className="mb-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.18em] text-brand-orange">Módulos Prefabricados San José</p>
+            <h3 className="mt-1 text-lg font-black text-slate-900">Plano CAD 2D · Módulo {moduleLabel}</h3>
+            <p className="mt-1 text-sm font-semibold text-slate-500">Escala visual orientativa · unidades en metros</p>
+          </div>
+          <div className="rounded-full border border-orange-200 bg-orange-50 px-4 py-2 text-sm font-black text-brand-orange">
+            {moduleLabel}
+          </div>
+        </div>
+      </div>
       <div ref={shellRef} className="overflow-auto rounded-[22px] border border-slate-700/70 bg-slate-950 p-2 shadow-2xl shadow-slate-950/30 sm:rounded-[28px] sm:p-3">
         <Stage ref={ref} width={geometry.stageWidth} height={geometry.stageHeight} onMouseDown={(event) => { if (event.target === event.target.getStage()) onSelect(null); }} onTouchStart={(event) => { if (event.target === event.target.getStage()) onSelect(null); }}>
           <Layer listening={false}>
             <Rect x={0} y={0} width={geometry.stageWidth} height={geometry.stageHeight} fill="#020617" cornerRadius={22} />
             <Rect x={12} y={12} width={geometry.stageWidth - 24} height={geometry.stageHeight - 24} stroke="#334155" strokeWidth={1} cornerRadius={18} />
-            <Rect x={18} y={18} width={geometry.stageWidth - 36} height={isCompact ? 32 : 40} fill="rgba(15,23,42,0.92)" stroke="#334155" strokeWidth={1} cornerRadius={12} />
-            <Text x={geometry.planX} y={isCompact ? 24 : 24} text={titleText} fill="#f8fafc" fontSize={isCompact ? 11 : 12} fontStyle="bold" letterSpacing={isCompact ? 1 : 1.3} width={titleWidth} />
-            <Text x={geometry.planX} y={isCompact ? 39 : 40} text={subtitleText} fill="#94a3b8" fontSize={isCompact ? 9 : 10} width={titleWidth} />
-            <Rect x={chipX} y={isCompact ? 23 : 26} width={chipWidth} height={isCompact ? 22 : 24} fill="rgba(249,115,22,0.16)" stroke="#fb923c" strokeWidth={1} cornerRadius={999} />
-            <Text x={chipX + 8} y={isCompact ? 29 : 32} width={chipWidth - 16} align="center" text={isCompact ? moduleLabel : `Módulo ${moduleLabel}`} fill="#fed7aa" fontSize={isCompact ? 9 : 10} fontStyle="bold" />
           </Layer>
           <Layer listening={false}>
             <CadGrid geometry={geometry} length={length} width={width} />
