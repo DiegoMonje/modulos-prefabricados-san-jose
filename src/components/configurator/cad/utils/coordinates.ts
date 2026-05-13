@@ -24,11 +24,13 @@ export interface PlanGeometry {
 export const calculatePlanGeometry = (stageWidth: number, length: number, width: number, zoom = 1): PlanGeometry => {
   const safeLength = Math.max(length, 0.1);
   const safeWidth = Math.max(width, 0.1);
-  const paddingLeft = 88;
-  const paddingRight = 40;
-  const paddingTop = 76;
-  const paddingBottom = 76;
-  const availableWidth = Math.max(420, stageWidth - paddingLeft - paddingRight);
+  const isCompact = stageWidth < 640;
+  const paddingLeft = isCompact ? 44 : 88;
+  const paddingRight = isCompact ? 16 : 40;
+  const paddingTop = isCompact ? 58 : 76;
+  const paddingBottom = isCompact ? 56 : 76;
+  const minimumPlanWidth = isCompact ? 220 : 420;
+  const availableWidth = Math.max(minimumPlanWidth, stageWidth - paddingLeft - paddingRight);
   const planWidth = availableWidth * zoom;
   const scale = planWidth / safeLength;
   const planHeight = safeWidth * scale;
