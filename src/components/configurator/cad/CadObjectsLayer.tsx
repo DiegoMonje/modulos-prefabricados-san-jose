@@ -80,6 +80,10 @@ export const CadObjectsLayer = ({
   onMove: (id: string, x: number, y: number) => void;
 }) => {
   const sortedItems = [...items].sort((a, b) => Number(isDivision(b)) - Number(isDivision(a)));
+  const isCompact = geometry.stageWidth < 640;
+  const minTouchWidth = isCompact ? 38 : 30;
+  const minTouchHeight = isCompact ? 34 : 24;
+  const selectionPadding = isCompact ? 7 : 5;
 
   return (
     <Group>
@@ -133,15 +137,15 @@ export const CadObjectsLayer = ({
               onMove(item.id, x, y);
             }}
           >
-            <Rect x={box.x} y={box.y} width={Math.max(box.width, 30)} height={Math.max(box.height, 24)} fill="rgba(0,0,0,0.01)" />
+            <Rect x={box.x} y={box.y} width={Math.max(box.width, minTouchWidth)} height={Math.max(box.height, minTouchHeight)} fill="rgba(0,0,0,0.01)" />
             <CadObjectSymbol item={item} selected={selected} geometry={geometry} hasError={hasError} hasWarning={hasWarning} />
             {(selected || hasError || hasWarning) ? (
               <Group listening={false}>
                 <Rect
-                  x={box.x - 5}
-                  y={box.y - 5}
-                  width={box.width + 10}
-                  height={box.height + 10}
+                  x={box.x - selectionPadding}
+                  y={box.y - selectionPadding}
+                  width={box.width + selectionPadding * 2}
+                  height={box.height + selectionPadding * 2}
                   stroke={hasError ? '#ef4444' : hasWarning ? '#f59e0b' : '#fb923c'}
                   strokeWidth={hasError || hasWarning ? 3 : 2}
                   dash={[7, 5]}
