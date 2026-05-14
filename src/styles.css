@@ -26,6 +26,22 @@ body {
   border-radius: 18px;
 }
 
+@media (min-width: 1280px) {
+  .max-w-7xl:has(.cad-stage-root) {
+    max-width: 1600px;
+  }
+
+  .card:has(.cad-stage-root) > div > .mt-6 > .grid {
+    grid-template-columns: minmax(0, 1fr) 320px !important;
+  }
+}
+
+@media (min-width: 1536px) {
+  .card:has(.cad-stage-root) > div > .mt-6 > .grid {
+    grid-template-columns: minmax(0, 1fr) 340px !important;
+  }
+}
+
 @layer components {
   .container-page {
     @apply mx-auto max-w-7xl px-4;
