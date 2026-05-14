@@ -1,12 +1,10 @@
 import type { ElementType } from 'react';
 import {
-  Bath,
   Copy,
   DoorOpen,
   Droplets,
   FlipHorizontal2,
   Grid3X3,
-  House,
   Lightbulb,
   PanelsTopLeft,
   Plug,
@@ -52,17 +50,15 @@ const toolSections: {
   },
   {
     title: 'Distribución interior',
-    description: 'Separaciones y estancias',
+    description: 'Separaciones y tabiques',
     tools: [
       { type: 'wall_partition', icon: SquareDashedMousePointer, hint: `${ITEM_LABELS.wall_partition} · ${formatCurrency(ITEM_PRICES.wall_partition)}` },
-      { type: 'interior_room', icon: House, hint: `${ITEM_LABELS.interior_room} · ${formatCurrency(ITEM_PRICES.interior_room)}` },
     ],
   },
   {
     title: 'Baño y fontanería',
-    description: 'Baño completo o piezas sueltas',
+    description: 'Piezas individuales para montar el baño',
     tools: [
-      { type: 'full_bathroom', icon: Bath, hint: `${ITEM_LABELS.full_bathroom} · ${formatCurrency(ITEM_PRICES.full_bathroom)}` },
       { type: 'toilet', icon: Toilet, hint: `${ITEM_LABELS.toilet} · ${formatCurrency(ITEM_PRICES.toilet)}` },
       { type: 'sink', icon: Droplets, hint: `${ITEM_LABELS.sink} · ${formatCurrency(ITEM_PRICES.sink)}` },
       { type: 'shower_tray', icon: ShowerHead, hint: `${ITEM_LABELS.shower_tray} · ${formatCurrency(ITEM_PRICES.shower_tray)}` },
@@ -165,7 +161,7 @@ export const CadElementActionBar = ({ onDelete }: { onDelete: () => void }) => {
   const selectedPrice = selectedItem ? getItemPrice(selectedItem) : 0;
 
   return (
-    <div className="cad-element-action-bar flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+    <div className="cad-element-action-bar grid gap-4 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-center">
       <div className="min-w-0">
         <p className="text-xs font-black uppercase tracking-[0.16em] text-brand-blue">Acciones del elemento seleccionado</p>
         {selectedItem ? (
@@ -180,11 +176,11 @@ export const CadElementActionBar = ({ onDelete }: { onDelete: () => void }) => {
         )}
       </div>
 
-      <div className="cad-element-buttons flex gap-2 overflow-x-auto pb-1 lg:pb-0">
-        <button className="btn-outline shrink-0 px-3 py-2 text-sm" onClick={rotateSelected} disabled={!selectedItem}><RotateCw size={16} /> Girar</button>
-        <button className="btn-outline shrink-0 px-3 py-2 text-sm" onClick={duplicateSelected} disabled={!canDuplicate}><Copy size={16} /> Duplicar</button>
-        <button className="btn-outline shrink-0 px-3 py-2 text-sm" onClick={onDelete} disabled={!selectedItem}><Trash2 size={16} /> Borrar</button>
-        <button className="btn-outline shrink-0 px-3 py-2 text-sm" onClick={toggleSelectedDoorSwing} disabled={!canChangeDoorSwing}><FlipHorizontal2 size={16} /> Apertura</button>
+      <div className="cad-element-buttons grid grid-cols-2 gap-2 sm:grid-cols-4 xl:min-w-[520px] xl:shrink-0">
+        <button className="btn-outline w-full px-3 py-2 text-sm" onClick={rotateSelected} disabled={!selectedItem}><RotateCw size={16} /> Girar</button>
+        <button className="btn-outline w-full px-3 py-2 text-sm" onClick={duplicateSelected} disabled={!canDuplicate}><Copy size={16} /> Duplicar</button>
+        <button className="btn-outline w-full px-3 py-2 text-sm" onClick={onDelete} disabled={!selectedItem}><Trash2 size={16} /> Borrar</button>
+        <button className="btn-outline w-full px-3 py-2 text-sm" onClick={toggleSelectedDoorSwing} disabled={!canChangeDoorSwing}><FlipHorizontal2 size={16} /> Apertura</button>
       </div>
     </div>
   );
