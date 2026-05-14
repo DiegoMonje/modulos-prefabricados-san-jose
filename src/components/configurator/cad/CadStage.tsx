@@ -6,6 +6,7 @@ import type { LayoutItem } from '../../../types';
 import { validateCadLayout } from './utils/collisions';
 import { calculatePlanGeometry } from './utils/coordinates';
 import { CadGrid } from './CadGrid';
+import { CadMobileLandscapeFullscreen } from './CadMobileLandscapeFullscreen';
 import { CadObjectsLayer } from './CadObjectsLayer';
 import { CadRulers } from './CadRulers';
 import { CadWalls } from './CadWalls';
@@ -68,6 +69,7 @@ export const CadStage = forwardRef<Konva.Stage, {
 
   return (
     <div className="cad-stage-root">
+      <CadMobileLandscapeFullscreen length={length} width={width} items={items} selectedItemId={selectedItemId} onSelect={onSelect} onMove={onMove} />
       <div className="cad-mobile-hint mb-4 rounded-[22px] border border-amber-200 bg-amber-50 p-4 text-center text-amber-950 shadow-sm md:hidden portrait:block landscape:hidden">
         <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-brand-orange shadow-sm">
           <div className="relative">
