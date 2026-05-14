@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type ElementType } from 'react';
 import type Konva from 'konva';
 import { Layer, Rect, Stage, Text } from 'react-konva';
 import {
@@ -11,6 +11,8 @@ import {
   Grid3X3,
   House,
   Lightbulb,
+  Maximize2,
+  Minimize2,
   MousePointer2,
   PanelsTopLeft,
   Plus,
@@ -37,13 +39,10 @@ import { CadWalls } from './CadWalls';
 import { validateCadLayout } from './utils/collisions';
 import type { PlanGeometry } from './utils/coordinates';
 
-const FULLSCREEN_HEADER_HEIGHT = 34;
-const FULLSCREEN_NAV_HEIGHT = 50;
+type Panel = 'edit' | 'add' | 'view' | 'none';
+type Tool = { type: LayoutItemType; icon: ElementType; label: string };
 
-const toolSections: {
-  title: string;
-  tools: { type: LayoutItemType; icon: typeof DoorOpen; label: string }[];
-}[] = [
+const sections: { title: string; tools: Tool[] }[] = [
   {
     title: 'Puertas y ventanas',
     tools: [
@@ -100,10 +99,7 @@ const duplicableTypes: LayoutItemType[] = [
   'shower_tray',
   'air_conditioning',
 ];
-
 const doorTypes: LayoutItemType[] = ['base_door', 'additional_door', 'interior_door', 'bathroom_door'];
-
-type Panel = 'edit' | 'add' | 'view' | 'none';
 
 const fitGeometryToBox = (containerWidth: number, containerHeight: number, length: number, width: number, zoom: number): PlanGeometry => {
   const safeLength = Math.max(length, 0.1);
@@ -115,19 +111,15 @@ const fitGeometryToBox = (containerWidth: number, containerHeight: number, lengt
   const paddingBottom = compact ? 26 : 32;
   const availableWidth = Math.max(220, containerWidth - paddingLeft - paddingRight);
   const availableHeight = Math.max(120, containerHeight - paddingTop - paddingBottom);
-  const fitByWidth = availableWidth;
-  const fitByHeight = availableHeight * (safeLength / safeWidth);
-  const planWidth = Math.max(220, Math.min(fitByWidth, fitByHeight) * zoom);
+  const planWidth = Math.max(220, Math.min(availableWidth, availableHeight * (safeLength / safeWidth)) * zoom);
   const scale = planWidth / safeLength;
   const planHeight = safeWidth * scale;
-  const planX = paddingLeft + Math.max(0, (availableWidth - planWidth) / 2);
-  const planY = paddingTop + Math.max(0, (availableHeight - planHeight) / 2);
 
   return {
     stageWidth: Math.max(containerWidth, planWidth + paddingLeft + paddingRight),
     stageHeight: Math.max(containerHeight, planHeight + paddingTop + paddingBottom),
-    planX,
-    planY,
+    planX: paddingLeft + Math.max(0, (availableWidth - planWidth) / 2),
+    planY: paddingTop + Math.max(0, (availableHeight - planHeight) / 2),
     planWidth,
     planHeight,
     scale,
@@ -170,6 +162,9 @@ export const CadMobileLandscapeFullscreen = ({
   const [dismissed, setDismissed] = useState(false);
   const [panel, setPanel] = useState<Panel>('none');
   const [zoom, setZoom] = useState(1);
+  const [fullscreenActive, setFullscreenActive] = useState(false);
+  const [fullscreenError, setFullscreenError] = useState('');
+  const rootRef = useRef<HTMLDivElement | null>(null);
   const shellRef = useRef<HTMLDivElement | null>(null);
   const stageRef = useRef<Konva.Stage>(null);
   const [size, setSize] = useState({ width: 760, height: 280 });
@@ -188,6 +183,13 @@ export const CadMobileLandscapeFullscreen = ({
   }, [isLandscape]);
 
   useEffect(() => {
+    const update = () => setFullscreenActive(Boolean(document.fullscreenElement));
+    update();
+    document.addEventListener('fullscreenchange', update);
+    return () => document.removeEventListener('fullscreenchange', update);
+  }, []);
+
+  useEffect(() => {
     const node = shellRef.current;
     if (!node || !isLandscape || dismissed) return;
     const update = () => setSize({ width: Math.max(320, node.clientWidth), height: Math.max(180, node.clientHeight) });
@@ -195,11 +197,36 @@ export const CadMobileLandscapeFullscreen = ({
     const observer = new ResizeObserver(update);
     observer.observe(node);
     return () => observer.disconnect();
-  }, [isLandscape, dismissed]);
+  }, [isLandscape, dismissed, fullscreenActive]);
 
-  const validationIssues = useMemo(() => validateCadLayout(items, length, width), [items, length, width]);
-  const errorItemIds = useMemo(() => validationIssues.flatMap((issue) => issue.severity === 'error' ? [issue.itemId, issue.relatedItemId].filter(Boolean) as string[] : []), [validationIssues]);
-  const warningItemIds = useMemo(() => validationIssues.flatMap((issue) => issue.severity === 'warning' ? [issue.itemId, issue.relatedItemId].filter(Boolean) as string[] : []), [validationIssues]);
+  const requestNativeFullscreen = async (silent = false) => {
+    const node = rootRef.current;
+    if (!node?.requestFullscreen || document.fullscreenElement) return;
+
+    try {
+      setFullscreenError('');
+      await node.requestFullscreen();
+    } catch {
+      if (!silent) setFullscreenError('Toca de nuevo “Pantalla”. Chrome puede bloquearlo al primer intento.');
+    }
+  };
+
+  const exitNativeFullscreen = async () => {
+    try {
+      if (document.fullscreenElement) await document.exitFullscreen();
+    } catch {
+      // El navegador puede bloquear esta acción; no afecta al uso del CAD.
+    }
+  };
+
+  const handleDismiss = async () => {
+    await exitNativeFullscreen();
+    setDismissed(true);
+  };
+
+  const issues = useMemo(() => validateCadLayout(items, length, width), [items, length, width]);
+  const errorItemIds = useMemo(() => issues.flatMap((issue) => issue.severity === 'error' ? [issue.itemId, issue.relatedItemId].filter(Boolean) as string[] : []), [issues]);
+  const warningItemIds = useMemo(() => issues.flatMap((issue) => issue.severity === 'warning' ? [issue.itemId, issue.relatedItemId].filter(Boolean) as string[] : []), [issues]);
   const geometry = useMemo(() => fitGeometryToBox(size.width, size.height, length, width, zoom), [size.width, size.height, length, width, zoom]);
   const moduleLabel = `${length.toLocaleString('es-ES')} x ${width.toLocaleString('es-ES')} m`;
   const selectedPrice = selectedItem ? getItemPrice(selectedItem) : 0;
@@ -208,16 +235,20 @@ export const CadMobileLandscapeFullscreen = ({
 
   if (!isLandscape || dismissed) return null;
 
-  const togglePanel = (nextPanel: Panel) => setPanel((current) => current === nextPanel ? 'none' : nextPanel);
+  const togglePanel = (nextPanel: Panel) => {
+    void requestNativeFullscreen(true);
+    setPanel((current) => current === nextPanel ? 'none' : nextPanel);
+  };
 
   return (
-    <div className="fixed inset-0 z-[9999] flex h-[100dvh] w-screen flex-col overflow-hidden bg-slate-950 text-white">
+    <div ref={rootRef} className="fixed inset-0 z-[9999] flex h-[100dvh] w-screen flex-col overflow-hidden bg-slate-950 text-white">
       <header className="flex h-[34px] shrink-0 items-center justify-between gap-2 border-b border-white/10 bg-slate-950/95 px-2">
-        <button onClick={() => setDismissed(true)} className="inline-flex h-7 items-center gap-1 rounded-full bg-white/10 px-2.5 text-[11px] font-black text-white active:scale-95">
-          <X size={14} /> Salir
-        </button>
+        <button onClick={handleDismiss} className="inline-flex h-7 items-center gap-1 rounded-full bg-white/10 px-2.5 text-[11px] font-black text-white active:scale-95"><X size={14} /> Salir</button>
         <p className="min-w-0 flex-1 truncate text-center text-[11px] font-black uppercase tracking-[0.14em] text-orange-300">CAD 2D · {moduleLabel}</p>
-        <p className="w-[58px] text-right text-[10px] font-black text-emerald-300">{validationIssues.length ? `${validationIssues.length} avisos` : 'Correcto'}</p>
+        <button onClick={() => fullscreenActive ? void exitNativeFullscreen() : void requestNativeFullscreen()} className="inline-flex h-7 w-[92px] items-center justify-center gap-1 rounded-full bg-brand-orange px-2 text-[10px] font-black text-white active:scale-95">
+          {fullscreenActive ? <Minimize2 size={13} /> : <Maximize2 size={13} />}
+          {fullscreenActive ? 'Salir' : 'Pantalla'}
+        </button>
       </header>
 
       <main className="relative min-h-0 flex-1 overflow-hidden p-1.5 pb-[54px]">
@@ -248,6 +279,8 @@ export const CadMobileLandscapeFullscreen = ({
           </Stage>
         </div>
 
+        {fullscreenError ? <p className="absolute right-2 top-2 rounded-full bg-amber-100 px-3 py-1 text-[10px] font-black text-amber-950 shadow-lg">{fullscreenError}</p> : null}
+
         {panel !== 'none' ? (
           <section className="absolute inset-x-2 bottom-[56px] max-h-[32dvh] overflow-auto rounded-xl border border-white/15 bg-white/95 p-2 text-slate-900 shadow-2xl backdrop-blur">
             {panel === 'edit' ? (
@@ -268,7 +301,7 @@ export const CadMobileLandscapeFullscreen = ({
 
             {panel === 'add' ? (
               <div className="grid gap-1.5 sm:grid-cols-2">
-                {toolSections.map((section) => (
+                {sections.map((section) => (
                   <div key={section.title} className="rounded-lg border border-slate-200 bg-slate-50 p-1.5">
                     <p className="mb-1.5 text-[11px] font-black text-slate-800">{section.title}</p>
                     <div className="grid grid-cols-2 gap-1.5">
