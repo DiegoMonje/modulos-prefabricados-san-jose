@@ -26,6 +26,198 @@ body {
   border-radius: 18px;
 }
 
+@media (max-width: 920px) and (orientation: landscape) {
+  body:has(.cad-stage-root) {
+    overflow: hidden;
+    background: #020617;
+  }
+
+  body:has(.cad-stage-root) > div {
+    background: #020617;
+  }
+
+  .cad-stage-root {
+    position: fixed;
+    inset: 0;
+    z-index: 80;
+    display: grid;
+    grid-template-rows: 1fr auto;
+    gap: 8px;
+    overflow: hidden;
+    background: #020617;
+    padding: max(8px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left));
+  }
+
+  .cad-mobile-hint,
+  .cad-status-card,
+  .cad-stage-title,
+  .cad-validation-list {
+    display: none !important;
+  }
+
+  .cad-stage-shell {
+    min-height: 0;
+    height: calc(100vh - 86px - max(8px, env(safe-area-inset-top)) - max(8px, env(safe-area-inset-bottom)));
+    margin: 0 !important;
+    overflow: auto;
+    border-radius: 18px !important;
+    box-shadow: none !important;
+  }
+
+  .cad-stage-shell .konvajs-content,
+  .cad-stage-shell canvas {
+    max-height: calc(100vh - 104px);
+  }
+
+  .cad-element-action-bar {
+    position: fixed;
+    left: max(8px, env(safe-area-inset-left));
+    right: max(8px, env(safe-area-inset-right));
+    bottom: max(8px, env(safe-area-inset-bottom));
+    z-index: 110;
+    display: grid !important;
+    grid-template-columns: minmax(170px, 1fr) auto;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid rgba(148, 163, 184, 0.35);
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.96);
+    padding: 8px;
+    box-shadow: 0 18px 55px rgba(0, 0, 0, 0.35);
+    backdrop-filter: blur(14px);
+  }
+
+  .cad-element-action-bar p:first-child {
+    font-size: 9px;
+    letter-spacing: 0.11em;
+  }
+
+  .cad-element-action-bar .text-base {
+    font-size: 13px;
+    line-height: 1.1;
+  }
+
+  .cad-element-action-bar .text-sm {
+    font-size: 11px;
+    line-height: 1.2;
+  }
+
+  .cad-element-buttons {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    max-width: 48vw;
+    padding-bottom: 0 !important;
+  }
+
+  .cad-element-buttons .btn-outline,
+  .cad-view-tools .btn-outline,
+  .cad-add-tools button {
+    min-height: 38px;
+    border-radius: 999px;
+    padding: 8px 11px;
+    font-size: 12px;
+    white-space: nowrap;
+  }
+
+  .cad-toolbar-panel {
+    position: fixed;
+    top: max(8px, env(safe-area-inset-top));
+    right: max(8px, env(safe-area-inset-right));
+    bottom: calc(86px + max(8px, env(safe-area-inset-bottom)));
+    z-index: 105;
+    width: min(280px, 38vw);
+    overflow-y: auto;
+    border-color: rgba(148, 163, 184, 0.35) !important;
+    background: rgba(255, 255, 255, 0.95) !important;
+    padding: 10px !important;
+    border-radius: 18px !important;
+    box-shadow: 0 18px 55px rgba(0, 0, 0, 0.35) !important;
+    backdrop-filter: blur(14px);
+  }
+
+  .cad-toolbar-heading h3 {
+    font-size: 14px;
+  }
+
+  .cad-toolbar-heading p {
+    font-size: 10px;
+  }
+
+  .cad-add-tools {
+    display: grid;
+    gap: 8px;
+  }
+
+  .cad-add-tools details {
+    padding: 8px !important;
+    border-radius: 14px !important;
+  }
+
+  .cad-add-tools summary p:first-child {
+    font-size: 12px;
+  }
+
+  .cad-add-tools summary p:last-child {
+    display: none;
+  }
+
+  .cad-add-tools details > div:last-child {
+    margin-top: 8px !important;
+    max-height: 180px;
+    overflow-y: auto;
+  }
+
+  .cad-add-tools button {
+    justify-content: flex-start !important;
+    padding: 8px !important;
+    font-size: 11px !important;
+  }
+
+  .cad-add-tools button svg:last-child {
+    display: none;
+  }
+
+  .cad-view-tools {
+    padding: 8px !important;
+    border-radius: 14px !important;
+  }
+
+  .cad-view-tools > div {
+    display: flex !important;
+    flex-wrap: wrap;
+    gap: 6px !important;
+  }
+
+  .cad-view-tools .btn-outline {
+    flex: 1 1 auto;
+    padding: 8px !important;
+    font-size: 11px !important;
+  }
+
+  .cad-view-tools .col-span-2 {
+    grid-column: auto !important;
+  }
+}
+
+@media (max-width: 760px) and (orientation: landscape) {
+  .cad-toolbar-panel {
+    width: min(240px, 36vw);
+  }
+
+  .cad-element-action-bar {
+    grid-template-columns: 1fr;
+  }
+
+  .cad-element-buttons {
+    max-width: none;
+  }
+
+  .cad-stage-shell {
+    height: calc(100vh - 122px - max(8px, env(safe-area-inset-top)) - max(8px, env(safe-area-inset-bottom)));
+  }
+}
+
 @layer components {
   .container-page {
     @apply mx-auto max-w-7xl px-4;
