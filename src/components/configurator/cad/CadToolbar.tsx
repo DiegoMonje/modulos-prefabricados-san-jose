@@ -99,7 +99,6 @@ export const CadToolbar = ({
   onAdd,
   onUndo,
   onRedo,
-  onDelete,
   onZoomIn,
   onZoomOut,
   onCenter,
@@ -107,11 +106,55 @@ export const CadToolbar = ({
   onAdd: (type: LayoutItemType) => void;
   onUndo: () => void;
   onRedo: () => void;
-  onDelete: () => void;
   onZoomIn: () => void;
   onZoomOut: () => void;
   onCenter: () => void;
-}) => {
+}) => (
+  <aside className="space-y-4 rounded-3xl border border-slate-200 bg-white p-4 shadow-soft">
+    <div>
+      <p className="text-xs font-black uppercase tracking-[0.18em] text-brand-orange">Herramientas CAD</p>
+      <h3 className="mt-1 text-lg font-black text-slate-900">Añadir elementos</h3>
+      <p className="mt-1 text-xs font-semibold text-slate-500">Herramientas agrupadas para diseñar el módulo sin saturar la pantalla.</p>
+    </div>
+
+    <div className="space-y-3">
+      {toolSections.map((section, index) => (
+        <details key={section.title} open={index < 2} className="group rounded-2xl border border-slate-200 bg-slate-50 p-3 open:bg-white">
+          <summary className="cursor-pointer list-none">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-sm font-black text-slate-900">{section.title}</p>
+                <p className="mt-0.5 text-xs font-semibold text-slate-500">{section.description}</p>
+              </div>
+              <span className="rounded-full bg-white px-2.5 py-1 text-xs font-black text-slate-500 shadow-sm group-open:text-brand-orange">{section.tools.length}</span>
+            </div>
+          </summary>
+          <div className="mt-3 grid gap-2">
+            {section.tools.map(({ type, icon: Icon, hint }) => (
+              <button key={type} onClick={() => onAdd(type)} className="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white px-3 py-2.5 text-left text-sm font-bold text-slate-700 transition hover:border-brand-orange hover:bg-orange-50 hover:text-brand-orange">
+                <span className="flex items-center gap-2"><Icon size={17} /> {hint}</span>
+                <Copy size={14} />
+              </button>
+            ))}
+          </div>
+        </details>
+      ))}
+    </div>
+
+    <div className="rounded-2xl border border-slate-200 bg-white p-3">
+      <p className="text-xs font-black uppercase tracking-[0.16em] text-slate-500">Acciones del plano</p>
+      <div className="mt-3 grid grid-cols-2 gap-2">
+        <button className="btn-outline px-3 py-2 text-sm" onClick={onUndo}><Undo2 size={16} /> Deshacer</button>
+        <button className="btn-outline px-3 py-2 text-sm" onClick={onRedo}><Redo2 size={16} /> Rehacer</button>
+        <button className="btn-outline px-3 py-2 text-sm" onClick={onZoomOut}><ZoomOut size={16} /> Zoom -</button>
+        <button className="btn-outline px-3 py-2 text-sm" onClick={onZoomIn}><ZoomIn size={16} /> Zoom +</button>
+        <button className="btn-outline col-span-2 px-3 py-2 text-sm" onClick={onCenter}><Grid3X3 size={16} /> Centrar plano</button>
+      </div>
+    </div>
+  </aside>
+);
+
+export const CadElementActionBar = ({ onDelete }: { onDelete: () => void }) => {
   const selectedItemId = useConfiguratorStore((state) => state.selectedItemId);
   const selectedItem = useConfiguratorStore((state) => state.config.layoutItems.find((item) => item.id === selectedItemId));
   const rotateSelected = useConfiguratorStore((state) => state.rotateSelected);
@@ -122,74 +165,27 @@ export const CadToolbar = ({
   const selectedPrice = selectedItem ? getItemPrice(selectedItem) : 0;
 
   return (
-    <>
-      <aside className="order-3 space-y-4 rounded-3xl border border-slate-200 bg-white p-4 shadow-soft xl:order-none xl:col-start-2 xl:row-span-2 xl:row-start-1">
-        <div>
-          <p className="text-xs font-black uppercase tracking-[0.18em] text-brand-orange">Herramientas CAD</p>
-          <h3 className="mt-1 text-lg font-black text-slate-900">Añadir elementos</h3>
-          <p className="mt-1 text-xs font-semibold text-slate-500">Herramientas agrupadas para diseñar el módulo sin saturar la pantalla.</p>
-        </div>
-
-        <div className="space-y-3">
-          {toolSections.map((section, index) => (
-            <details key={section.title} open={index < 2} className="group rounded-2xl border border-slate-200 bg-slate-50 p-3 open:bg-white">
-              <summary className="cursor-pointer list-none">
-                <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <p className="text-sm font-black text-slate-900">{section.title}</p>
-                    <p className="mt-0.5 text-xs font-semibold text-slate-500">{section.description}</p>
-                  </div>
-                  <span className="rounded-full bg-white px-2.5 py-1 text-xs font-black text-slate-500 shadow-sm group-open:text-brand-orange">{section.tools.length}</span>
-                </div>
-              </summary>
-              <div className="mt-3 grid gap-2">
-                {section.tools.map(({ type, icon: Icon, hint }) => (
-                  <button key={type} onClick={() => onAdd(type)} className="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white px-3 py-2.5 text-left text-sm font-bold text-slate-700 transition hover:border-brand-orange hover:bg-orange-50 hover:text-brand-orange">
-                    <span className="flex items-center gap-2"><Icon size={17} /> {hint}</span>
-                    <Copy size={14} />
-                  </button>
-                ))}
-              </div>
-            </details>
-          ))}
-        </div>
-
-        <div className="rounded-2xl border border-slate-200 bg-white p-3">
-          <p className="text-xs font-black uppercase tracking-[0.16em] text-slate-500">Acciones del plano</p>
-          <div className="mt-3 grid grid-cols-2 gap-2">
-            <button className="btn-outline px-3 py-2 text-sm" onClick={onUndo}><Undo2 size={16} /> Deshacer</button>
-            <button className="btn-outline px-3 py-2 text-sm" onClick={onRedo}><Redo2 size={16} /> Rehacer</button>
-            <button className="btn-outline px-3 py-2 text-sm" onClick={onZoomOut}><ZoomOut size={16} /> Zoom -</button>
-            <button className="btn-outline px-3 py-2 text-sm" onClick={onZoomIn}><ZoomIn size={16} /> Zoom +</button>
-            <button className="btn-outline col-span-2 px-3 py-2 text-sm" onClick={onCenter}><Grid3X3 size={16} /> Centrar plano</button>
+    <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+      <div className="min-w-0">
+        <p className="text-xs font-black uppercase tracking-[0.16em] text-brand-blue">Acciones del elemento seleccionado</p>
+        {selectedItem ? (
+          <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm font-bold text-slate-700">
+            <span className="max-w-full truncate text-base font-black text-slate-900">{selectedItem.label}</span>
+            <span>{selectedItem.side ? `Pared ${selectedItem.side}` : selectedItem.zone === 'inside' ? 'Interior' : 'Plano'}</span>
+            <span>{selectedItem.included ? 'Incluido' : formatCurrency(selectedPrice)}</span>
+            <span>{formatMeters(selectedItem.width)} x {formatMeters(selectedItem.height)}</span>
           </div>
-        </div>
-      </aside>
-
-      <div className="order-2 rounded-3xl border border-slate-200 bg-white p-3 shadow-soft xl:order-none xl:col-start-1 xl:row-start-2">
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-          <div className="min-w-0">
-            <p className="text-xs font-black uppercase tracking-[0.16em] text-brand-blue">Acciones del elemento seleccionado</p>
-            {selectedItem ? (
-              <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm font-bold text-slate-700">
-                <span className="max-w-full truncate text-base font-black text-slate-900">{selectedItem.label}</span>
-                <span>{selectedItem.side ? `Pared ${selectedItem.side}` : selectedItem.zone === 'inside' ? 'Interior' : 'Plano'}</span>
-                <span>{selectedItem.included ? 'Incluido' : formatCurrency(selectedPrice)}</span>
-                <span>{formatMeters(selectedItem.width)} x {formatMeters(selectedItem.height)}</span>
-              </div>
-            ) : (
-              <p className="mt-1 text-sm font-semibold text-slate-600">Selecciona una puerta, ventana, baño o elemento del plano para editarlo sin hacer scroll.</p>
-            )}
-          </div>
-
-          <div className="flex gap-2 overflow-x-auto pb-1 lg:pb-0">
-            <button className="btn-outline shrink-0 px-3 py-2 text-sm" onClick={rotateSelected} disabled={!selectedItem}><RotateCw size={16} /> Girar</button>
-            <button className="btn-outline shrink-0 px-3 py-2 text-sm" onClick={duplicateSelected} disabled={!canDuplicate}><Copy size={16} /> Duplicar</button>
-            <button className="btn-outline shrink-0 px-3 py-2 text-sm" onClick={onDelete} disabled={!selectedItem}><Trash2 size={16} /> Borrar</button>
-            <button className="btn-outline shrink-0 px-3 py-2 text-sm" onClick={toggleSelectedDoorSwing} disabled={!canChangeDoorSwing}><FlipHorizontal2 size={16} /> Apertura</button>
-          </div>
-        </div>
+        ) : (
+          <p className="mt-1 text-sm font-semibold text-slate-600">Selecciona una puerta, ventana, baño o elemento del plano para editarlo sin hacer scroll.</p>
+        )}
       </div>
-    </>
+
+      <div className="flex gap-2 overflow-x-auto pb-1 lg:pb-0">
+        <button className="btn-outline shrink-0 px-3 py-2 text-sm" onClick={rotateSelected} disabled={!selectedItem}><RotateCw size={16} /> Girar</button>
+        <button className="btn-outline shrink-0 px-3 py-2 text-sm" onClick={duplicateSelected} disabled={!canDuplicate}><Copy size={16} /> Duplicar</button>
+        <button className="btn-outline shrink-0 px-3 py-2 text-sm" onClick={onDelete} disabled={!selectedItem}><Trash2 size={16} /> Borrar</button>
+        <button className="btn-outline shrink-0 px-3 py-2 text-sm" onClick={toggleSelectedDoorSwing} disabled={!canChangeDoorSwing}><FlipHorizontal2 size={16} /> Apertura</button>
+      </div>
+    </div>
   );
 };
