@@ -67,8 +67,8 @@ export const CadStage = forwardRef<Konva.Stage, {
         };
 
   return (
-    <div>
-      <div className="mb-4 rounded-[22px] border border-amber-200 bg-amber-50 p-4 text-center text-amber-950 shadow-sm md:hidden portrait:block landscape:hidden">
+    <div className="cad-stage-root">
+      <div className="cad-mobile-hint mb-4 rounded-[22px] border border-amber-200 bg-amber-50 p-4 text-center text-amber-950 shadow-sm md:hidden portrait:block landscape:hidden">
         <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-brand-orange shadow-sm">
           <div className="relative">
             <Smartphone size={30} />
@@ -78,7 +78,7 @@ export const CadStage = forwardRef<Konva.Stage, {
         <p className="text-base font-black">Plano móvil optimizado</p>
         <p className="mt-1 text-sm font-semibold">Puedes verlo en vertical. Para mover elementos con más precisión, gira el móvil en horizontal.</p>
       </div>
-      <div className={`mb-4 rounded-2xl border p-4 text-sm shadow-sm ${status.className}`}>
+      <div className={`cad-status-card mb-4 rounded-2xl border p-4 text-sm shadow-sm ${status.className}`}>
         <div className="flex items-start gap-3">
           <span className={`mt-1 h-3 w-3 shrink-0 rounded-full ${status.dotClassName}`} />
           <div>
@@ -87,7 +87,7 @@ export const CadStage = forwardRef<Konva.Stage, {
           </div>
         </div>
       </div>
-      <div className="mb-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="cad-stage-title mb-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-xs font-black uppercase tracking-[0.18em] text-brand-orange">Módulos Prefabricados San José</p>
@@ -99,7 +99,7 @@ export const CadStage = forwardRef<Konva.Stage, {
           </div>
         </div>
       </div>
-      <div ref={shellRef} className="overflow-auto rounded-[22px] border border-slate-700/70 bg-slate-950 p-2 shadow-2xl shadow-slate-950/30 sm:rounded-[28px] sm:p-3">
+      <div ref={shellRef} className="cad-stage-shell overflow-auto rounded-[22px] border border-slate-700/70 bg-slate-950 p-2 shadow-2xl shadow-slate-950/30 sm:rounded-[28px] sm:p-3">
         <Stage ref={ref} width={geometry.stageWidth} height={geometry.stageHeight} onMouseDown={(event) => { if (event.target === event.target.getStage()) onSelect(null); }} onTouchStart={(event) => { if (event.target === event.target.getStage()) onSelect(null); }}>
           <Layer listening={false}>
             <Rect x={0} y={0} width={geometry.stageWidth} height={geometry.stageHeight} fill="#020617" cornerRadius={22} />
@@ -128,7 +128,7 @@ export const CadStage = forwardRef<Konva.Stage, {
         </Stage>
       </div>
       {validationIssues.length ? (
-        <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm font-semibold text-amber-950">
+        <div className="cad-validation-list mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm font-semibold text-amber-950">
           <p className="font-black">Avisos técnicos del plano</p>
           <ul className="mt-2 list-disc space-y-1 pl-5">
             {validationIssues.slice(0, 8).map((issue) => <li key={issue.id} className={issue.severity === 'error' ? 'text-red-700' : 'text-amber-950'}>{issue.message}</li>)}
