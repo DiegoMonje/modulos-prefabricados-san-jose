@@ -110,14 +110,14 @@ export const CadToolbar = ({
   onZoomOut: () => void;
   onCenter: () => void;
 }) => (
-  <aside className="space-y-4 rounded-3xl border border-slate-200 bg-white p-4 shadow-soft">
-    <div>
+  <aside className="cad-toolbar-panel space-y-4 rounded-3xl border border-slate-200 bg-white p-4 shadow-soft">
+    <div className="cad-toolbar-heading">
       <p className="text-xs font-black uppercase tracking-[0.18em] text-brand-orange">Herramientas CAD</p>
       <h3 className="mt-1 text-lg font-black text-slate-900">Añadir elementos</h3>
       <p className="mt-1 text-xs font-semibold text-slate-500">Herramientas agrupadas para diseñar el módulo sin saturar la pantalla.</p>
     </div>
 
-    <div className="space-y-3">
+    <div className="cad-add-tools space-y-3">
       {toolSections.map((section, index) => (
         <details key={section.title} open={index < 2} className="group rounded-2xl border border-slate-200 bg-slate-50 p-3 open:bg-white">
           <summary className="cursor-pointer list-none">
@@ -141,7 +141,7 @@ export const CadToolbar = ({
       ))}
     </div>
 
-    <div className="rounded-2xl border border-slate-200 bg-white p-3">
+    <div className="cad-view-tools rounded-2xl border border-slate-200 bg-white p-3">
       <p className="text-xs font-black uppercase tracking-[0.16em] text-slate-500">Acciones del plano</p>
       <div className="mt-3 grid grid-cols-2 gap-2">
         <button className="btn-outline px-3 py-2 text-sm" onClick={onUndo}><Undo2 size={16} /> Deshacer</button>
@@ -165,7 +165,7 @@ export const CadElementActionBar = ({ onDelete }: { onDelete: () => void }) => {
   const selectedPrice = selectedItem ? getItemPrice(selectedItem) : 0;
 
   return (
-    <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+    <div className="cad-element-action-bar flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
       <div className="min-w-0">
         <p className="text-xs font-black uppercase tracking-[0.16em] text-brand-blue">Acciones del elemento seleccionado</p>
         {selectedItem ? (
@@ -180,7 +180,7 @@ export const CadElementActionBar = ({ onDelete }: { onDelete: () => void }) => {
         )}
       </div>
 
-      <div className="flex gap-2 overflow-x-auto pb-1 lg:pb-0">
+      <div className="cad-element-buttons flex gap-2 overflow-x-auto pb-1 lg:pb-0">
         <button className="btn-outline shrink-0 px-3 py-2 text-sm" onClick={rotateSelected} disabled={!selectedItem}><RotateCw size={16} /> Girar</button>
         <button className="btn-outline shrink-0 px-3 py-2 text-sm" onClick={duplicateSelected} disabled={!canDuplicate}><Copy size={16} /> Duplicar</button>
         <button className="btn-outline shrink-0 px-3 py-2 text-sm" onClick={onDelete} disabled={!selectedItem}><Trash2 size={16} /> Borrar</button>
