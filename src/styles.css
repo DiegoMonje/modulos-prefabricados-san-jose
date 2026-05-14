@@ -26,6 +26,28 @@ body {
   border-radius: 18px;
 }
 
+@media (min-width: 1024px) {
+  .card:has(.cad-stage-root) {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (min-width: 1280px) {
+  .card:has(.cad-stage-root) > div > .mt-6 > .grid {
+    grid-template-columns: minmax(0, 1fr) 360px !important;
+  }
+
+  .card:has(.cad-stage-root) .cad-element-action-bar {
+    min-height: 84px;
+  }
+}
+
+@media (min-width: 1536px) {
+  .card:has(.cad-stage-root) > div > .mt-6 > .grid {
+    grid-template-columns: minmax(0, 1fr) 380px !important;
+  }
+}
+
 @layer components {
   .container-page {
     @apply mx-auto max-w-7xl px-4;
