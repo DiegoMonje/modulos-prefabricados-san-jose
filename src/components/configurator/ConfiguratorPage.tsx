@@ -9,7 +9,7 @@ import { downloadConfiguratorPdf } from '../../utils/pdf';
 import { createLead } from '../../services/leads';
 import { Button, Card, Field, Input, Select, Textarea } from '../ui/Ui';
 import { CadStage } from './cad/CadStage';
-import { CadToolbar } from './cad/CadToolbar';
+import { CadElementActionBar, CadToolbar } from './cad/CadToolbar';
 import { exportStageAsPng } from './cad/utils/exportStage';
 import { useConfiguratorStore } from './store/useConfiguratorStore';
 
@@ -159,9 +159,14 @@ export const ConfiguratorPage = ({ onBack }: { onBack: () => void }) => {
             {step === 3 && <UseStep />}
             {step === 4 && (
               <StepShell title="Plano CAD 2D profesional" subtitle="Añade, selecciona y arrastra elementos sobre el módulo. Puertas y ventanas se ajustan a muros exteriores.">
-                <div className="grid gap-5 xl:grid-cols-[1fr_330px]">
-                  <CadStage ref={stageRef} length={config.length} width={config.width} items={config.layoutItems} selectedItemId={selectedItemId} zoom={zoom} onSelect={store.selectItem} onMove={store.moveItem} />
-                  <CadToolbar onAdd={store.addItem} onUndo={store.undo} onRedo={store.redo} onDelete={store.removeSelected} onZoomIn={() => setZoom((z) => Math.min(maxCadZoom, Number((z + 0.1).toFixed(2))))} onZoomOut={() => setZoom((z) => Math.max(0.75, Number((z - 0.1).toFixed(2))))} onCenter={() => setZoom(1)} />
+                <div className="grid gap-5 xl:grid-cols-[1fr_330px] xl:items-start">
+                  <div className="rounded-[28px] border border-slate-200 bg-white p-3 shadow-soft">
+                    <CadStage ref={stageRef} length={config.length} width={config.width} items={config.layoutItems} selectedItemId={selectedItemId} zoom={zoom} onSelect={store.selectItem} onMove={store.moveItem} />
+                    <div className="mt-3 rounded-2xl border border-slate-200 bg-slate-50 p-3">
+                      <CadElementActionBar onDelete={store.removeSelected} />
+                    </div>
+                  </div>
+                  <CadToolbar onAdd={store.addItem} onUndo={store.undo} onRedo={store.redo} onZoomIn={() => setZoom((z) => Math.min(maxCadZoom, Number((z + 0.1).toFixed(2))))} onZoomOut={() => setZoom((z) => Math.max(0.75, Number((z - 0.1).toFixed(2))))} onCenter={() => setZoom(1)} />
                 </div>
                 {isMobileCad ? <p className="mt-3 rounded-2xl bg-slate-50 p-3 text-xs font-bold text-slate-600">En móvil el zoom se limita para evitar que el plano se salga de la pantalla.</p> : null}
                 <SelectedItemPanel item={config.layoutItems.find((i) => i.id === selectedItemId) || null} />
