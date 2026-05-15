@@ -1,4 +1,4 @@
-import { Calculator, CheckCircle2, Clock3, FileText, Image as ImageIcon, MapPin, MessageCircle, Phone, Ruler, ShieldCheck, Sparkles } from 'lucide-react';
+import { Building2, Calculator, CheckCircle2, Clock3, FileText, Image as ImageIcon, MapPin, MessageCircle, Phone, Ruler, ShieldCheck, Sparkles } from 'lucide-react';
 import { company, whatsappContactUrl } from '../../config/company';
 import { Button, Card } from '../ui/Ui';
 
@@ -64,12 +64,12 @@ export const LandingPage = ({ onStart, onLegalPage, onAdmin }: { onStart: () => 
       <UrgencyBar onStart={onStart} />
       <header className="border-b border-slate-200 bg-white/95 backdrop-blur">
         <div className="container-page flex items-center justify-between gap-4 py-4">
-          <a href="#inicio" className="flex items-center" aria-label={company.name}>
-            <img
-              src="/images/logo_modulos_sanjose_header_reducido.png"
-              alt={company.name}
-              className="h-12 w-auto max-w-[210px] object-contain sm:h-14 sm:max-w-[260px]"
-            />
+          <a href="#inicio" className="flex items-center gap-3">
+            <div className="rounded-2xl bg-brand-navy p-3 text-white"><Building2 size={24} /></div>
+            <div>
+              <p className="font-black text-slate-900">{company.name}</p>
+              <p className="text-xs font-semibold text-slate-500">Casetas y módulos prefabricados en Sevilla</p>
+            </div>
           </a>
           <nav className="hidden items-center gap-6 text-sm font-black text-slate-600 lg:flex">
             <button onClick={onStart} className="hover:text-brand-orange">Calculadora</button>
