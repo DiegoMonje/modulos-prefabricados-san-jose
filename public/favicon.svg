@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <title>Módulos Prefabricados San José</title>
+  <rect width="512" height="512" rx="96" fill="#ffffff"/>
+  <path d="M70 242A186 186 0 0 1 442 242" fill="none" stroke="#ff8200" stroke-width="34" stroke-linecap="round"/>
+  <path d="M442 270A186 186 0 0 1 70 270" fill="none" stroke="#002b55" stroke-width="34" stroke-linecap="round"/>
+  <path d="M150 190 250 130 382 156 382 338 150 360Z" fill="#ffffff" stroke="#002b55" stroke-width="22" stroke-linejoin="round"/>
+  <path d="M150 190 250 130 250 360 150 360Z" fill="#f6f8fb" stroke="#002b55" stroke-width="18" stroke-linejoin="round"/>
+  <path d="M250 130 382 156" fill="none" stroke="#002b55" stroke-width="18" stroke-linecap="round"/>
+  <path d="M286 218H334V338H286Z" fill="#002b55"/>
+  <path d="M342 230H382V290H342Z" fill="#ffffff" stroke="#002b55" stroke-width="14"/>
+  <path d="M180 206V342M210 188V354" stroke="#cbd5e1" stroke-width="9"/>
+  <path d="M258 196V344M370 174V330" stroke="#cbd5e1" stroke-width="9"/>
+  <circle cx="328" cy="280" r="5" fill="#ffffff"/>
+</svg>
