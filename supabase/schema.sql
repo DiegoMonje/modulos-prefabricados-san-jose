@@ -130,16 +130,16 @@ alter table public.quotes enable row level security;
 
 -- Web pública: crear solicitudes, configuración, proforma y newsletter.
 drop policy if exists "public_insert_leads" on public.leads;
-create policy "public_insert_leads" on public.leads for insert to anon with check (public.is_admin());
+create policy "public_insert_leads" on public.leads for insert to anon with check (true);
 
 drop policy if exists "public_insert_configurations" on public.configurations;
-create policy "public_insert_configurations" on public.configurations for insert to anon with check (public.is_admin());
+create policy "public_insert_configurations" on public.configurations for insert to anon with check (true);
 
 drop policy if exists "public_insert_newsletter" on public.newsletter_subscribers;
-create policy "public_insert_newsletter" on public.newsletter_subscribers for insert to anon with check (public.is_admin());
+create policy "public_insert_newsletter" on public.newsletter_subscribers for insert to anon with check (true);
 
 drop policy if exists "public_insert_quotes" on public.quotes;
-create policy "public_insert_quotes" on public.quotes for insert to anon with check (public.is_admin());
+create policy "public_insert_quotes" on public.quotes for insert to anon with check (true);
 
 -- Panel privado: usuarios autenticados pueden leer y gestionar.
 drop policy if exists "auth_select_leads" on public.leads;
