@@ -102,6 +102,26 @@ create trigger set_leads_updated_at
 before update on public.leads
 for each row execute function public.set_updated_at();
 
+
+-- Only explicitly allow-listed users may access customer data.
+create table if not exists public.admin_users (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  created_at timestamptz not null default now()
+);
+alter table public.admin_users enable row level security;
+
+create or replace function public.is_admin()
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $
+  select exists (select 1 from public.admin_users where user_id = auth.uid());
+$;
+revoke all on function public.is_admin() from public;
+grant execute on function public.is_admin() to authenticated;
+
 alter table public.leads enable row level security;
 alter table public.configurations enable row level security;
 alter table public.newsletter_subscribers enable row level security;
@@ -110,59 +130,59 @@ alter table public.quotes enable row level security;
 
 -- Web pública: crear solicitudes, configuración, proforma y newsletter.
 drop policy if exists "public_insert_leads" on public.leads;
-create policy "public_insert_leads" on public.leads for insert to anon with check (true);
+create policy "public_insert_leads" on public.leads for insert to anon with check (public.is_admin());
 
 drop policy if exists "public_insert_configurations" on public.configurations;
-create policy "public_insert_configurations" on public.configurations for insert to anon with check (true);
+create policy "public_insert_configurations" on public.configurations for insert to anon with check (public.is_admin());
 
 drop policy if exists "public_insert_newsletter" on public.newsletter_subscribers;
-create policy "public_insert_newsletter" on public.newsletter_subscribers for insert to anon with check (true);
+create policy "public_insert_newsletter" on public.newsletter_subscribers for insert to anon with check (public.is_admin());
 
 drop policy if exists "public_insert_quotes" on public.quotes;
-create policy "public_insert_quotes" on public.quotes for insert to anon with check (true);
+create policy "public_insert_quotes" on public.quotes for insert to anon with check (public.is_admin());
 
 -- Panel privado: usuarios autenticados pueden leer y gestionar.
 drop policy if exists "auth_select_leads" on public.leads;
-create policy "auth_select_leads" on public.leads for select to authenticated using (true);
+create policy "auth_select_leads" on public.leads for select to authenticated using (public.is_admin());
 
 drop policy if exists "auth_update_leads" on public.leads;
-create policy "auth_update_leads" on public.leads for update to authenticated using (true) with check (true);
+create policy "auth_update_leads" on public.leads for update to authenticated using (public.is_admin()) with check (public.is_admin());
 
 drop policy if exists "auth_delete_leads" on public.leads;
-create policy "auth_delete_leads" on public.leads for delete to authenticated using (true);
+create policy "auth_delete_leads" on public.leads for delete to authenticated using (public.is_admin());
 
 drop policy if exists "auth_select_configurations" on public.configurations;
-create policy "auth_select_configurations" on public.configurations for select to authenticated using (true);
+create policy "auth_select_configurations" on public.configurations for select to authenticated using (public.is_admin());
 
 drop policy if exists "auth_select_newsletter" on public.newsletter_subscribers;
-create policy "auth_select_newsletter" on public.newsletter_subscribers for select to authenticated using (true);
+create policy "auth_select_newsletter" on public.newsletter_subscribers for select to authenticated using (public.is_admin());
 
 drop policy if exists "auth_manage_notes" on public.notes;
-create policy "auth_manage_notes" on public.notes for all to authenticated using (true) with check (true);
+create policy "auth_manage_notes" on public.notes for all to authenticated using (public.is_admin()) with check (public.is_admin());
 
 drop policy if exists "auth_manage_quotes" on public.quotes;
-create policy "auth_manage_quotes" on public.quotes for all to authenticated using (true) with check (true);
+create policy "auth_manage_quotes" on public.quotes for all to authenticated using (public.is_admin()) with check (public.is_admin());
 
 -- Storage para PDFs de proformas.
 insert into storage.buckets (id, name, public)
-values ('quotes', 'quotes', true)
-on conflict (id) do update set public = true;
+values ('quotes', 'quotes', false)
+on conflict (id) do update set public = false;
 
 drop policy if exists "public_upload_quote_pdfs" on storage.objects;
 create policy "public_upload_quote_pdfs" on storage.objects
 for insert to anon
-with check (bucket_id = 'quotes');
+with check (
+  bucket_id = 'quotes'
+  and lower(storage.extension(name)) = 'pdf'
+  and coalesce((metadata ->> 'mimetype'), '') = 'application/pdf'
+);
 
 drop policy if exists "public_update_quote_pdfs" on storage.objects;
-create policy "public_update_quote_pdfs" on storage.objects
-for update to anon
-using (bucket_id = 'quotes')
-with check (bucket_id = 'quotes');
 
 drop policy if exists "public_read_quote_pdfs" on storage.objects;
-create policy "public_read_quote_pdfs" on storage.objects
-for select to anon, authenticated
-using (bucket_id = 'quotes');
+create policy "auth_read_quote_pdfs" on storage.objects
+for select to authenticated
+using (bucket_id = 'quotes' and public.is_admin());
 
 create index if not exists leads_created_at_idx on public.leads(created_at desc);
 create index if not exists configurations_lead_id_idx on public.configurations(lead_id);
