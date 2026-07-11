@@ -67,3 +67,14 @@ La lógica de coordenadas, snapping y colisiones está fuera de los componentes 
 - El mensaje de WhatsApp está centralizado en `src/utils/whatsapp.ts`.
 - El PDF usa el Stage de Konva exportado como imagen.
 - Los textos legales incluidos son una base informativa y conviene revisarlos con un profesional.
+
+## Migración de seguridad pendiente
+
+Esta rama hace privado el bucket `quotes` y limita el panel a usuarios incluidos en `public.admin_users`. Antes de desplegarla:
+
+1. Inserta el UUID del administrador en `public.admin_users`.
+2. Ejecuta `supabase/schema.sql` en el SQL Editor.
+3. Configura `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY` en Vercel.
+4. Verifica en Preview una solicitud y la apertura del PDF desde el panel.
+
+No promociones esta rama a producción antes de completar esos cuatro pasos.
