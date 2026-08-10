@@ -1,0 +1,16 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "www.modulosprefabricadossanjose.com"
+        }
+      ],
+      "destination": "https://modulosprefabricadossanjose.com/:path*",
+      "permanent": true
+    }
+  ]
+}
