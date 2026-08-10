@@ -1,4 +1,4 @@
-import { Building2, Calculator, CheckCircle2, Clock3, FileText, Image as ImageIcon, MapPin, MessageCircle, Phone, Ruler, ShieldCheck, Sparkles } from 'lucide-react';
+import { Calculator, CheckCircle2, Clock3, FileText, Image as ImageIcon, MapPin, MessageCircle, Phone, Ruler, ShieldCheck, Sparkles } from 'lucide-react';
 import { company, whatsappContactUrl } from '../../config/company';
 import { Button, Card } from '../ui/Ui';
 
@@ -65,7 +65,13 @@ export const LandingPage = ({ onStart, onLegalPage, onAdmin }: { onStart: () => 
       <header className="border-b border-slate-200 bg-white/95 backdrop-blur">
         <div className="container-page flex items-center justify-between gap-4 py-4">
           <a href="#inicio" className="flex items-center gap-3">
-            <div className="rounded-2xl bg-brand-navy p-3 text-white"><Building2 size={24} /></div>
+            <img
+              src="/images/logo-modulos-prefabricados-san-jose.png"
+              alt="Módulos Prefabricados San José S.L."
+              width="48"
+              height="48"
+              className="h-12 w-12 shrink-0 object-contain"
+            />
             <div>
               <p className="font-black text-slate-900">{company.name}</p>
               <p className="text-xs font-semibold text-slate-500">Casetas y módulos prefabricados en Sevilla</p>
