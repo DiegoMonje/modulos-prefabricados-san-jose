@@ -35,8 +35,8 @@ const uploadQuotePdf = async ({ leadId, fileName, pdfBlob }: { leadId: string; f
 
   if (uploadError) throw uploadError;
 
-  const { data } = client.storage.from(QUOTES_BUCKET).getPublicUrl(path);
-  return data.publicUrl || path;
+  // Store only the object path. Administrators receive a short-lived signed URL.
+  return path;
 };
 
 export const createLead = async ({
@@ -183,7 +183,17 @@ export const getLeads = async (): Promise<LeadRow[]> => {
     .select('*, configurations(*), notes(*), quotes(*)')
     .order('created_at', { ascending: false });
   if (error) throw error;
-  return (data || []) as LeadRow[];
+  const rows = (data || []) as LeadRow[];
+  await Promise.all(rows.flatMap((lead) => (lead.quotes || []).map(async (quote) => {
+    if (!quote.pdf_url) return;
+    const marker = '/object/public/quotes/';
+    const objectPath = quote.pdf_url.includes(marker)
+      ? decodeURIComponent(quote.pdf_url.split(marker)[1])
+      : quote.pdf_url;
+    const { data: signed } = await client.storage.from(QUOTES_BUCKET).createSignedUrl(objectPath, 300);
+    quote.pdf_url = signed?.signedUrl || null;
+  })));
+  return rows;
 };
 
 export const updateLeadStatus = async (leadId: string, status: LeadStatus) => {
