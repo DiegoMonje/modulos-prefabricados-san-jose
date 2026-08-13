@@ -295,7 +295,7 @@ const Footer = ({ onLegalPage, onAdmin }: { onLegalPage: (page: 'aviso-legal' | 
         <h3 className="text-sm font-black uppercase tracking-[0.18em] text-slate-400">Contacto</h3>
         <div className="mt-4 space-y-3 text-sm text-slate-300">
           <a href={`tel:${company.phoneHref}`} className="flex items-center gap-3 hover:text-white"><Phone size={18} className="text-brand-orange" /> {company.phone}</a>
-          <a href={whatsappContactUrl} target="_blank" rel="noreferrer" className="flex items-center gap-3 hover:text-white"><MessageCircle size={18} className="text-brand-green" /> WhatsApp {company.phone}</a>
+          <a href={whatsappContactUrl} target="_blank" rel="noreferrer" className="flex items-center gap-3 hover:text-white"><MessageCircle size={18} className="text-brand-green" /> WhatsApp {company.whatsapp}</a>
           <a href={`mailto:${company.email}`} className="break-all hover:text-white">{company.email}</a>
         </div>
       </div>
