@@ -56,9 +56,12 @@ const safeErrorMessage = (error: unknown) => error instanceof Error ? error.mess
 
 const inspectCommercialConfig = () => {
   if (cachedCommercialConfig) return { status: 'ready' as const, config: cachedCommercialConfig };
-  const rawConfig = process.env.COMMERCIAL_KNOWLEDGE_JSON;
+  const rawConfig = process.env.COMMERCIAL_KNOWLEDGE_PREVIEW_JSON
+    || process.env.COMMERCIAL_KNOWLEDGE_JSON;
   if (!rawConfig) {
-    const status = Object.prototype.hasOwnProperty.call(process.env, 'COMMERCIAL_KNOWLEDGE_JSON')
+    const hasConfiguredVariable = Object.prototype.hasOwnProperty.call(process.env, 'COMMERCIAL_KNOWLEDGE_PREVIEW_JSON')
+      || Object.prototype.hasOwnProperty.call(process.env, 'COMMERCIAL_KNOWLEDGE_JSON');
+    const status = hasConfiguredVariable
       ? 'empty' as const
       : 'missing' as const;
     return { status, config: null };
