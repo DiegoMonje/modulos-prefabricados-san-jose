@@ -54,12 +54,22 @@ const aiCredentialsAvailable = () => Boolean(
 
 const safeErrorMessage = (error: unknown) => error instanceof Error ? error.message.slice(0, 180) : 'Unknown error';
 
-const loadCommercialConfig = () => {
-  if (cachedCommercialConfig) return cachedCommercialConfig;
+const inspectCommercialConfig = () => {
+  if (cachedCommercialConfig) return { status: 'ready' as const, config: cachedCommercialConfig };
   const rawConfig = process.env.COMMERCIAL_KNOWLEDGE_JSON;
-  if (!rawConfig) throw new Error('COMMERCIAL_KNOWLEDGE_JSON is not configured');
-  cachedCommercialConfig = commercialConfigSchema.parse(JSON.parse(rawConfig));
-  return cachedCommercialConfig;
+  if (!rawConfig) return { status: 'missing' as const, config: null };
+  try {
+    cachedCommercialConfig = commercialConfigSchema.parse(JSON.parse(rawConfig));
+    return { status: 'ready' as const, config: cachedCommercialConfig };
+  } catch {
+    return { status: 'invalid' as const, config: null };
+  }
+};
+
+const loadCommercialConfig = () => {
+  const result = inspectCommercialConfig();
+  if (!result.config) throw new Error(`COMMERCIAL_KNOWLEDGE_JSON is ${result.status}`);
+  return result.config;
 };
 
 const handlePost = async (request: Request) => {
@@ -122,17 +132,12 @@ const handlePost = async (request: Request) => {
 export default {
   async fetch(request: Request) {
     if (request.method === 'GET') {
-      let knowledgeConfigured = false;
-      try {
-        loadCommercialConfig();
-        knowledgeConfigured = true;
-      } catch {
-        knowledgeConfigured = false;
-      }
+      const knowledge = inspectCommercialConfig();
       return json({
         status: 'ok',
         testMode: true,
-        knowledgeConfigured,
+        knowledgeConfigured: knowledge.status === 'ready',
+        knowledgeStatus: knowledge.status,
         aiConfigured: aiCredentialsAvailable(),
         model: aiCredentialsAvailable() ? (process.env.AI_MODEL || DEFAULT_COMMERCIAL_MODEL) : null,
         automaticMessages: false,
