@@ -4,7 +4,7 @@ import {
   type CommercialConfig,
   calculateCommercialQuote,
   estimateTransport,
-} from './commercialKnowledge';
+} from './commercialKnowledge.js';
 
 const quantity = z.number().int().min(0).max(10).default(0);
 

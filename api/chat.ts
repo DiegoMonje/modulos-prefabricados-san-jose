@@ -1,8 +1,10 @@
 import { z } from 'zod';
-import { createCommercialAgent, DEFAULT_COMMERCIAL_MODEL } from '../src/agent/commercialAgent';
-import { buildGuidedResponse } from '../src/agent/commercialKnowledge';
-import { persistChatTurn } from '../src/agent/chatPersistence';
-import { loadCommercialConfig } from '../src/agent/serverCommercialConfig';
+import { createCommercialAgent, DEFAULT_COMMERCIAL_MODEL } from '../src/agent/commercialAgent.js';
+import {
+  buildGuidedResponse,
+  commercialConfigSchema,
+  type CommercialConfig,
+} from '../src/agent/commercialKnowledge.js';
 
 const messageSchema = z.object({
   id: z.string().min(1).max(100),
@@ -19,6 +21,7 @@ type RateEntry = { count: number; resetAt: number };
 const rateEntries = new Map<string, RateEntry>();
 const RATE_WINDOW_MS = 60_000;
 const RATE_LIMIT = 12;
+let cachedCommercialConfig: CommercialConfig | null = null;
 
 const json = (body: unknown, status = 200) => Response.json(body, {
   status,
@@ -51,6 +54,14 @@ const aiCredentialsAvailable = () => Boolean(
 
 const safeErrorMessage = (error: unknown) => error instanceof Error ? error.message.slice(0, 180) : 'Unknown error';
 
+const loadCommercialConfig = () => {
+  if (cachedCommercialConfig) return cachedCommercialConfig;
+  const rawConfig = process.env.COMMERCIAL_KNOWLEDGE_JSON;
+  if (!rawConfig) throw new Error('COMMERCIAL_KNOWLEDGE_JSON is not configured');
+  cachedCommercialConfig = commercialConfigSchema.parse(JSON.parse(rawConfig));
+  return cachedCommercialConfig;
+};
+
 const handlePost = async (request: Request) => {
   const contentLength = Number(request.headers.get('content-length') || 0);
   if (contentLength > 40_000) return json({ error: 'La conversación es demasiado larga.' }, 413);
@@ -71,7 +82,7 @@ const handlePost = async (request: Request) => {
 
   let commercialConfig;
   try {
-    commercialConfig = await loadCommercialConfig(request.signal);
+    commercialConfig = loadCommercialConfig();
   } catch (error) {
     console.error('Private commercial configuration unavailable:', safeErrorMessage(error));
     return json({ error: 'El asistente de prueba todavía no tiene cargada su configuración comercial privada.' }, 503);
@@ -99,18 +110,11 @@ const handlePost = async (request: Request) => {
   }
 
   const assistantMessageId = crypto.randomUUID();
-  const persisted = await persistChatTurn({
-    sessionId: parsedBody.sessionId,
-    userMessage: { id: lastMessage.id, content: lastMessage.content },
-    assistantMessage: { id: assistantMessageId, content: reply },
-    responseMode: mode,
-  }, request.signal);
-
   return json({
     reply,
     assistantMessageId,
     mode,
-    persisted,
+    persisted: false,
     testMode: true,
   });
 };
@@ -120,7 +124,7 @@ export default {
     if (request.method === 'GET') {
       let knowledgeConfigured = false;
       try {
-        await loadCommercialConfig(request.signal);
+        loadCommercialConfig();
         knowledgeConfigured = true;
       } catch {
         knowledgeConfigured = false;

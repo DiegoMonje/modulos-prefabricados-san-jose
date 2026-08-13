@@ -1,6 +1,6 @@
 import { ToolLoopAgent, isStepCount } from 'ai';
-import type { CommercialConfig } from './commercialKnowledge';
-import { createCommercialTools } from './commercialTools';
+import type { CommercialConfig } from './commercialKnowledge.js';
+import { createCommercialTools } from './commercialTools.js';
 
 export const DEFAULT_COMMERCIAL_MODEL = 'openai/gpt-5.6-luna';
 
