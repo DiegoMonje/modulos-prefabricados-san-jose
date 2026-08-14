@@ -1,5 +1,5 @@
-import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
-import { Bot, ChevronDown, MessageCircle, Phone, RotateCcw, Send, X } from 'lucide-react';
+import { ChangeEvent, FormEvent, useEffect, useMemo, useRef, useState } from 'react';
+import { Bot, ChevronDown, MessageCircle, Phone, RotateCcw, Send, Upload, X } from 'lucide-react';
 import { company } from '../../config/company';
 import { chatbotIntro, quickQuestions, quoteWhatsappText } from './chatbotKnowledge';
 
@@ -20,6 +20,7 @@ type ConnectionMode = 'checking' | 'setup' | 'ai' | 'guided';
 
 const CHAT_MESSAGES_KEY = 'mpsj_test_chat_messages_v1';
 const CHAT_SESSION_KEY = 'mpsj_test_chat_session_v1';
+const CHAT_KNOWLEDGE_KEY = 'mpsj_private_commercial_knowledge_v1';
 
 const welcomeMessage: ChatMessage = {
   id: 'welcome-message',
@@ -53,6 +54,16 @@ const loadMessages = (): ChatMessage[] => {
   }
 };
 
+const loadPreviewKnowledge = (): unknown | null => {
+  try {
+    const stored = localStorage.getItem(CHAT_KNOWLEDGE_KEY);
+    return stored ? JSON.parse(stored) : null;
+  } catch {
+    localStorage.removeItem(CHAT_KNOWLEDGE_KEY);
+    return null;
+  }
+};
+
 export const ChatbotWidget = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState('');
@@ -60,6 +71,7 @@ export const ChatbotWidget = () => {
   const [sessionId, setSessionId] = useState(loadSessionId);
   const [isSending, setIsSending] = useState(false);
   const [connectionMode, setConnectionMode] = useState<ConnectionMode>('checking');
+  const [previewKnowledge, setPreviewKnowledge] = useState<unknown | null>(loadPreviewKnowledge);
   const [error, setError] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -80,14 +92,33 @@ export const ChatbotWidget = () => {
       .then((response) => response.ok ? response.json() : Promise.reject(new Error('Health check failed')))
       .then((health: { aiConfigured?: boolean; knowledgeConfigured?: boolean }) => {
         if (!active) return;
-        if (!health.knowledgeConfigured) setConnectionMode('setup');
+        if (!health.knowledgeConfigured) setConnectionMode(previewKnowledge ? 'guided' : 'setup');
         else setConnectionMode(health.aiConfigured ? 'ai' : 'guided');
       })
       .catch(() => {
         if (active) setConnectionMode('guided');
       });
     return () => { active = false; };
-  }, [isOpen]);
+  }, [isOpen, previewKnowledge]);
+
+  const handleKnowledgeFile = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const rawKnowledge = await file.text();
+      const parsedKnowledge: unknown = JSON.parse(rawKnowledge);
+      if (!parsedKnowledge || typeof parsedKnowledge !== 'object') throw new Error('Invalid knowledge file');
+      localStorage.setItem(CHAT_KNOWLEDGE_KEY, rawKnowledge);
+      setPreviewKnowledge(parsedKnowledge);
+      setConnectionMode('guided');
+      setError('');
+    } catch {
+      setError('No se ha podido cargar el archivo privado. Compruebe que sea el JSON del chatbot.');
+    } finally {
+      event.target.value = '';
+    }
+  };
 
   const sendQuestion = async (question: string) => {
     const content = question.trim();
@@ -107,7 +138,11 @@ export const ChatbotWidget = () => {
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-        body: JSON.stringify({ sessionId, messages: requestMessages }),
+        body: JSON.stringify({
+          sessionId,
+          messages: requestMessages,
+          ...(previewKnowledge ? { previewKnowledge } : {}),
+        }),
         signal: controller.signal,
       });
       const payload = await response.json() as ChatResponse | { error?: string };
@@ -197,6 +232,30 @@ export const ChatbotWidget = () => {
           </header>
 
           <div className="flex-1 space-y-3 overflow-y-auto bg-slate-50 p-4" aria-live="polite">
+            {connectionMode === 'setup' && !previewKnowledge && (
+              <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-amber-950 shadow-sm">
+                <p className="text-sm font-black">Cargue el conocimiento privado para iniciar la prueba</p>
+                <p className="mt-1 text-xs font-semibold leading-5">
+                  El archivo se guardará únicamente en este navegador y no se publicará en GitHub.
+                </p>
+                <label className="mt-3 inline-flex cursor-pointer items-center gap-2 rounded-xl bg-amber-500 px-3 py-2 text-xs font-black text-white transition hover:bg-amber-600">
+                  <Upload size={15} /> Seleccionar archivo JSON
+                  <input
+                    type="file"
+                    accept="application/json,.json"
+                    onChange={(event) => void handleKnowledgeFile(event)}
+                    className="sr-only"
+                  />
+                </label>
+              </div>
+            )}
+
+            {previewKnowledge !== null && (
+              <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-black text-emerald-800">
+                Conocimiento privado cargado en este navegador.
+              </div>
+            )}
+
             {messages.map((message) => (
               <div key={message.id} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                 <div className={`max-w-[88%] whitespace-pre-wrap rounded-2xl px-4 py-3 text-sm font-semibold leading-6 shadow-sm ${
@@ -216,6 +275,7 @@ export const ChatbotWidget = () => {
                     key={question}
                     type="button"
                     onClick={() => void sendQuestion(question)}
+                    disabled={connectionMode === 'setup' && !previewKnowledge}
                     className="rounded-2xl border border-slate-200 bg-white px-3 py-2.5 text-left text-xs font-black leading-4 text-slate-700 transition hover:border-brand-orange hover:bg-orange-50 hover:text-brand-orange"
                   >
                     {question}
@@ -247,14 +307,14 @@ export const ChatbotWidget = () => {
                 id="commercial-chat-input"
                 value={input}
                 onChange={(event) => setInput(event.target.value)}
-                disabled={isSending}
+                disabled={isSending || (connectionMode === 'setup' && !previewKnowledge)}
                 maxLength={2500}
                 placeholder="Ej.: precio de un 6 x 2,40 con baño"
                 className="min-w-0 flex-1 rounded-2xl border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-brand-orange focus:ring-2 focus:ring-orange-100 disabled:bg-slate-100"
               />
               <button
                 type="submit"
-                disabled={isSending || !input.trim()}
+                disabled={isSending || !input.trim() || (connectionMode === 'setup' && !previewKnowledge)}
                 className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-brand-orange text-white shadow-sm transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-50"
                 aria-label="Enviar consulta"
               >

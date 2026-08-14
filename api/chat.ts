@@ -15,6 +15,7 @@ const messageSchema = z.object({
 const chatRequestSchema = z.object({
   sessionId: z.string().uuid(),
   messages: z.array(messageSchema).min(1).max(14),
+  previewKnowledge: z.unknown().optional(),
 });
 
 type RateEntry = { count: number; resetAt: number };
@@ -120,12 +121,20 @@ const handlePost = async (request: Request) => {
   const lastMessage = parsedBody.messages[parsedBody.messages.length - 1];
   if (!lastMessage || lastMessage.role !== 'user') return json({ error: 'La última intervención debe ser una pregunta del cliente.' }, 400);
 
-  let commercialConfig;
-  try {
-    commercialConfig = loadCommercialConfig();
-  } catch (error) {
-    console.error('Private commercial configuration unavailable:', safeErrorMessage(error));
-    return json({ error: 'El asistente de prueba todavía no tiene cargada su configuración comercial privada.' }, 503);
+  let commercialConfig: CommercialConfig;
+  if (parsedBody.previewKnowledge !== undefined) {
+    try {
+      commercialConfig = commercialConfigSchema.parse(parsedBody.previewKnowledge);
+    } catch {
+      return json({ error: 'El archivo privado de conocimiento no tiene un formato válido.' }, 400);
+    }
+  } else {
+    try {
+      commercialConfig = loadCommercialConfig();
+    } catch (error) {
+      console.error('Private commercial configuration unavailable:', safeErrorMessage(error));
+      return json({ error: 'El asistente de prueba todavía no tiene cargada su configuración comercial privada.' }, 503);
+    }
   }
 
   let reply: string;
@@ -163,15 +172,6 @@ export default {
   async fetch(request: Request) {
     if (request.method === 'GET') {
       const knowledge = inspectCommercialConfig();
-      const environmentDiagnostics = {
-        runtimeEnvironment: process.env.VERCEL_ENV || null,
-        targetEnvironment: process.env.VERCEL_TARGET_ENV || null,
-        gitBranch: process.env.VERCEL_GIT_COMMIT_REF || null,
-        staticProbe: process.env.CHATBOT_STATIC_PROBE === 'vercel-json',
-        configuredParts: knowledge.configuredParts,
-        legacyPreviewVariable: Boolean(process.env.COMMERCIAL_KNOWLEDGE_PREVIEW_JSON),
-      };
-      console.info('Commercial chat environment diagnostics:', environmentDiagnostics);
       return json({
         status: 'ok',
         testMode: true,
@@ -181,11 +181,7 @@ export default {
         knowledgeDelivery: knowledge.status !== 'ready'
           ? 'none'
           : knowledge.configuredParts === COMMERCIAL_KNOWLEDGE_PART_NAMES.length ? 'split' : 'single',
-        environmentProbe: Boolean(process.env.CHATBOT_ENV_TEST),
-        runtimeEnvironment: environmentDiagnostics.runtimeEnvironment,
-        targetEnvironment: environmentDiagnostics.targetEnvironment,
-        gitBranch: environmentDiagnostics.gitBranch,
-        staticProbe: environmentDiagnostics.staticProbe,
+        browserKnowledgeAccepted: true,
         aiConfigured: aiCredentialsAvailable(),
         model: aiCredentialsAvailable() ? (process.env.AI_MODEL || DEFAULT_COMMERCIAL_MODEL) : null,
         automaticMessages: false,
