@@ -163,6 +163,15 @@ export default {
   async fetch(request: Request) {
     if (request.method === 'GET') {
       const knowledge = inspectCommercialConfig();
+      const environmentDiagnostics = {
+        runtimeEnvironment: process.env.VERCEL_ENV || null,
+        targetEnvironment: process.env.VERCEL_TARGET_ENV || null,
+        gitBranch: process.env.VERCEL_GIT_COMMIT_REF || null,
+        staticProbe: process.env.CHATBOT_STATIC_PROBE === 'vercel-json',
+        configuredParts: knowledge.configuredParts,
+        legacyPreviewVariable: Boolean(process.env.COMMERCIAL_KNOWLEDGE_PREVIEW_JSON),
+      };
+      console.info('Commercial chat environment diagnostics:', environmentDiagnostics);
       return json({
         status: 'ok',
         testMode: true,
@@ -173,6 +182,10 @@ export default {
           ? 'none'
           : knowledge.configuredParts === COMMERCIAL_KNOWLEDGE_PART_NAMES.length ? 'split' : 'single',
         environmentProbe: Boolean(process.env.CHATBOT_ENV_TEST),
+        runtimeEnvironment: environmentDiagnostics.runtimeEnvironment,
+        targetEnvironment: environmentDiagnostics.targetEnvironment,
+        gitBranch: environmentDiagnostics.gitBranch,
+        staticProbe: environmentDiagnostics.staticProbe,
         aiConfigured: aiCredentialsAvailable(),
         model: aiCredentialsAvailable() ? (process.env.AI_MODEL || DEFAULT_COMMERCIAL_MODEL) : null,
         automaticMessages: false,
