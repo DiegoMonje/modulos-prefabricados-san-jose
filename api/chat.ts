@@ -146,6 +146,7 @@ export default {
         testMode: true,
         knowledgeConfigured: knowledge.status === 'ready',
         knowledgeStatus: knowledge.status,
+        environmentProbe: process.env.CHATBOT_ENV_TEST === 'ok',
         aiConfigured: aiCredentialsAvailable(),
         model: aiCredentialsAvailable() ? (process.env.AI_MODEL || DEFAULT_COMMERCIAL_MODEL) : null,
         automaticMessages: false,
