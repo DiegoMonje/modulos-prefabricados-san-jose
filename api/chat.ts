@@ -168,6 +168,9 @@ export default {
         knowledgeConfigured: knowledge.status === 'ready',
         knowledgeStatus: knowledge.status,
         knowledgeParts: `${knowledge.configuredParts}/${COMMERCIAL_KNOWLEDGE_PART_NAMES.length}`,
+        knowledgeDelivery: knowledge.status !== 'ready'
+          ? 'none'
+          : knowledge.configuredParts === COMMERCIAL_KNOWLEDGE_PART_NAMES.length ? 'split' : 'single',
         environmentProbe: Object.prototype.hasOwnProperty.call(process.env, 'CHATBOT_ENV_TEST'),
         aiConfigured: aiCredentialsAvailable(),
         model: aiCredentialsAvailable() ? (process.env.AI_MODEL || DEFAULT_COMMERCIAL_MODEL) : null,
