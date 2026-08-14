@@ -22,6 +22,14 @@ const rateEntries = new Map<string, RateEntry>();
 const RATE_WINDOW_MS = 60_000;
 const RATE_LIMIT = 12;
 let cachedCommercialConfig: CommercialConfig | null = null;
+let cachedCommercialConfigParts = 0;
+
+const COMMERCIAL_KNOWLEDGE_PART_NAMES = [
+  'COMMERCIAL_KNOWLEDGE_PART_1',
+  'COMMERCIAL_KNOWLEDGE_PART_2',
+  'COMMERCIAL_KNOWLEDGE_PART_3',
+  'COMMERCIAL_KNOWLEDGE_PART_4',
+] as const;
 
 const json = (body: unknown, status = 200) => Response.json(body, {
   status,
@@ -55,22 +63,35 @@ const aiCredentialsAvailable = () => Boolean(
 const safeErrorMessage = (error: unknown) => error instanceof Error ? error.message.slice(0, 180) : 'Unknown error';
 
 const inspectCommercialConfig = () => {
-  if (cachedCommercialConfig) return { status: 'ready' as const, config: cachedCommercialConfig };
-  const rawConfig = process.env.COMMERCIAL_KNOWLEDGE_PREVIEW_JSON
+  if (cachedCommercialConfig) {
+    return { status: 'ready' as const, config: cachedCommercialConfig, configuredParts: cachedCommercialConfigParts };
+  }
+  const singleVariableConfig = process.env.COMMERCIAL_KNOWLEDGE_PREVIEW_JSON
     || process.env.COMMERCIAL_KNOWLEDGE_JSON;
+  const configuredParts = COMMERCIAL_KNOWLEDGE_PART_NAMES
+    .filter((name) => Object.prototype.hasOwnProperty.call(process.env, name));
+  const splitVariableConfig = configuredParts.length === COMMERCIAL_KNOWLEDGE_PART_NAMES.length
+    && COMMERCIAL_KNOWLEDGE_PART_NAMES.every((name) => Boolean(process.env[name]))
+    ? COMMERCIAL_KNOWLEDGE_PART_NAMES.map((name) => process.env[name] || '').join('')
+    : null;
+  const rawConfig = splitVariableConfig || singleVariableConfig;
+
   if (!rawConfig) {
-    const hasConfiguredVariable = Object.prototype.hasOwnProperty.call(process.env, 'COMMERCIAL_KNOWLEDGE_PREVIEW_JSON')
+    const hasSingleVariable = Object.prototype.hasOwnProperty.call(process.env, 'COMMERCIAL_KNOWLEDGE_PREVIEW_JSON')
       || Object.prototype.hasOwnProperty.call(process.env, 'COMMERCIAL_KNOWLEDGE_JSON');
-    const status = hasConfiguredVariable
+    const status = configuredParts.length > 0 && configuredParts.length < COMMERCIAL_KNOWLEDGE_PART_NAMES.length
+      ? 'partial' as const
+      : hasSingleVariable || configuredParts.length === COMMERCIAL_KNOWLEDGE_PART_NAMES.length
       ? 'empty' as const
       : 'missing' as const;
-    return { status, config: null };
+    return { status, config: null, configuredParts: configuredParts.length };
   }
   try {
     cachedCommercialConfig = commercialConfigSchema.parse(JSON.parse(rawConfig));
-    return { status: 'ready' as const, config: cachedCommercialConfig };
+    cachedCommercialConfigParts = configuredParts.length;
+    return { status: 'ready' as const, config: cachedCommercialConfig, configuredParts: configuredParts.length };
   } catch {
-    return { status: 'invalid' as const, config: null };
+    return { status: 'invalid' as const, config: null, configuredParts: configuredParts.length };
   }
 };
 
@@ -146,6 +167,7 @@ export default {
         testMode: true,
         knowledgeConfigured: knowledge.status === 'ready',
         knowledgeStatus: knowledge.status,
+        knowledgeParts: `${knowledge.configuredParts}/${COMMERCIAL_KNOWLEDGE_PART_NAMES.length}`,
         environmentProbe: Object.prototype.hasOwnProperty.call(process.env, 'CHATBOT_ENV_TEST'),
         aiConfigured: aiCredentialsAvailable(),
         model: aiCredentialsAvailable() ? (process.env.AI_MODEL || DEFAULT_COMMERCIAL_MODEL) : null,

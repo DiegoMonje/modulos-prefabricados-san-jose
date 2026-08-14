@@ -29,11 +29,16 @@ VITE_SUPABASE_ANON_KEY=tu_anon_key
 AI_GATEWAY_API_KEY=tu_clave_opcional_de_ai_gateway
 AI_MODEL=openai/gpt-5.6-luna
 COMMERCIAL_KNOWLEDGE_JSON=configuracion_privada_opcional
+# Alternativa para previews cuando la plataforma limita el tamaño por variable:
+COMMERCIAL_KNOWLEDGE_PART_1=primer_fragmento
+COMMERCIAL_KNOWLEDGE_PART_2=segundo_fragmento
+COMMERCIAL_KNOWLEDGE_PART_3=tercer_fragmento
+COMMERCIAL_KNOWLEDGE_PART_4=cuarto_fragmento
 ```
 
 En Vercel, AI Gateway puede autenticarse con el token OIDC del despliegue sin guardar una clave permanente. Para desarrollo local puede usarse `AI_GATEWAY_API_KEY`.
 
-`COMMERCIAL_KNOWLEDGE_JSON` es exclusivamente de servidor: nunca debe llevar el prefijo `VITE_` ni llegar al navegador. Si la IA no está configurada o falla, el chat cambia automáticamente al modo guiado usando la misma configuración comercial privada.
+Las variables `COMMERCIAL_KNOWLEDGE_*` son exclusivamente de servidor: nunca deben llevar el prefijo `VITE_` ni llegar al navegador. Se puede usar una sola variable JSON o los cuatro fragmentos numerados; no se deben combinar ambos formatos. Si la IA no está configurada o falla, el chat cambia automáticamente al modo guiado usando la misma configuración comercial privada.
 
 ## Despliegue en Vercel
 
@@ -54,7 +59,7 @@ Ejecuta el archivo `supabase/schema.sql` en el SQL editor de Supabase.
 - `src/agent/commercialAgent.ts`: comportamiento del agente y modelo configurable.
 - `api/chat.ts`: función segura de Vercel consumida por el widget.
 
-El manual, los precios del agente, las referencias de transporte, la cola y las reglas internas no se guardan en GitHub. La preview los recibe exclusivamente desde la variable cifrada `COMMERCIAL_KNOWLEDGE_JSON` de Vercel y no persiste las conversaciones. La primera fase es exclusivamente de prueba: no envía proformas ni mensajes, no procesa pagos y no reserva turnos.
+El manual, los precios del agente, las referencias de transporte, la cola y las reglas internas no se guardan en GitHub. La preview los recibe exclusivamente desde variables cifradas `COMMERCIAL_KNOWLEDGE_*` de Vercel y no persiste las conversaciones. La primera fase es exclusivamente de prueba: no envía proformas ni mensajes, no procesa pagos y no reserva turnos.
 
 Para comprobar las reglas numéricas principales:
 
