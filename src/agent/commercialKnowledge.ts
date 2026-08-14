@@ -269,6 +269,7 @@ export const formatEuro = (value: number) =>
   new Intl.NumberFormat('es-ES', {
     style: 'currency',
     currency: 'EUR',
+    useGrouping: true,
     minimumFractionDigits: Number.isInteger(value) ? 0 : 2,
     maximumFractionDigits: 2,
   }).format(value);
@@ -288,57 +289,116 @@ const renderTemplate = (template: string, values: Record<string, string | number
     template,
   );
 
+const formatDimension = (value: number) =>
+  new Intl.NumberFormat('es-ES', {
+    minimumFractionDigits: Number.isInteger(value) ? 0 : 1,
+    maximumFractionDigits: 2,
+  }).format(value);
+
+const renderQuoteResponse = (config: CommercialConfig, quote: CommercialQuote) => {
+  const dimensions = `${formatDimension(quote.length)} x ${formatDimension(quote.width)} m`;
+  const hasExtras = quote.extras.length > 0;
+  const lines = [
+    hasExtras
+      ? `El precio calculado para el módulo de ${dimensions} es ${formatEuro(quote.subtotalWithoutVat!)} + IVA (${formatEuro(quote.totalWithVat!)} con IVA).`
+      : `El módulo diáfano de ${dimensions} cuesta ${formatEuro(quote.subtotalWithoutVat!)} + IVA (${formatEuro(quote.totalWithVat!)} con IVA).`,
+  ];
+
+  if (hasExtras) {
+    lines.push('', 'Desglose:');
+    lines.push(`- Módulo diáfano: ${formatEuro(quote.basePriceWithoutVat!)} + IVA.`);
+    quote.extras.forEach((item) => {
+      const quantity = item.quantity > 1 ? ` (${item.quantity} unidades)` : '';
+      lines.push(`- ${item.label}${quantity}: ${formatEuro(item.total)} + IVA.`);
+    });
+  }
+
+  if (quote.extras.some(({ key }) => key === 'completeBathroom')) {
+    lines.push('', `${config.bathroomNotePrefix} ${config.completeBathroomIncludes.join(', ')}.`);
+  }
+
+  lines.push('', `El transporte va aparte y el presupuesto tiene una validez habitual de ${quote.quoteValidityDays} días.`);
+  return lines.join('\n');
+};
+
+const requestsBathroom = (normalized: string) => {
+  const mentionsBathroom = /\b(bano|cuarto de bano)\b/.test(normalized);
+  const rejectsBathroom = /\b(sin|no quiero|no llevara|no lleva)\s+(?:un\s+|el\s+)?(?:bano|cuarto de bano)\b/.test(normalized);
+  return mentionsBathroom && !rejectsBathroom;
+};
+
+const extractTransportLocation = (message: string) => {
+  const match = message.match(/\b(?:hasta|hacia|para|a)\s+([a-záéíóúüñ][a-záéíóúüñ\s-]{1,80}?)(?:\s*[?.!,]|$)/i);
+  return match?.[1].trim() || null;
+};
+
+const getMatchingFactTopics = (normalized: string): CommercialFactTopic[] => {
+  const matchers: Array<[CommercialFactTopic, RegExp]> = [
+    ['access', /\b(acceso|camion|grua|cable|arbol|camino|finca|maniobra|descargar)\b/],
+    ['payment', /\b(pago|paga|pagar|abono|abonar|adelanto|adelantado|senal|reserva|factura|transferencia|presupuesto|validez)\b/],
+    ['changes', /\b(cambio|cambiar|modificar|cancelacion|cancelar|devolucion|materiales)\b/],
+    ['permits', /\b(permiso|licencia|ayuntamiento|municipal|via publica|cortar la calle)\b/],
+    ['panels', /\b(grosor|panel|techo|altura|canalon|evacuacion|milimetros|mm)\b/],
+    ['structure', /\b(estructura|tubo|galvanizado|pilar|travesano|suelo|osb|carga|pavimento|vinilo)\b/],
+    ['openings', /\b(puerta|ventana|reja|cristal|persiana|bisagra)\b/],
+    ['electricity', /\b(electricidad|electrica|enchufe|toma de corriente|punto de luz|luminaria|cuadro electrico|termo)\b/],
+    ['uses', /\b(vivienda|oficina|almacen|vestuario|sala|comedor|caseta de obra|uso)\b/],
+    ['delivery', /\b(colocacion|nivelacion|nivelar|solera|apoyo|saneamiento|conexion|conectar|montaje|terreno)\b/],
+  ];
+  return matchers.filter(([, matcher]) => matcher.test(normalized)).map(([topic]) => topic);
+};
+
 export const buildGuidedResponse = (config: CommercialConfig, message: string) => {
   const normalized = normalizeText(message);
   const dimensions = extractDimensions(message);
+  const bathroomRequested = requestsBathroom(normalized);
+  const requestsPrice = /\b(precio|cuesta|costar|presupuesto|importe|sale|valdria|valor)\b/.test(normalized);
 
-  if (dimensions && /(precio|cuesta|costar|presupuesto|modulo|caseta|bano)/.test(normalized)) {
-    const hasCompleteBathroom = /bano completo/.test(normalized);
+  if (dimensions && requestsPrice) {
     const quote = calculateCommercialQuote(config, {
       ...dimensions,
-      extras: hasCompleteBathroom ? { completeBathroom: 1 } : {},
+      extras: bathroomRequested ? { completeBathroom: 1 } : {},
     });
     if (quote.status === 'review-required') {
       return renderTemplate(config.guidedResponses.customMeasure, dimensions);
     }
-    return renderTemplate(config.guidedResponses.calculatedPrice, {
-      subtotal: formatEuro(quote.subtotalWithoutVat!),
-      total: formatEuro(quote.totalWithVat!),
-    });
+    return renderQuoteResponse(config, quote);
+  }
+
+  if (bathroomRequested && requestsPrice) {
+    return 'Para calcular correctamente un módulo con baño completo necesito saber la medida exterior, por ejemplo 6 x 2,40 m.';
   }
 
   if (/transporte|porte|llevar|envio/.test(normalized)) {
     const match = findTransportReference(config, message);
-    if (!match) return config.guidedResponses.transportQuestion;
-    const estimate = estimateTransport(config, match.label);
+    const requestedLocation = match?.label || extractTransportLocation(message);
+    if (!requestedLocation) return config.guidedResponses.transportQuestion;
+    const estimate = estimateTransport(config, requestedLocation);
     const amount = estimate.minimum === estimate.maximum
       ? formatEuro(estimate.minimum)
-      : `entre ${formatEuro(estimate.minimum)} y ${formatEuro(estimate.maximum)}`;
-    return renderTemplate(config.guidedResponses.transportEstimate, {
-      location: match.label,
+      : `una horquilla de ${formatEuro(estimate.minimum)} a ${formatEuro(estimate.maximum)}`;
+    const response = renderTemplate(config.guidedResponses.transportEstimate, {
+      location: requestedLocation,
       amount,
       disclaimer: config.transport.disclaimer,
     });
+    return `${response} ${config.transport.accessNotice}`;
   }
 
-  const topic: CommercialFactTopic | null = /grosor|panel/.test(normalized)
-    ? 'panels'
-    : /pago|adelanto|senal|reserva/.test(normalized)
-      ? 'payment'
-      : /acceso|camion|grua|cable|arbol|camino|finca/.test(normalized)
-        ? 'access'
-        : /cancel/.test(normalized)
-          ? 'changes'
-          : null;
-
-  if (topic) return config.facts[topic].facts.join(' ');
-
-  if (/plazo|tarda|fabricacion|cola|entrega/.test(normalized)) {
+  if (/plazo|tarda|fabricacion|cola|cuando.*entrega|fecha.*entrega/.test(normalized)) {
     return renderTemplate(config.guidedResponses.production, {
       standardLeadTime: config.production.standardLeadTimeBusinessDays,
       bathroomLeadTime: config.production.completeBathroomLeadTimeBusinessDays,
       reservationRule: config.production.reservationRule,
     });
+  }
+
+  const topics = getMatchingFactTopics(normalized);
+  if (topics.length) {
+    return topics
+      .slice(0, 2)
+      .map((topic) => `${config.facts[topic].title}: ${config.facts[topic].facts.join(' ')}`)
+      .join('\n\n');
   }
 
   return config.guidedResponses.default;

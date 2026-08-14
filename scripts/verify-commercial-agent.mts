@@ -2,10 +2,12 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import {
   calculateCommercialQuote,
+  buildGuidedResponse,
   commercialConfigSchema,
   estimateTransport,
   extraPriceKeys,
   factTopics,
+  formatEuro,
   getStandardBasePrice,
 } from '../src/agent/commercialKnowledge.ts';
 
@@ -19,10 +21,13 @@ const fakeConfig = commercialConfigSchema.parse({
   bathroomNotePrefix: 'test fixture',
   basePrices: [{ length: 3, width: 2, price: 1000 }],
   extraPrices: Object.fromEntries(extraPriceKeys.map((key) => [key, 100])),
-  extraLabels: Object.fromEntries(extraPriceKeys.map((key) => [key, `Test ${key}`])),
+  extraLabels: Object.fromEntries(extraPriceKeys.map((key) => [
+    key,
+    key === 'completeBathroom' ? 'Baño completo' : `Test ${key}`,
+  ])),
   completeBathroomIncludes: ['test fixture'],
   standardModuleIncludes: ['test fixture'],
-  facts: Object.fromEntries(factTopics.map((topic) => [topic, { title: topic, facts: ['test fixture'] }])),
+  facts: Object.fromEntries(factTopics.map((topic) => [topic, { title: topic, facts: [`${topic} information`] }])),
   transport: {
     references: [{
       aliases: ['Testville'],
@@ -78,10 +83,48 @@ assert.equal(transport.minimum, 25);
 assert.equal(transport.maximum, 35);
 assert.equal(transport.requiresCarrierConfirmation, true);
 
+const bathroomQuestion = '¿Cuánto cuesta un módulo de 3 x 2 con baño?';
+const completeBathroomQuestion = '¿Qué precio tiene un módulo de 3 x 2 con baño completo?';
+const bathroomReply = buildGuidedResponse(fakeConfig, bathroomQuestion);
+const completeBathroomReply = buildGuidedResponse(fakeConfig, completeBathroomQuestion);
+assert.match(bathroomReply, /1\.100/);
+assert.match(bathroomReply, /Baño completo/i);
+assert.equal(bathroomReply, completeBathroomReply);
+
+const openPlanReply = buildGuidedResponse(fakeConfig, '¿Cuánto cuesta un módulo diáfano de 3 x 2 sin baño?');
+assert.match(openPlanReply, /1\.000/);
+assert.doesNotMatch(openPlanReply, /Baño completo/i);
+
+assert.match(buildGuidedResponse(fakeConfig, '¿De qué grosor es el panel?'), /panels information/);
+assert.match(buildGuidedResponse(fakeConfig, '¿Cómo se paga el pedido?'), /payment information/);
+assert.match(buildGuidedResponse(fakeConfig, '¿Puede entrar el camión por mi finca?'), /access information/);
+const knownTransportReply = buildGuidedResponse(fakeConfig, '¿Cuánto cuesta el transporte hasta Testville?');
+assert.match(knownTransportReply, /Test access notice/);
+assert.doesNotMatch(knownTransportReply, /en entre/);
+const broadTransportReply = buildGuidedResponse(fakeConfig, '¿Cuánto cuesta el transporte hasta New Town?');
+assert.match(broadTransportReply, /New Town/);
+assert.doesNotMatch(broadTransportReply, /a el transporte/);
+assert.match(buildGuidedResponse(fakeConfig, '¿Cuánto tarda un módulo con baño?'), /Test 1-2 3/);
+
 console.log('Commercial agent engine verified with non-production fixtures.');
 
 if (process.env.COMMERCIAL_KNOWLEDGE_PATH) {
   const privateConfig = JSON.parse(await readFile(process.env.COMMERCIAL_KNOWLEDGE_PATH, 'utf8'));
-  commercialConfigSchema.parse(privateConfig);
-  console.log('Private commercial configuration schema verified without printing its contents.');
+  const verifiedPrivateConfig = commercialConfigSchema.parse(privateConfig);
+  const privateBasePrice = getStandardBasePrice(verifiedPrivateConfig, 6, 2.4);
+  assert.notEqual(privateBasePrice, null);
+  const privateBathroomSubtotal = privateBasePrice! + verifiedPrivateConfig.extraPrices.completeBathroom;
+  const shortBathroomReply = buildGuidedResponse(
+    verifiedPrivateConfig,
+    '¿Qué precio tiene un módulo de 6 x 2,4 con baño?',
+  );
+  const explicitBathroomReply = buildGuidedResponse(
+    verifiedPrivateConfig,
+    '¿Qué precio tiene un módulo de 6 x 2,4 con baño completo?',
+  );
+  assert.match(shortBathroomReply, new RegExp(formatEuro(privateBathroomSubtotal).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+  assert.equal(shortBathroomReply, explicitBathroomReply);
+  assert.match(shortBathroomReply, /punto de luz adicional/i);
+  assert.match(shortBathroomReply, /toma de corriente adicional/i);
+  console.log('Private commercial configuration and bathroom pricing behavior verified without printing prices.');
 }

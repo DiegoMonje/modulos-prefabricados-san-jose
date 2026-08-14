@@ -14,7 +14,7 @@ export const createCommercialTools = (config: CommercialConfig) => ({
     inputSchema: z.object({
       length: z.number().min(1).max(20).describe('Largo del módulo en metros.'),
       width: z.number().min(1).max(5).describe('Ancho del módulo en metros.'),
-      completeBathroom: quantity.describe('Número de baños completos.'),
+      completeBathroom: quantity.describe('Número de baños completos. El paquete ya incluye todos los elementos definidos en completeBathroomIncludes; no dupliques esos elementos como extras adicionales.'),
       additionalExteriorDoor: quantity,
       interiorDoor: quantity,
       window80x80: quantity,
