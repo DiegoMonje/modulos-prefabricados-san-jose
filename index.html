@@ -16,14 +16,17 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Manrope:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
 
-    <!-- Google Ads: Consent Mode v2 + seguimiento de llamadas desde la web. -->
+    <!-- Google Analytics + Google Ads: una sola carga de gtag.js con Consent Mode v2. -->
     <script>
       (() => {
         const consentStorageKey = 'mpsj_cookie_consent';
-        const googleTagId = 'AW-975990655';
+        const googleAnalyticsId = 'G-1ZYHDJYQQN';
+        const googleAdsTagId = 'AW-975990655';
         const phoneConversionId = 'AW-975990655/GPGlCNL12-IcEP_esdED';
         const googleTagScriptId = 'mpsj-google-tag';
-        let googleTagConfigured = false;
+        let googleLibraryConfigured = false;
+        let googleAnalyticsConfigured = false;
+        let googleAdsConfigured = false;
 
         window.dataLayer = window.dataLayer || [];
         window.gtag = window.gtag || function () { window.dataLayer.push(arguments); };
@@ -36,19 +39,33 @@
         });
         window.gtag('set', 'ads_data_redaction', true);
 
-        const loadGoogleTag = () => {
+        const ensureGoogleTagLoaded = (bootstrapId) => {
           if (!document.getElementById(googleTagScriptId)) {
             const script = document.createElement('script');
             script.id = googleTagScriptId;
             script.async = true;
-            script.src = `https://www.googletagmanager.com/gtag/js?id=${googleTagId}`;
+            script.src = `https://www.googletagmanager.com/gtag/js?id=${bootstrapId}`;
             document.head.appendChild(script);
           }
 
-          if (googleTagConfigured) return;
-          googleTagConfigured = true;
-          window.gtag('js', new Date());
-          window.gtag('config', googleTagId);
+          if (!googleLibraryConfigured) {
+            googleLibraryConfigured = true;
+            window.gtag('js', new Date());
+          }
+        };
+
+        const configureAnalytics = () => {
+          ensureGoogleTagLoaded(googleAnalyticsId);
+          if (googleAnalyticsConfigured) return;
+          googleAnalyticsConfigured = true;
+          window.gtag('config', googleAnalyticsId);
+        };
+
+        const configureGoogleAds = () => {
+          ensureGoogleTagLoaded(googleAdsTagId);
+          if (googleAdsConfigured) return;
+          googleAdsConfigured = true;
+          window.gtag('config', googleAdsTagId);
           window.gtag('config', phoneConversionId, {
             phone_conversion_number: '600227252',
           });
@@ -62,7 +79,8 @@
             analytics_storage: analytics ? 'granted' : 'denied',
           });
 
-          if (marketing) loadGoogleTag();
+          if (analytics) configureAnalytics();
+          if (marketing) configureGoogleAds();
         };
 
         try {
