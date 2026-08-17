@@ -16,6 +16,89 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Manrope:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
 
+    <!-- Google Analytics + Google Ads: una sola carga de gtag.js con Consent Mode v2. -->
+    <script>
+      (() => {
+        const consentStorageKey = 'mpsj_cookie_consent';
+        const googleAnalyticsId = 'G-1ZYHDJYQQN';
+        const googleAdsTagId = 'AW-975990655';
+        const phoneConversionId = 'AW-975990655/GPGlCNL12-IcEP_esdED';
+        const googleTagScriptId = 'mpsj-google-tag';
+        let googleLibraryConfigured = false;
+        let googleAnalyticsConfigured = false;
+        let googleAdsConfigured = false;
+
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = window.gtag || function () { window.dataLayer.push(arguments); };
+
+        window.gtag('consent', 'default', {
+          ad_storage: 'denied',
+          ad_user_data: 'denied',
+          ad_personalization: 'denied',
+          analytics_storage: 'denied',
+        });
+        window.gtag('set', 'ads_data_redaction', true);
+
+        const ensureGoogleTagLoaded = (bootstrapId) => {
+          if (!document.getElementById(googleTagScriptId)) {
+            const script = document.createElement('script');
+            script.id = googleTagScriptId;
+            script.async = true;
+            script.src = `https://www.googletagmanager.com/gtag/js?id=${bootstrapId}`;
+            document.head.appendChild(script);
+          }
+
+          if (!googleLibraryConfigured) {
+            googleLibraryConfigured = true;
+            window.gtag('js', new Date());
+          }
+        };
+
+        const configureAnalytics = () => {
+          ensureGoogleTagLoaded(googleAnalyticsId);
+          if (googleAnalyticsConfigured) return;
+          googleAnalyticsConfigured = true;
+          window.gtag('config', googleAnalyticsId);
+        };
+
+        const configureGoogleAds = () => {
+          ensureGoogleTagLoaded(googleAdsTagId);
+          if (googleAdsConfigured) return;
+          googleAdsConfigured = true;
+          window.gtag('config', googleAdsTagId);
+          window.gtag('config', phoneConversionId, {
+            phone_conversion_number: '600227252',
+          });
+        };
+
+        window.mpsjSetGoogleConsent = ({ analytics = false, marketing = false } = {}) => {
+          window.gtag('consent', 'update', {
+            ad_storage: marketing ? 'granted' : 'denied',
+            ad_user_data: marketing ? 'granted' : 'denied',
+            ad_personalization: marketing ? 'granted' : 'denied',
+            analytics_storage: analytics ? 'granted' : 'denied',
+          });
+
+          if (analytics) configureAnalytics();
+          if (marketing) configureGoogleAds();
+        };
+
+        try {
+          const storedConsent = JSON.parse(window.localStorage.getItem(consentStorageKey) || 'null');
+          if (storedConsent?.status === 'accepted') {
+            window.mpsjSetGoogleConsent({ analytics: true, marketing: true });
+          } else if (storedConsent?.status === 'configured') {
+            window.mpsjSetGoogleConsent({
+              analytics: storedConsent.analytics === true,
+              marketing: storedConsent.marketing === true,
+            });
+          }
+        } catch {
+          // Si la preferencia guardada no es válida, se mantiene el consentimiento denegado.
+        }
+      })();
+    </script>
+
     <title>Módulos Prefabricados en Sevilla | Calcula tu Precio</title>
 
     <meta name="description" content="Módulos prefabricados desde 4.750 €. Para terrenos, parcelas, oficinas o trasteros. Gran aislamiento térmico y fabricación rápida. Llama o escribe por WhatsApp." />

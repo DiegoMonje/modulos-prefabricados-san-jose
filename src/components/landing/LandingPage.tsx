@@ -1,6 +1,7 @@
 import { Calculator, CheckCircle2, Clock3, FileText, Image as ImageIcon, MapPin, MessageCircle, Phone, Ruler, ShieldCheck, Sparkles } from 'lucide-react';
 import { company, whatsappContactUrl } from '../../config/company';
 import { Button, Card } from '../ui/Ui';
+import { OPEN_COOKIE_SETTINGS_EVENT } from '../legal/CookieBanner';
 
 const useCases = [
   ['Casetas para fincas', 'Para herramientas, maquinaria, aperos o zonas de descanso en terrenos particulares.'],
@@ -305,6 +306,7 @@ const Footer = ({ onLegalPage, onAdmin }: { onLegalPage: (page: 'aviso-legal' | 
           <button onClick={() => onLegalPage('aviso-legal')} className="block hover:text-white">Aviso legal</button>
           <button onClick={() => onLegalPage('privacidad')} className="block hover:text-white">Política de privacidad</button>
           <button onClick={() => onLegalPage('cookies')} className="block hover:text-white">Política de cookies</button>
+          <button onClick={() => window.dispatchEvent(new Event(OPEN_COOKIE_SETTINGS_EVENT))} className="block hover:text-white">Configurar cookies</button>
           <button onClick={onAdmin} className="block text-slate-500 hover:text-white">Panel privado</button>
         </div>
       </div>

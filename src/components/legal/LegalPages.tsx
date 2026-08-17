@@ -5,7 +5,7 @@ import { Button, Card } from '../ui/Ui';
 
 export type LegalPageType = 'aviso-legal' | 'privacidad' | 'cookies' | 'condiciones';
 
-const lastUpdated = '15 de mayo de 2026';
+const lastUpdated = '16 de agosto de 2026';
 
 const pageConfig: Record<LegalPageType, { title: string; icon: typeof FileText; intro: string }> = {
   'aviso-legal': {
@@ -21,7 +21,7 @@ const pageConfig: Record<LegalPageType, { title: string; icon: typeof FileText; 
   cookies: {
     title: 'Política de cookies',
     icon: Cookie,
-    intro: 'Información sobre cookies técnicas, almacenamiento local y posibles herramientas de analítica o marketing si se activan en el futuro.',
+    intro: 'Información sobre cookies técnicas, almacenamiento local y medición de conversiones publicitarias con Google Ads.',
   },
   condiciones: {
     title: 'Condiciones de venta',
@@ -165,6 +165,7 @@ const Privacidad = () => (
       <p>Con carácter general, no vendemos ni cedemos datos personales a terceros. No obstante, pueden acceder a determinados datos proveedores necesarios para prestar el servicio o gestionar la actividad:</p>
       <LegalList>
         <li>Proveedores de hosting, mantenimiento web, correo electrónico o herramientas técnicas.</li>
+        <li>Google Ads, cuando el usuario acepta las cookies de marketing, para medir llamadas y otras conversiones procedentes de campañas publicitarias.</li>
         <li>Servicios de mensajería o comunicación utilizados por el usuario, como WhatsApp, cuando el cliente decide contactar por ese medio.</li>
         <li>Asesoría, gestoría o administración cuando sea necesario para facturación, contabilidad u obligaciones legales.</li>
         <li>Transportistas o colaboradores de confianza cuando el cliente solicite ayuda para coordinar transporte o entrega.</li>
@@ -199,8 +200,8 @@ const Cookies = () => (
       <LegalList>
         <li><strong>Cookies técnicas o necesarias:</strong> permiten el funcionamiento básico de la web y no requieren consentimiento cuando son imprescindibles.</li>
         <li><strong>Almacenamiento de preferencias:</strong> se utiliza para recordar la decisión del usuario sobre el banner de cookies.</li>
-        <li><strong>Analítica:</strong> solo debería activarse si se instala una herramienta para medir visitas y el usuario la acepta o configura.</li>
-        <li><strong>Marketing:</strong> solo debería activarse si en el futuro se instalan píxeles publicitarios, remarketing o herramientas similares y el usuario lo consiente.</li>
+        <li><strong>Analítica:</strong> se mantiene desactivada salvo que el usuario la acepte o la habilite expresamente desde la configuración.</li>
+        <li><strong>Marketing:</strong> permite activar Google Ads para medir llamadas y conversiones procedentes de campañas publicitarias. Solo se carga con el consentimiento del usuario.</li>
       </LegalList>
     </Section>
 
@@ -218,20 +219,25 @@ const Cookies = () => (
           <tbody className="divide-y divide-slate-100">
             <tr><td className="py-2 pr-4">Técnicas</td><td className="py-2 pr-4">Funcionamiento básico de la web</td><td className="py-2 pr-4">Propia</td><td className="py-2 pr-4">Necesarias</td></tr>
             <tr><td className="py-2 pr-4">Preferencias</td><td className="py-2 pr-4">Recordar consentimiento del banner</td><td className="py-2 pr-4">Propia</td><td className="py-2 pr-4">Según elección</td></tr>
-            <tr><td className="py-2 pr-4">Analítica</td><td className="py-2 pr-4">Medición de visitas, si se instala</td><td className="py-2 pr-4">Propia o terceros</td><td className="py-2 pr-4">Solo con consentimiento</td></tr>
-            <tr><td className="py-2 pr-4">Marketing</td><td className="py-2 pr-4">Campañas o píxeles, si se instalan</td><td className="py-2 pr-4">Terceros</td><td className="py-2 pr-4">Solo con consentimiento</td></tr>
+            <tr><td className="py-2 pr-4">Analítica</td><td className="py-2 pr-4">Medición del uso y rendimiento de la web</td><td className="py-2 pr-4">Propia o terceros</td><td className="py-2 pr-4">Solo con consentimiento</td></tr>
+            <tr><td className="py-2 pr-4">Google Ads</td><td className="py-2 pr-4">Medir llamadas y conversiones de campañas</td><td className="py-2 pr-4">Google Ireland Limited</td><td className="py-2 pr-4">Solo con consentimiento de marketing</td></tr>
           </tbody>
         </table>
       </div>
     </Section>
 
     <Section title="Gestión del consentimiento">
-      <p>Al entrar en la web se muestra un banner desde el que el usuario puede aceptar, rechazar o configurar las cookies no necesarias. Actualmente el banner guarda la preferencia del usuario en el navegador mediante almacenamiento local.</p>
-      <p>El usuario puede modificar su elección eliminando los datos del sitio desde la configuración de su navegador o utilizando las opciones del banner cuando vuelva a mostrarse.</p>
+      <p>Al entrar en la web se muestra un banner desde el que el usuario puede aceptar, rechazar o configurar las cookies no necesarias. El banner guarda la preferencia en el navegador mediante almacenamiento local y comunica la elección a Google mediante Consent Mode v2.</p>
+      <p>El usuario puede modificar o retirar su elección en cualquier momento mediante el enlace «Configurar cookies» disponible en el pie de la web. Al rechazar el marketing, Google Ads no se carga y las llamadas siguen funcionando normalmente sin medición publicitaria.</p>
     </Section>
 
-    <Section title="Cookies de terceros">
-      <p>Si en el futuro se instalan herramientas externas como analítica web, píxeles publicitarios, mapas, vídeos embebidos, chat externo u otros servicios, podrán generarse cookies de terceros. En ese caso, esta política deberá actualizarse con la información concreta de cada proveedor.</p>
+    <Section title="Google Ads y medición de llamadas">
+      <p>Cuando el usuario acepta las cookies de marketing, esta web carga la etiqueta de Google Ads para atribuir a las campañas publicitarias las llamadas realizadas desde la web. Google puede mostrar temporalmente un número de desvío que dirige la llamada al teléfono real de la empresa y permite medir datos como el origen, la hora y la duración de la llamada.</p>
+      <p>Google puede tratar datos técnicos del navegador, la página visitada, identificadores del clic publicitario y datos relacionados con la conversión. Puede consultar más información en la política de privacidad y condiciones de Google.</p>
+    </Section>
+
+    <Section title="Otros servicios de terceros">
+      <p>Si en el futuro se instalan otras herramientas externas como analítica web, mapas, vídeos embebidos, chat externo u otros servicios, podrán generarse cookies de terceros. En ese caso, esta política deberá actualizarse con la información concreta de cada proveedor.</p>
     </Section>
   </div>
 );

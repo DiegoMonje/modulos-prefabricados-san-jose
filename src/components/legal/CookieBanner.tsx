@@ -4,8 +4,25 @@ import { Button } from '../ui/Ui';
 import type { LegalPageType } from './LegalPages';
 
 const STORAGE_KEY = 'mpsj_cookie_consent';
+export const OPEN_COOKIE_SETTINGS_EVENT = 'mpsj:open-cookie-settings';
 
 type Consent = 'accepted' | 'rejected' | 'configured';
+type ConsentPreferences = { status: Consent; analytics: boolean; marketing: boolean; savedAt: string };
+
+const readSavedConsent = (): ConsentPreferences | null => {
+  try {
+    const stored = JSON.parse(window.localStorage.getItem(STORAGE_KEY) || 'null') as Partial<ConsentPreferences> | null;
+    if (!stored || !['accepted', 'rejected', 'configured'].includes(stored.status ?? '')) return null;
+    return {
+      status: stored.status as Consent,
+      analytics: stored.status === 'accepted' || stored.analytics === true,
+      marketing: stored.status === 'accepted' || stored.marketing === true,
+      savedAt: typeof stored.savedAt === 'string' ? stored.savedAt : '',
+    };
+  } catch {
+    return null;
+  }
+};
 
 export const CookieBanner = ({ onLegalPage }: { onLegalPage: (page: LegalPageType) => void }) => {
   const [visible, setVisible] = useState(false);
@@ -14,11 +31,28 @@ export const CookieBanner = ({ onLegalPage }: { onLegalPage: (page: LegalPageTyp
   const [marketing, setMarketing] = useState(false);
 
   useEffect(() => {
-    if (!window.localStorage.getItem(STORAGE_KEY)) setVisible(true);
+    const stored = readSavedConsent();
+    if (!stored) setVisible(true);
+
+    const openSettings = () => {
+      const current = readSavedConsent();
+      setAnalytics(current?.analytics ?? false);
+      setMarketing(current?.marketing ?? false);
+      setShowSettings(true);
+      setVisible(true);
+    };
+
+    window.addEventListener(OPEN_COOKIE_SETTINGS_EVENT, openSettings);
+    return () => window.removeEventListener(OPEN_COOKIE_SETTINGS_EVENT, openSettings);
   }, []);
 
   const save = (status: Consent, options?: { analytics?: boolean; marketing?: boolean }) => {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ status, analytics: options?.analytics ?? false, marketing: options?.marketing ?? false, savedAt: new Date().toISOString() }));
+    const preferences = {
+      analytics: options?.analytics ?? false,
+      marketing: options?.marketing ?? false,
+    };
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ status, ...preferences, savedAt: new Date().toISOString() }));
+    window.mpsjSetGoogleConsent(preferences);
     setVisible(false);
   };
 
@@ -40,7 +74,7 @@ export const CookieBanner = ({ onLegalPage }: { onLegalPage: (page: LegalPageTyp
               </div>
               <p className="mt-1.5 text-xs leading-5 text-slate-300 sm:hidden">Usamos cookies técnicas y, con tu permiso, analíticas o de marketing.</p>
               <p className="mt-2 hidden max-w-3xl text-sm leading-6 text-slate-300 sm:block">Utilizamos cookies técnicas necesarias. Las cookies de analítica o marketing solo se activarán si las aceptas o las configuras.</p>
-              {showSettings && <div className="mt-3 grid gap-2 rounded-xl bg-slate-900 p-3 text-xs text-slate-200 sm:mt-4 sm:grid-cols-2 sm:gap-3 sm:rounded-2xl sm:p-4 sm:text-sm"><label className="flex items-start gap-2 rounded-xl border border-slate-700 p-2.5 sm:gap-3 sm:p-3"><input type="checkbox" checked disabled className="mt-1" /><span><strong>Necesarias</strong><br /><span className="text-slate-400">Siempre activas.</span></span></label><label className="flex items-start gap-2 rounded-xl border border-slate-700 p-2.5 sm:gap-3 sm:p-3"><input type="checkbox" checked={analytics} onChange={(e) => setAnalytics(e.target.checked)} className="mt-1" /><span><strong>Analítica</strong><br /><span className="text-slate-400">Para medir visitas si se instala analítica.</span></span></label><label className="flex items-start gap-2 rounded-xl border border-slate-700 p-2.5 sm:col-span-2 sm:gap-3 sm:p-3"><input type="checkbox" checked={marketing} onChange={(e) => setMarketing(e.target.checked)} className="mt-1" /><span><strong>Marketing</strong><br /><span className="text-slate-400">Para campañas o píxeles publicitarios si se añaden.</span></span></label></div>}
+              {showSettings && <div className="mt-3 grid gap-2 rounded-xl bg-slate-900 p-3 text-xs text-slate-200 sm:mt-4 sm:grid-cols-2 sm:gap-3 sm:rounded-2xl sm:p-4 sm:text-sm"><label className="flex items-start gap-2 rounded-xl border border-slate-700 p-2.5 sm:gap-3 sm:p-3"><input type="checkbox" checked disabled className="mt-1" /><span><strong>Necesarias</strong><br /><span className="text-slate-400">Siempre activas.</span></span></label><label className="flex items-start gap-2 rounded-xl border border-slate-700 p-2.5 sm:gap-3 sm:p-3"><input type="checkbox" checked={analytics} onChange={(e) => setAnalytics(e.target.checked)} className="mt-1" /><span><strong>Analítica</strong><br /><span className="text-slate-400">Para medir el uso y rendimiento de la web.</span></span></label><label className="flex items-start gap-2 rounded-xl border border-slate-700 p-2.5 sm:col-span-2 sm:gap-3 sm:p-3"><input type="checkbox" checked={marketing} onChange={(e) => setMarketing(e.target.checked)} className="mt-1" /><span><strong>Marketing</strong><br /><span className="text-slate-400">Para medir campañas y llamadas procedentes de Google Ads.</span></span></label></div>}
               <button onClick={() => onLegalPage('cookies')} className="mt-2 inline-flex items-center gap-1.5 text-xs font-black text-orange-300 hover:text-orange-200 sm:mt-3 sm:gap-2 sm:text-sm"><ShieldCheck size={15} /> Ver política de cookies</button>
             </div>
           </div>
