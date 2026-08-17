@@ -16,20 +16,32 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Manrope:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
 
-    <!-- Google Analytics + Google Ads + Meta Pixel con consentimiento. -->
+    <!-- Meta Pixel: loader oficial presente en la página; eventos bloqueados hasta consentimiento de marketing. -->
+    <script>
+      !function(f,b,e,v,n,t,s)
+      {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+      n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+      if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+      n.queue=[];t=b.createElement(e);t.async=!0;
+      t.src=v;s=b.getElementsByTagName(e)[0];
+      s.parentNode.insertBefore(t,s)}(window, document,'script',
+      'https://connect.facebook.net/en_US/fbevents.js');
+      fbq('consent', 'revoke');
+      fbq('init', '2563290727469693');
+    </script>
+
+    <!-- Google Analytics + Google Ads + consentimiento compartido con Meta Pixel. -->
     <script>
       (() => {
         const consentStorageKey = 'mpsj_cookie_consent';
         const googleAnalyticsId = 'G-1ZYHDJYQQN';
         const googleAdsTagId = 'AW-975990655';
         const phoneConversionId = 'AW-975990655/GPGlCNL12-IcEP_esdED';
-        const metaPixelId = '2563290727469693';
         const googleTagScriptId = 'mpsj-google-tag';
-        const metaPixelScriptId = 'mpsj-meta-pixel';
         let googleLibraryConfigured = false;
         let googleAnalyticsConfigured = false;
         let googleAdsConfigured = false;
-        let metaPixelConfigured = false;
+        let metaPageViewSent = false;
 
         window.dataLayer = window.dataLayer || [];
         window.gtag = window.gtag || function () { window.dataLayer.push(arguments); };
@@ -74,33 +86,13 @@
           });
         };
 
-        const configureMetaPixel = () => {
-          if (metaPixelConfigured) return;
-          metaPixelConfigured = true;
-
-          if (!window.fbq) {
-            const fbq = function () {
-              if (fbq.callMethod) fbq.callMethod.apply(fbq, arguments);
-              else fbq.queue.push(arguments);
-            };
-            window.fbq = fbq;
-            if (!window._fbq) window._fbq = fbq;
-            fbq.push = fbq;
-            fbq.loaded = true;
-            fbq.version = '2.0';
-            fbq.queue = [];
+        const setMetaConsent = (marketing) => {
+          if (!window.fbq) return;
+          window.fbq('consent', marketing ? 'grant' : 'revoke');
+          if (marketing && !metaPageViewSent) {
+            metaPageViewSent = true;
+            window.fbq('track', 'PageView');
           }
-
-          if (!document.getElementById(metaPixelScriptId)) {
-            const script = document.createElement('script');
-            script.id = metaPixelScriptId;
-            script.async = true;
-            script.src = 'https://connect.facebook.net/en_US/fbevents.js';
-            document.head.appendChild(script);
-          }
-
-          window.fbq('init', metaPixelId);
-          window.fbq('track', 'PageView');
         };
 
         window.mpsjSetGoogleConsent = ({ analytics = false, marketing = false } = {}) => {
@@ -111,11 +103,9 @@
             analytics_storage: analytics ? 'granted' : 'denied',
           });
 
+          setMetaConsent(marketing);
           if (analytics) configureAnalytics();
-          if (marketing) {
-            configureGoogleAds();
-            configureMetaPixel();
-          }
+          if (marketing) configureGoogleAds();
         };
 
         try {
@@ -127,9 +117,11 @@
               analytics: storedConsent.analytics === true,
               marketing: storedConsent.marketing === true,
             });
+          } else {
+            setMetaConsent(false);
           }
         } catch {
-          // Si la preferencia guardada no es válida, se mantiene el consentimiento denegado.
+          setMetaConsent(false);
         }
       })();
     </script>
