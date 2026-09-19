@@ -16,6 +16,13 @@ const quoteNumber = () => {
 const cleanText = (value: unknown) => String(value ?? '').replace(/\s+/g, ' ').trim();
 const safeFileName = (value: string) => cleanText(value).toLowerCase().replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '') || 'cliente';
 
+const formatPdfDate = (value?: string) => {
+  if (!value) return new Date().toLocaleDateString('es-ES');
+  const [year, month, day] = value.slice(0, 10).split('-').map(Number);
+  if (!year || !month || !day) return value;
+  return new Date(year, month - 1, day).toLocaleDateString('es-ES');
+};
+
 const addHeader = (doc: jsPDF, number: string, date: string) => {
   doc.setFillColor(15, 23, 42);
   doc.rect(0, 0, PAGE_WIDTH, 34, 'F');
@@ -113,7 +120,69 @@ const drawPriceTable = (doc: jsPDF, price: PriceResult, y: number) => {
   doc.setTextColor(15, 23, 42);
 };
 
-const addPlanPage = (doc: jsPDF, number: string, date: string, cadImage?: string | null) => {
+const storedPlanLabel = (type: string) => {
+  if (type.includes('door')) return 'Puerta';
+  if (type.includes('window')) return 'Ventana';
+  if (type.includes('socket')) return 'Enchufe';
+  if (type.includes('light')) return 'Luz';
+  if (type === 'wall_partition') return 'Tabique';
+  if (type === 'interior_room') return 'Habitación';
+  if (type === 'full_bathroom') return 'Baño';
+  if (type === 'toilet') return 'WC';
+  if (type === 'sink') return 'Lavabo';
+  if (type === 'shower_tray') return 'Ducha';
+  if (type === 'air_conditioning') return 'A/A';
+  if (type === 'base_electrical_panel') return 'Cuadro';
+  return 'Elemento';
+};
+
+const drawStoredPlan = (doc: jsPDF, config: ConfiguratorState) => {
+  const area = { x: MARGIN + 8, y: 72, width: CONTENT_WIDTH - 16, height: 98 };
+  const scale = Math.min(area.width / Math.max(config.length, 0.1), area.height / Math.max(config.width, 0.1));
+  const planWidth = config.length * scale;
+  const planHeight = config.width * scale;
+  const originX = area.x + (area.width - planWidth) / 2;
+  const originY = area.y + (area.height - planHeight) / 2;
+
+  doc.setFillColor(255, 255, 255);
+  doc.setDrawColor(15, 23, 42);
+  doc.setLineWidth(0.8);
+  doc.rect(originX, originY, planWidth, planHeight, 'FD');
+
+  config.layoutItems.forEach((item) => {
+    const x = originX + item.x * scale;
+    const y = originY + item.y * scale;
+    const width = Math.max(item.width * scale, 1.6);
+    const height = Math.max(item.height * scale, 1.6);
+    const isOpening = item.zone === 'edge';
+
+    if (isOpening) {
+      doc.setDrawColor(item.type.includes('door') ? 249 : 37, item.type.includes('door') ? 115 : 99, item.type.includes('door') ? 22 : 235);
+      doc.setLineWidth(1.4);
+      doc.line(x, y, x + width, y + height);
+      return;
+    }
+
+    doc.setDrawColor(100, 116, 139);
+    doc.setFillColor(241, 245, 249);
+    doc.setLineWidth(0.25);
+    doc.roundedRect(x, y, width, height, 0.7, 0.7, 'FD');
+    if (width >= 8 && height >= 5) {
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(5.5);
+      doc.setTextColor(51, 65, 85);
+      doc.text(storedPlanLabel(item.type), x + width / 2, y + height / 2 + 1, { align: 'center' });
+    }
+  });
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(7.5);
+  doc.setTextColor(15, 23, 42);
+  doc.text(`${config.length} m`, originX + planWidth / 2, originY + planHeight + 7, { align: 'center' });
+  doc.text(`${config.width} m`, originX - 3, originY + planHeight / 2, { align: 'right' });
+};
+
+const addPlanPage = (doc: jsPDF, number: string, date: string, cadImage?: string | null, config?: ConfiguratorState) => {
   doc.addPage();
   addHeader(doc, number, date);
   addFooter(doc, doc.getNumberOfPages());
@@ -134,10 +203,12 @@ const addPlanPage = (doc: jsPDF, number: string, date: string, cadImage?: string
       doc.text('No se pudo insertar la imagen del plano en este navegador.', PAGE_WIDTH / 2, 123, { align: 'center' });
       doc.setTextColor(15, 23, 42);
     }
+  } else if (config) {
+    drawStoredPlan(doc, config);
   } else {
     doc.setTextColor(255, 255, 255);
     doc.setFont('helvetica', 'bold');
-    doc.text('Plano no capturado. Vuelve al paso CAD y continúa de nuevo para incluirlo.', PAGE_WIDTH / 2, 123, { align: 'center' });
+    doc.text('Plano no disponible.', PAGE_WIDTH / 2, 123, { align: 'center' });
     doc.setTextColor(15, 23, 42);
   }
   doc.setFont('helvetica', 'bold');
@@ -379,10 +450,27 @@ export interface GeneratedConfiguratorPdf {
   blob: Blob;
 }
 
-export const downloadConfiguratorPdf = ({ contact, config, price, cadImage }: { contact: ContactFormState; config: ConfiguratorState; price: PriceResult; cadImage?: string | null }): GeneratedConfiguratorPdf => {
+interface CreateConfiguratorPdfOptions {
+  contact: ContactFormState;
+  config: ConfiguratorState;
+  price: PriceResult;
+  cadImage?: string | null;
+  number?: string;
+  quoteDate?: string;
+  download?: boolean;
+}
+
+export const createConfiguratorPdf = ({
+  contact,
+  config,
+  price,
+  cadImage,
+  number = quoteNumber(),
+  quoteDate,
+  download = false,
+}: CreateConfiguratorPdfOptions): GeneratedConfiguratorPdf => {
   const doc = new jsPDF({ unit: 'mm', format: 'a4', compress: true });
-  const number = quoteNumber();
-  const date = new Date().toLocaleDateString('es-ES');
+  const date = formatPdfDate(quoteDate);
   addHeader(doc, number, date);
   addFooter(doc, 1);
   let y = 45;
@@ -427,11 +515,14 @@ export const downloadConfiguratorPdf = ({ contact, config, price, cadImage }: { 
   doc.setFontSize(8);
   drawWrappedText(doc, 'Esta factura proforma no constituye factura definitiva. Precio orientativo pendiente de revisión técnica, transporte, montaje, accesos, forma de pago y disponibilidad de materiales.', MARGIN + 5, y + 14, CONTENT_WIDTH - 10, 4);
   doc.setTextColor(15, 23, 42);
-  addPlanPage(doc, number, date, cadImage);
+  addPlanPage(doc, number, date, cadImage, config);
   addWarrantyPage(doc, number, date);
   const name = safeFileName(contact.fullName);
   const fileName = `factura-proforma-${name}-${number}.pdf`;
   const blob = doc.output('blob');
-  doc.save(fileName);
+  if (download) doc.save(fileName);
   return { number, fileName, blob };
 };
+
+export const downloadConfiguratorPdf = (options: Omit<CreateConfiguratorPdfOptions, 'download'>): GeneratedConfiguratorPdf =>
+  createConfiguratorPdf({ ...options, download: true });
