@@ -144,9 +144,12 @@ drop policy if exists "auth_manage_quotes" on public.quotes;
 create policy "auth_manage_quotes" on public.quotes for all to authenticated using (true) with check (true);
 
 -- Storage para PDFs de proformas.
-insert into storage.buckets (id, name, public)
-values ('quotes', 'quotes', true)
-on conflict (id) do update set public = true;
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('quotes', 'quotes', false, 10485760, array['application/pdf'])
+on conflict (id) do update set
+  public = false,
+  file_size_limit = excluded.file_size_limit,
+  allowed_mime_types = excluded.allowed_mime_types;
 
 drop policy if exists "public_upload_quote_pdfs" on storage.objects;
 create policy "public_upload_quote_pdfs" on storage.objects
@@ -154,15 +157,12 @@ for insert to anon
 with check (bucket_id = 'quotes');
 
 drop policy if exists "public_update_quote_pdfs" on storage.objects;
-create policy "public_update_quote_pdfs" on storage.objects
-for update to anon
+drop policy if exists "public_read_quote_pdfs" on storage.objects;
+drop policy if exists "auth_manage_quote_pdfs" on storage.objects;
+create policy "auth_manage_quote_pdfs" on storage.objects
+for all to authenticated
 using (bucket_id = 'quotes')
 with check (bucket_id = 'quotes');
-
-drop policy if exists "public_read_quote_pdfs" on storage.objects;
-create policy "public_read_quote_pdfs" on storage.objects
-for select to anon, authenticated
-using (bucket_id = 'quotes');
 
 create index if not exists leads_created_at_idx on public.leads(created_at desc);
 create index if not exists configurations_lead_id_idx on public.configurations(lead_id);

@@ -3,6 +3,7 @@ import type { FormEvent } from 'react';
 import { ArrowLeft, Download, FileText, LogOut, MessageCircle, RefreshCcw, Search, Trash2 } from 'lucide-react';
 import type { LeadRow, LeadStatus } from '../../types';
 import { addLeadNote, deleteLead, exportNewsletterCsv, getLeads, updateLeadStatus } from '../../services/leads';
+import { downloadQuoteForLead } from '../../services/quotes';
 import { getCurrentUser, signIn, signOut } from '../../services/auth';
 import { getRememberAdminSession, setRememberAdminSession } from '../../lib/supabase';
 import { formatCurrency } from '../../utils/pricing';
@@ -173,7 +174,7 @@ const AdminDashboard = ({ onBack, onLogout }: { onBack: () => void; onLogout: ()
             {loading ? <p className="py-10 text-center text-slate-500">Cargando...</p> : <div className="overflow-x-auto"><table className="w-full min-w-[980px] text-left text-sm"><thead><tr className="border-b border-slate-200 text-xs uppercase text-slate-500"><th className="py-3">Fecha</th><th>Nombre</th><th>Teléfono</th><th>Email</th><th>Provincia</th><th>Medida</th><th>Uso</th><th>Sin IVA</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>{filtered.map((lead) => { const config = lead.configurations?.[0]; return <tr key={lead.id} className="border-b border-slate-100 hover:bg-slate-50"><td className="py-3">{new Date(lead.created_at).toLocaleDateString('es-ES')}</td><td className="font-bold text-slate-900">{lead.full_name}</td><td>{lead.phone}</td><td>{lead.email || '-'}</td><td>{lead.province}</td><td>{config ? `${config.length} x ${config.width} m` : '-'}</td><td>{config?.use_type || lead.intended_use || '-'}</td><td>{formatCurrency(lead.estimated_price_without_vat || 0)}</td><td><Badge color={statusColor(lead.status)}>{lead.status}</Badge></td><td><div className="flex gap-1"><Button variant="ghost" className="px-3 py-2 text-sm" onClick={() => setSelectedLead(lead)}>Ver</Button><a href={leadWhatsApp(lead)} target="_blank" rel="noreferrer" className="rounded-lg p-2 hover:bg-slate-200"><MessageCircle size={16} /></a><button onClick={() => removeLead(lead)} className="rounded-lg p-2 text-red-600 hover:bg-red-50"><Trash2 size={16} /></button></div></td></tr>; })}</tbody></table></div>}
           </Card>
           <Card className="h-fit">
-            {!selectedLead ? <div className="py-10 text-center text-slate-500">Selecciona una solicitud para ver el detalle.</div> : <LeadDetail lead={selectedLead} note={note} setNote={setNote} saveNote={saveNote} changeStatus={changeStatus} />}
+            {!selectedLead ? <div className="py-10 text-center text-slate-500">Selecciona una solicitud para ver el detalle.</div> : <LeadDetail lead={selectedLead} note={note} setNote={setNote} saveNote={saveNote} changeStatus={changeStatus} onDocumentUpdated={load} />}
           </Card>
         </section>
       </main>
@@ -181,9 +182,39 @@ const AdminDashboard = ({ onBack, onLogout }: { onBack: () => void; onLogout: ()
   );
 };
 
-const LeadDetail = ({ lead, note, setNote, saveNote, changeStatus }: { lead: LeadRow; note: string; setNote: (value: string) => void; saveNote: () => void; changeStatus: (lead: LeadRow, status: LeadStatus) => Promise<void> }) => {
+const LeadDetail = ({ lead, note, setNote, saveNote, changeStatus, onDocumentUpdated }: { lead: LeadRow; note: string; setNote: (value: string) => void; saveNote: () => void; changeStatus: (lead: LeadRow, status: LeadStatus) => Promise<void>; onDocumentUpdated: () => Promise<void> }) => {
+  const [documentBusy, setDocumentBusy] = useState(false);
+  const [documentMessage, setDocumentMessage] = useState('');
+  const [documentError, setDocumentError] = useState('');
   const quotes = lead.quotes || [];
   const quoteWithPdf = quotes.find((quote) => quote.pdf_url);
+
+  useEffect(() => {
+    setDocumentMessage('');
+    setDocumentError('');
+  }, [lead.id]);
+
+  const downloadQuote = async () => {
+    setDocumentBusy(true);
+    setDocumentMessage('');
+    setDocumentError('');
+    try {
+      const result = await downloadQuoteForLead(lead);
+      if (result.warning) {
+        setDocumentMessage(result.warning);
+      } else if (result.repaired) {
+        setDocumentMessage('PDF descargado y copia guardada de nuevo correctamente.');
+        await onDocumentUpdated();
+      } else {
+        setDocumentMessage('PDF descargado correctamente.');
+      }
+    } catch (error) {
+      setDocumentError(error instanceof Error ? error.message : 'No se pudo preparar el PDF.');
+    } finally {
+      setDocumentBusy(false);
+    }
+  };
+
   return (
     <div>
       <div className="mb-5 flex items-start justify-between gap-3"><div><h2 className="text-xl font-black text-slate-900">{lead.full_name}</h2><p className="text-sm text-slate-500">{lead.phone} · {lead.city}, {lead.province}</p></div><Badge color={statusColor(lead.status)}>{lead.status}</Badge></div>
@@ -192,15 +223,17 @@ const LeadDetail = ({ lead, note, setNote, saveNote, changeStatus }: { lead: Lea
       <div className="mt-5 rounded-2xl bg-orange-50 p-4"><p className="text-sm font-bold text-orange-700">Precio estimado sin IVA</p><p className="text-2xl font-black text-brand-orange">{formatCurrency(lead.estimated_price_without_vat || 0)}</p><p className="text-sm font-bold text-orange-900">Total con IVA: {formatCurrency(lead.estimated_price_with_vat || 0)}</p></div>
       <div className="mt-5 rounded-2xl bg-blue-50 p-4">
         <h3 className="mb-3 font-black text-slate-900">Proformas / documentos</h3>
-        {quoteWithPdf ? (
-          <a href={quoteWithPdf.pdf_url || '#'} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-2xl bg-slate-900 px-4 py-3 text-sm font-black text-white hover:bg-slate-800">
-            <FileText size={16} /> Ver PDF generado
-          </a>
-        ) : quotes.length ? (
-          <p className="text-sm font-semibold text-amber-900">Hay una proforma registrada, pero no tiene PDF adjunto. Revisa que exista el bucket de Supabase Storage llamado <strong>quotes</strong>.</p>
-        ) : (
-          <p className="text-sm text-slate-600">Este registro todavía no tiene PDF guardado. Los registros nuevos sí intentarán guardar una copia en Supabase Storage.</p>
-        )}
+        <p className="mb-3 text-sm text-slate-700">
+          {quoteWithPdf
+            ? 'Descarga la proforma guardada. Si el archivo estuviera dañado, el panel lo regenerará automáticamente.'
+            : 'La copia guardada no está disponible. El panel regenerará la proforma con los datos de esta solicitud.'}
+        </p>
+        <Button onClick={downloadQuote} disabled={documentBusy || !lead.configurations?.[0]}>
+          {documentBusy ? <RefreshCcw className="animate-spin" size={16} /> : <FileText size={16} />}
+          {documentBusy ? 'Preparando PDF...' : 'Descargar PDF'}
+        </Button>
+        {documentMessage ? <p className={`mt-3 text-sm font-semibold ${documentMessage.startsWith('El PDF se ha descargado, pero') ? 'text-amber-800' : 'text-green-700'}`}>{documentMessage}</p> : null}
+        {documentError ? <p className="mt-3 text-sm font-semibold text-red-700">{documentError}</p> : null}
       </div>
       <div className="mt-5"><h3 className="mb-3 font-black text-slate-900">Notas internas</h3><div className="space-y-2">{lead.notes?.length ? lead.notes.map((n) => <div key={n.id} className="rounded-xl bg-slate-50 p-3 text-sm"><p>{n.note}</p><p className="mt-1 text-xs text-slate-400">{new Date(n.created_at).toLocaleString('es-ES')}</p></div>) : <p className="text-sm text-slate-500">Sin notas todavía.</p>}</div><div className="mt-3 space-y-2"><Textarea rows={3} value={note} onChange={(e) => setNote(e.target.value)} placeholder="Añadir nota interna..." /><Button onClick={saveNote}>Guardar nota</Button></div></div>
     </div>

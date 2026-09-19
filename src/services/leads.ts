@@ -30,13 +30,11 @@ const uploadQuotePdf = async ({ leadId, fileName, pdfBlob }: { leadId: string; f
     .from(QUOTES_BUCKET)
     .upload(path, pdfBlob, {
       contentType: 'application/pdf',
-      upsert: true,
+      upsert: false,
     });
 
   if (uploadError) throw uploadError;
-
-  const { data } = client.storage.from(QUOTES_BUCKET).getPublicUrl(path);
-  return data.publicUrl || path;
+  return path;
 };
 
 export const createLead = async ({
