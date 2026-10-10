@@ -12,5 +12,13 @@
       "destination": "https://modulosprefabricadossanjose.com/:path*",
       "permanent": true
     }
+  ],
+  "rewrites": [
+    { "source": "/catalogo", "destination": "/index.html" },
+    { "source": "/catalogo/modulo-3x240", "destination": "/index.html" },
+    { "source": "/catalogo/modulo-4x240", "destination": "/index.html" },
+    { "source": "/catalogo/modulo-5x240", "destination": "/index.html" },
+    { "source": "/catalogo/modulo-6x240", "destination": "/index.html" },
+    { "source": "/catalogo/modulo-7x240", "destination": "/index.html" }
   ]
 }
