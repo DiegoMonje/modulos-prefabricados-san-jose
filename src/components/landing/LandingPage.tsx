@@ -79,6 +79,7 @@ export const LandingPage = ({ onStart, onLegalPage, onAdmin }: { onStart: () => 
             </div>
           </a>
           <nav className="hidden items-center gap-6 text-sm font-black text-slate-600 lg:flex">
+            <a href="/catalogo" className="text-brand-blue hover:text-brand-orange">Catálogo</a>
             <button onClick={onStart} className="hover:text-brand-orange">Calculadora</button>
             <a href="#servicios" className="hover:text-brand-orange">Servicios</a>
             <a href="#galeria" className="hover:text-brand-orange">Galería</a>
@@ -90,6 +91,16 @@ export const LandingPage = ({ onStart, onLegalPage, onAdmin }: { onStart: () => 
             <a href={whatsappContactUrl} target="_blank" rel="noreferrer"><Button variant="secondary"><MessageCircle size={18} /> WhatsApp</Button></a>
           </div>
         </div>
+        <nav aria-label="Navegación principal" className="border-t border-slate-100 lg:hidden">
+          <div className="container-page flex items-center gap-5 overflow-x-auto py-3 text-sm font-black text-slate-600">
+            <a href="/catalogo" className="shrink-0 text-brand-blue hover:text-brand-orange">Catálogo</a>
+            <button onClick={onStart} className="shrink-0 hover:text-brand-orange">Calculadora</button>
+            <a href="#servicios" className="shrink-0 hover:text-brand-orange">Servicios</a>
+            <a href="#galeria" className="shrink-0 hover:text-brand-orange">Galería</a>
+            <a href="#modelos" className="shrink-0 hover:text-brand-orange">Modelos</a>
+            <a href="#contacto" className="shrink-0 hover:text-brand-orange">Contacto</a>
+          </div>
+        </nav>
       </header>
     </div>
 
