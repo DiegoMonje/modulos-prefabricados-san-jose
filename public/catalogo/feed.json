@@ -1,0 +1,31 @@
+{
+  "merchant": {
+    "name": "Módulos Prefabricados San José S.L.",
+    "currency": "EUR",
+    "catalogUrl": "https://modulosprefabricadossanjose.com/catalogo"
+  },
+  "priceNotes": "Los precios con IVA aparecen en priceWithVat. Transporte, montaje, accesos, grúa, cimentación y permisos no están incluidos.",
+  "products": [
+    { "sku": "MSJ-3X240", "name": "Módulo prefabricado 3 × 2,40 m", "url": "https://modulosprefabricadossanjose.com/catalogo/modulo-3x240", "priceWithoutVat": 2850, "priceWithVat": 3449 },
+    { "sku": "MSJ-3X250", "name": "Módulo prefabricado 3 × 2,50 m", "url": "https://modulosprefabricadossanjose.com/catalogo/modulo-3x240", "priceWithoutVat": 2969, "priceWithVat": 3592 },
+    { "sku": "MSJ-4X240", "name": "Módulo prefabricado 4 × 2,40 m", "url": "https://modulosprefabricadossanjose.com/catalogo/modulo-4x240", "priceWithoutVat": 3483, "priceWithVat": 4214 },
+    { "sku": "MSJ-4X250", "name": "Módulo prefabricado 4 × 2,50 m", "url": "https://modulosprefabricadossanjose.com/catalogo/modulo-4x240", "priceWithoutVat": 3628, "priceWithVat": 4390 },
+    { "sku": "MSJ-5X240", "name": "Módulo prefabricado 5 × 2,40 m", "url": "https://modulosprefabricadossanjose.com/catalogo/modulo-5x240", "priceWithoutVat": 4354, "priceWithVat": 5268 },
+    { "sku": "MSJ-5X250", "name": "Módulo prefabricado 5 × 2,50 m", "url": "https://modulosprefabricadossanjose.com/catalogo/modulo-5x240", "priceWithoutVat": 4536, "priceWithVat": 5489 },
+    { "sku": "MSJ-6X240", "name": "Módulo prefabricado 6 × 2,40 m", "url": "https://modulosprefabricadossanjose.com/catalogo/modulo-6x240", "priceWithoutVat": 4750, "priceWithVat": 5748 },
+    { "sku": "MSJ-6X250", "name": "Módulo prefabricado 6 × 2,50 m", "url": "https://modulosprefabricadossanjose.com/catalogo/modulo-6x240", "priceWithoutVat": 4948, "priceWithVat": 5987 },
+    { "sku": "MSJ-7X240", "name": "Módulo prefabricado 7 × 2,40 m", "url": "https://modulosprefabricadossanjose.com/catalogo/modulo-7x240", "priceWithoutVat": 5542, "priceWithVat": 6706 },
+    { "sku": "MSJ-7X250", "name": "Módulo prefabricado 7 × 2,50 m", "url": "https://modulosprefabricadossanjose.com/catalogo/modulo-7x240", "priceWithoutVat": 5773, "priceWithVat": 6985 }
+  ],
+  "extras": [
+    { "code": "additional_socket", "name": "Enchufe adicional", "priceWithoutVat": 50 },
+    { "code": "additional_light_point", "name": "Punto de luz adicional", "priceWithoutVat": 60 },
+    { "code": "additional_door", "name": "Puerta exterior adicional", "priceWithoutVat": 120 },
+    { "code": "window_80x80", "name": "Ventana 80 × 80 cm extra", "priceWithoutVat": 200 },
+    { "code": "large_window", "name": "Ventana grande", "priceWithoutVat": 250 },
+    { "code": "wall_partition", "name": "Tabique interior simple", "priceWithoutVat": 300 },
+    { "code": "interior_room", "name": "Habitación interior", "priceWithoutVat": 700 },
+    { "code": "full_bathroom", "name": "Baño completo prediseñado", "priceWithoutVat": 1500 },
+    { "code": "air_conditioning", "name": "Aire acondicionado", "priceWithoutVat": 600 }
+  ]
+}
