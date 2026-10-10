@@ -1,27 +1,168 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<catalog currency="EUR" merchant="Módulos Prefabricados San José S.L.">
-  <notes>Precios con IVA. Transporte, montaje, accesos, grúa, cimentación y permisos no incluidos.</notes>
-  <products>
-    <product><sku>MSJ-3X240</sku><name>Módulo prefabricado 3 × 2,40 m</name><url>https://modulosprefabricadossanjose.com/catalogo/modulo-3x240</url><priceWithoutVat>2850.00</priceWithoutVat><priceWithVat>3449.00</priceWithVat></product>
-    <product><sku>MSJ-3X250</sku><name>Módulo prefabricado 3 × 2,50 m</name><url>https://modulosprefabricadossanjose.com/catalogo/modulo-3x240</url><priceWithoutVat>2969.00</priceWithoutVat><priceWithVat>3592.00</priceWithVat></product>
-    <product><sku>MSJ-4X240</sku><name>Módulo prefabricado 4 × 2,40 m</name><url>https://modulosprefabricadossanjose.com/catalogo/modulo-4x240</url><priceWithoutVat>3483.00</priceWithoutVat><priceWithVat>4214.00</priceWithVat></product>
-    <product><sku>MSJ-4X250</sku><name>Módulo prefabricado 4 × 2,50 m</name><url>https://modulosprefabricadossanjose.com/catalogo/modulo-4x240</url><priceWithoutVat>3628.00</priceWithoutVat><priceWithVat>4390.00</priceWithVat></product>
-    <product><sku>MSJ-5X240</sku><name>Módulo prefabricado 5 × 2,40 m</name><url>https://modulosprefabricadossanjose.com/catalogo/modulo-5x240</url><priceWithoutVat>4354.00</priceWithoutVat><priceWithVat>5268.00</priceWithVat></product>
-    <product><sku>MSJ-5X250</sku><name>Módulo prefabricado 5 × 2,50 m</name><url>https://modulosprefabricadossanjose.com/catalogo/modulo-5x240</url><priceWithoutVat>4536.00</priceWithoutVat><priceWithVat>5489.00</priceWithVat></product>
-    <product><sku>MSJ-6X240</sku><name>Módulo prefabricado 6 × 2,40 m</name><url>https://modulosprefabricadossanjose.com/catalogo/modulo-6x240</url><priceWithoutVat>4750.00</priceWithoutVat><priceWithVat>5748.00</priceWithVat></product>
-    <product><sku>MSJ-6X250</sku><name>Módulo prefabricado 6 × 2,50 m</name><url>https://modulosprefabricadossanjose.com/catalogo/modulo-6x240</url><priceWithoutVat>4948.00</priceWithoutVat><priceWithVat>5987.00</priceWithVat></product>
-    <product><sku>MSJ-7X240</sku><name>Módulo prefabricado 7 × 2,40 m</name><url>https://modulosprefabricadossanjose.com/catalogo/modulo-7x240</url><priceWithoutVat>5542.00</priceWithoutVat><priceWithVat>6706.00</priceWithVat></product>
-    <product><sku>MSJ-7X250</sku><name>Módulo prefabricado 7 × 2,50 m</name><url>https://modulosprefabricadossanjose.com/catalogo/modulo-7x240</url><priceWithoutVat>5773.00</priceWithoutVat><priceWithVat>6985.00</priceWithVat></product>
-  </products>
-  <extras>
-    <extra><code>additional_socket</code><name>Enchufe adicional</name><priceWithoutVat>50.00</priceWithoutVat></extra>
-    <extra><code>additional_light_point</code><name>Punto de luz adicional</name><priceWithoutVat>60.00</priceWithoutVat></extra>
-    <extra><code>additional_door</code><name>Puerta exterior adicional</name><priceWithoutVat>120.00</priceWithoutVat></extra>
-    <extra><code>window_80x80</code><name>Ventana 80 × 80 cm extra</name><priceWithoutVat>200.00</priceWithoutVat></extra>
-    <extra><code>large_window</code><name>Ventana grande</name><priceWithoutVat>250.00</priceWithoutVat></extra>
-    <extra><code>wall_partition</code><name>Tabique interior simple</name><priceWithoutVat>300.00</priceWithoutVat></extra>
-    <extra><code>interior_room</code><name>Habitación interior</name><priceWithoutVat>700.00</priceWithoutVat></extra>
-    <extra><code>full_bathroom</code><name>Baño completo prediseñado</name><priceWithoutVat>1500.00</priceWithoutVat></extra>
-    <extra><code>air_conditioning</code><name>Aire acondicionado</name><priceWithoutVat>600.00</priceWithoutVat></extra>
-  </extras>
-</catalog>
+<rss xmlns:g="http://base.google.com/ns/1.0" version="2.0">
+  <channel>
+    <title>Catálogo de Módulos Prefabricados San José</title>
+    <link>https://modulosprefabricadossanjose.com/catalogo</link>
+    <description>Módulos prefabricados nuevos fabricados a medida en Sevilla. Los precios incluyen IVA; transporte, montaje, accesos, grúa, cimentación y permisos se calculan por separado.</description>
+
+    <item>
+      <g:id>MSJ-3X240</g:id>
+      <g:item_group_id>MSJ-3</g:item_group_id>
+      <g:title>Módulo prefabricado 3 × 2,40 m</g:title>
+      <g:description>Módulo prefabricado compacto nuevo para herramientas, fincas y pequeños almacenes. Incluye estructura, panel sándwich, puerta, ventana e instalación eléctrica básica.</g:description>
+      <g:link>https://modulosprefabricadossanjose.com/catalogo/modulo-3x240</g:link>
+      <g:image_link>https://modulosprefabricadossanjose.com/images/caseta-prefabricada-compacta-olivar.webp</g:image_link>
+      <g:availability>preorder</g:availability>
+      <g:price>3449.00 EUR</g:price>
+      <g:brand>Módulos Prefabricados San José</g:brand>
+      <g:condition>new</g:condition>
+      <g:mpn>MSJ-3X240</g:mpn>
+      <g:size>3 × 2,40 m</g:size>
+      <g:product_type>Módulos prefabricados</g:product_type>
+    </item>
+
+    <item>
+      <g:id>MSJ-3X250</g:id>
+      <g:item_group_id>MSJ-3</g:item_group_id>
+      <g:title>Módulo prefabricado 3 × 2,50 m</g:title>
+      <g:description>Módulo prefabricado compacto nuevo para herramientas, fincas y pequeños almacenes. Incluye estructura, panel sándwich, puerta, ventana e instalación eléctrica básica.</g:description>
+      <g:link>https://modulosprefabricadossanjose.com/catalogo/modulo-3x240</g:link>
+      <g:image_link>https://modulosprefabricadossanjose.com/images/caseta-prefabricada-compacta-olivar.webp</g:image_link>
+      <g:availability>preorder</g:availability>
+      <g:price>3592.00 EUR</g:price>
+      <g:brand>Módulos Prefabricados San José</g:brand>
+      <g:condition>new</g:condition>
+      <g:mpn>MSJ-3X250</g:mpn>
+      <g:size>3 × 2,50 m</g:size>
+      <g:product_type>Módulos prefabricados</g:product_type>
+    </item>
+
+    <item>
+      <g:id>MSJ-4X240</g:id>
+      <g:item_group_id>MSJ-4</g:item_group_id>
+      <g:title>Módulo prefabricado 4 × 2,40 m</g:title>
+      <g:description>Módulo prefabricado auxiliar nuevo para fincas, almacenamiento y zonas de trabajo. Incluye estructura, panel sándwich, puerta, ventana e instalación eléctrica básica.</g:description>
+      <g:link>https://modulosprefabricadossanjose.com/catalogo/modulo-4x240</g:link>
+      <g:image_link>https://modulosprefabricadossanjose.com/images/caseta-prefabricada-frontal-finca.webp</g:image_link>
+      <g:availability>preorder</g:availability>
+      <g:price>4214.00 EUR</g:price>
+      <g:brand>Módulos Prefabricados San José</g:brand>
+      <g:condition>new</g:condition>
+      <g:mpn>MSJ-4X240</g:mpn>
+      <g:size>4 × 2,40 m</g:size>
+      <g:product_type>Módulos prefabricados</g:product_type>
+    </item>
+
+    <item>
+      <g:id>MSJ-4X250</g:id>
+      <g:item_group_id>MSJ-4</g:item_group_id>
+      <g:title>Módulo prefabricado 4 × 2,50 m</g:title>
+      <g:description>Módulo prefabricado auxiliar nuevo para fincas, almacenamiento y zonas de trabajo. Incluye estructura, panel sándwich, puerta, ventana e instalación eléctrica básica.</g:description>
+      <g:link>https://modulosprefabricadossanjose.com/catalogo/modulo-4x240</g:link>
+      <g:image_link>https://modulosprefabricadossanjose.com/images/caseta-prefabricada-frontal-finca.webp</g:image_link>
+      <g:availability>preorder</g:availability>
+      <g:price>4390.00 EUR</g:price>
+      <g:brand>Módulos Prefabricados San José</g:brand>
+      <g:condition>new</g:condition>
+      <g:mpn>MSJ-4X250</g:mpn>
+      <g:size>4 × 2,50 m</g:size>
+      <g:product_type>Módulos prefabricados</g:product_type>
+    </item>
+
+    <item>
+      <g:id>MSJ-5X240</g:id>
+      <g:item_group_id>MSJ-5</g:item_group_id>
+      <g:title>Módulo prefabricado 5 × 2,40 m</g:title>
+      <g:description>Módulo prefabricado nuevo para almacén, obra u oficina auxiliar. Incluye estructura, panel sándwich, puerta, ventana e instalación eléctrica básica.</g:description>
+      <g:link>https://modulosprefabricadossanjose.com/catalogo/modulo-5x240</g:link>
+      <g:image_link>https://modulosprefabricadossanjose.com/images/modulo-prefabricado-perspectiva-jardin.webp</g:image_link>
+      <g:availability>preorder</g:availability>
+      <g:price>5268.00 EUR</g:price>
+      <g:brand>Módulos Prefabricados San José</g:brand>
+      <g:condition>new</g:condition>
+      <g:mpn>MSJ-5X240</g:mpn>
+      <g:size>5 × 2,40 m</g:size>
+      <g:product_type>Módulos prefabricados</g:product_type>
+    </item>
+
+    <item>
+      <g:id>MSJ-5X250</g:id>
+      <g:item_group_id>MSJ-5</g:item_group_id>
+      <g:title>Módulo prefabricado 5 × 2,50 m</g:title>
+      <g:description>Módulo prefabricado nuevo para almacén, obra u oficina auxiliar. Incluye estructura, panel sándwich, puerta, ventana e instalación eléctrica básica.</g:description>
+      <g:link>https://modulosprefabricadossanjose.com/catalogo/modulo-5x240</g:link>
+      <g:image_link>https://modulosprefabricadossanjose.com/images/modulo-prefabricado-perspectiva-jardin.webp</g:image_link>
+      <g:availability>preorder</g:availability>
+      <g:price>5489.00 EUR</g:price>
+      <g:brand>Módulos Prefabricados San José</g:brand>
+      <g:condition>new</g:condition>
+      <g:mpn>MSJ-5X250</g:mpn>
+      <g:size>5 × 2,50 m</g:size>
+      <g:product_type>Módulos prefabricados</g:product_type>
+    </item>
+
+    <item>
+      <g:id>MSJ-6X240</g:id>
+      <g:item_group_id>MSJ-6</g:item_group_id>
+      <g:title>Módulo prefabricado 6 × 2,40 m</g:title>
+      <g:description>Módulo prefabricado nuevo para oficinas, fincas, almacenes y casetas de obra. Incluye estructura, panel sándwich, puerta, ventana e instalación eléctrica básica.</g:description>
+      <g:link>https://modulosprefabricadossanjose.com/catalogo/modulo-6x240</g:link>
+      <g:image_link>https://modulosprefabricadossanjose.com/images/hero-modulo-prefabricado-jardin.webp</g:image_link>
+      <g:availability>preorder</g:availability>
+      <g:price>5748.00 EUR</g:price>
+      <g:brand>Módulos Prefabricados San José</g:brand>
+      <g:condition>new</g:condition>
+      <g:mpn>MSJ-6X240</g:mpn>
+      <g:size>6 × 2,40 m</g:size>
+      <g:product_type>Módulos prefabricados</g:product_type>
+    </item>
+
+    <item>
+      <g:id>MSJ-6X250</g:id>
+      <g:item_group_id>MSJ-6</g:item_group_id>
+      <g:title>Módulo prefabricado 6 × 2,50 m</g:title>
+      <g:description>Módulo prefabricado nuevo para oficinas, fincas, almacenes y casetas de obra. Incluye estructura, panel sándwich, puerta, ventana e instalación eléctrica básica.</g:description>
+      <g:link>https://modulosprefabricadossanjose.com/catalogo/modulo-6x240</g:link>
+      <g:image_link>https://modulosprefabricadossanjose.com/images/hero-modulo-prefabricado-jardin.webp</g:image_link>
+      <g:availability>preorder</g:availability>
+      <g:price>5987.00 EUR</g:price>
+      <g:brand>Módulos Prefabricados San José</g:brand>
+      <g:condition>new</g:condition>
+      <g:mpn>MSJ-6X250</g:mpn>
+      <g:size>6 × 2,50 m</g:size>
+      <g:product_type>Módulos prefabricados</g:product_type>
+    </item>
+
+    <item>
+      <g:id>MSJ-7X240</g:id>
+      <g:item_group_id>MSJ-7</g:item_group_id>
+      <g:title>Módulo prefabricado 7 × 2,40 m</g:title>
+      <g:description>Módulo prefabricado grande nuevo para vestuarios, oficinas, almacenes y proyectos profesionales. Incluye estructura, panel sándwich, puerta, ventana e instalación eléctrica básica.</g:description>
+      <g:link>https://modulosprefabricadossanjose.com/catalogo/modulo-7x240</g:link>
+      <g:image_link>https://modulosprefabricadossanjose.com/images/modulo-prefabricado-finca-dos-ventanas.webp</g:image_link>
+      <g:availability>preorder</g:availability>
+      <g:price>6706.00 EUR</g:price>
+      <g:brand>Módulos Prefabricados San José</g:brand>
+      <g:condition>new</g:condition>
+      <g:mpn>MSJ-7X240</g:mpn>
+      <g:size>7 × 2,40 m</g:size>
+      <g:product_type>Módulos prefabricados</g:product_type>
+    </item>
+
+    <item>
+      <g:id>MSJ-7X250</g:id>
+      <g:item_group_id>MSJ-7</g:item_group_id>
+      <g:title>Módulo prefabricado 7 × 2,50 m</g:title>
+      <g:description>Módulo prefabricado grande nuevo para vestuarios, oficinas, almacenes y proyectos profesionales. Incluye estructura, panel sándwich, puerta, ventana e instalación eléctrica básica.</g:description>
+      <g:link>https://modulosprefabricadossanjose.com/catalogo/modulo-7x240</g:link>
+      <g:image_link>https://modulosprefabricadossanjose.com/images/modulo-prefabricado-finca-dos-ventanas.webp</g:image_link>
+      <g:availability>preorder</g:availability>
+      <g:price>6985.00 EUR</g:price>
+      <g:brand>Módulos Prefabricados San José</g:brand>
+      <g:condition>new</g:condition>
+      <g:mpn>MSJ-7X250</g:mpn>
+      <g:size>7 × 2,50 m</g:size>
+      <g:product_type>Módulos prefabricados</g:product_type>
+    </item>
+  </channel>
+</rss>
