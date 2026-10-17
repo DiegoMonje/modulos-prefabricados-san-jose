@@ -11,6 +11,7 @@ Proyecto base profesional para crear una web de captación de clientes con confi
 - React Hook Form + Zod para validación
 - Supabase para leads, configuraciones, presupuestos, notas y newsletter
 - jsPDF para PDF con plano CAD exportado desde Konva
+- Vercel AI SDK para el agente comercial de prueba
 
 ## Instalación
 
@@ -25,9 +26,19 @@ npm run dev
 ```bash
 VITE_SUPABASE_URL=tu_url_de_supabase
 VITE_SUPABASE_ANON_KEY=tu_anon_key
+AI_GATEWAY_API_KEY=tu_clave_opcional_de_ai_gateway
+AI_MODEL=openai/gpt-5.6-luna
+COMMERCIAL_KNOWLEDGE_JSON=configuracion_privada_opcional
+# Alternativa para previews cuando la plataforma limita el tamaño por variable:
+COMMERCIAL_KNOWLEDGE_PART_1=primer_fragmento
+COMMERCIAL_KNOWLEDGE_PART_2=segundo_fragmento
+COMMERCIAL_KNOWLEDGE_PART_3=tercer_fragmento
+COMMERCIAL_KNOWLEDGE_PART_4=cuarto_fragmento
 ```
 
-Si Supabase no está configurado, la web sigue funcionando y genera PDF/WhatsApp, pero no persistirá los leads.
+En Vercel, AI Gateway puede autenticarse con el token OIDC del despliegue sin guardar una clave permanente. Para desarrollo local puede usarse `AI_GATEWAY_API_KEY`.
+
+Las variables `COMMERCIAL_KNOWLEDGE_*` son exclusivamente de servidor: nunca deben llevar el prefijo `VITE_` ni llegar al navegador. Se puede usar una sola variable JSON o los cuatro fragmentos numerados; no se deben combinar ambos formatos. Si la IA no está configurada o falla, el chat cambia automáticamente al modo guiado usando la misma configuración comercial privada.
 
 ## Despliegue en Vercel
 
@@ -40,6 +51,21 @@ Si Supabase no está configurado, la web sigue funcionando y genera PDF/WhatsApp
 ## Base de datos
 
 Ejecuta el archivo `supabase/schema.sql` en el SQL editor de Supabase.
+
+## Agente comercial de prueba
+
+- `src/agent/commercialKnowledge.ts`: esquema y motor de cálculo, sin datos comerciales reales.
+- `src/agent/commercialTools.ts`: herramientas cerradas utilizadas por la IA.
+- `src/agent/commercialAgent.ts`: comportamiento del agente y modelo configurable.
+- `api/chat.ts`: función segura de Vercel consumida por el widget.
+
+El manual, los precios del agente, las referencias de transporte, la cola y las reglas internas no se guardan en GitHub. La preview los recibe exclusivamente desde variables cifradas `COMMERCIAL_KNOWLEDGE_*` de Vercel y no persiste las conversaciones. La primera fase es exclusivamente de prueba: no envía proformas ni mensajes, no procesa pagos y no reserva turnos.
+
+Para comprobar las reglas numéricas principales:
+
+```bash
+npm run test:agent
+```
 
 ## Arquitectura CAD
 
